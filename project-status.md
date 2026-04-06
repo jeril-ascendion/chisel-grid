@@ -1,7 +1,7 @@
 # ChiselGrid — Project Status
 
 **Last Updated:** April 7, 2026
-**Current Version:** v1.1 White Label in development
+**Current Version:** v1.1 White Label + Voice features in development
 
 ## Overall Progress
 
@@ -13,13 +13,13 @@
 | **Phase 2C — Migration and SEO** | Content Migration, SEO Optimization | NOT STARTED — 0 of 13 tasks |
 | **Phase 3 — Testing and Mobile** | Testing Infrastructure, Mobile App | COMPLETE — 19 of 19 tasks |
 | **Phase 4 — White Label v1.1** | Multi-tenancy, Billing, Analytics | COMPLETE — 16 of 16 tasks |
+| **Phase 5B — Voice Output & Interview** | Podcast feed, Newsletter, Interview mode | COMPLETE — 8 of 8 tasks |
 
 ## Active Work
 
-Phase 4 is complete. All three EPIC gates passed:
-- **EPIC-13 Multi-Tenancy Foundation** — Enhanced RLS with per-operation policies, per-tenant Cognito pools, Lambda@Edge tenant routing, branding injection, custom domain SSL, tenant admin portal
-- **EPIC-14 Billing & Onboarding** — Stripe webhook integration, tier enforcement middleware, usage metering, self-service onboarding wizard, tenant health dashboard
-- **EPIC-15 Analytics Dashboard** — Athena-based reader analytics, content performance metrics, creator leaderboard, AI pipeline cost tracking, Recharts dashboard with CSV export
+Phase 5B is complete. Both EPIC gates passed:
+- **EPIC-18 Voice Output & Distribution** — Podcast RSS feed (iTunes namespace), email newsletter (table-based layout via @react-email), subscriber management (Aurora + SES suppression), email voice attachment ingest (MIME parser + S3 + transcription pipeline)
+- **EPIC-19 Voice Interview Mode** — DynamoDB interview templates (5 standard seeds), guided mobile recording UI (Q&A flow, progress bar, skip/record), multi-answer processor (per-answer Step Functions, series navigation), interview scheduling (ICS calendar, SES email, Expo push reminder)
 
 The remaining Phase 2 items (EPIC-09 Content Migration, EPIC-11 SEO Optimization) are not yet started.
 
@@ -27,7 +27,6 @@ The remaining Phase 2 items (EPIC-09 Content Migration, EPIC-11 SEO Optimization
 
 - Phase 2C complete: Content Migration from static site and SEO/Performance optimization
 - chiselgrid.com domain live: staging verification complete
-- ascendion.engineering go-live: production cutover from static site
 - ascendion.engineering go-live: production cutover from static site
 
 ---
@@ -341,3 +340,41 @@ This epic builds comprehensive analytics for content performance, reader engagem
 | T-15.5 | Analytics UI — 4-tab Recharts dashboard, date range picker, CSV export, stat cards | Frontend Engineer | High | 12 | COMPLETE |
 
 **EPIC-15 GATE: VERIFIED** — Admin sees real traffic data, content metrics, and AI cost breakdown.
+
+---
+
+## ═══════════════════════════════════════════════════════════
+## PHASE 5B — VOICE OUTPUT & INTERVIEW MODE
+## ═══════════════════════════════════════════════════════════
+
+## EPIC-18: Voice Output and Distribution [Phase 5B]
+
+**Status: COMPLETE**
+
+This epic adds voice content distribution channels. A podcast RSS feed with iTunes namespace serves audio articles as podcast episodes. An email newsletter system using @react-email/components with table-based layouts (Outlook-safe) sends weekly digests via SES SendBulkEmail. A subscriber management system with Aurora schema supports category filtering and frequency preferences, with unsubscribe via SES suppression list. Email voice attachment ingest parses incoming MIME emails, extracts audio, stores in S3, and triggers the transcription pipeline.
+
+| Task | Description | Role | Complexity | Hours | Status |
+|------|-------------|------|------------|-------|--------|
+| T-18.1 | Podcast RSS feed — /api/feed/podcast route, RSS 2.0, iTunes namespace, enclosures | Backend Engineer | Medium | 6 | COMPLETE |
+| T-18.2 | Email newsletter — @react-email/components, weekly-digest template, SES bulk send | Full Stack Engineer | Medium | 8 | COMPLETE |
+| T-18.3 | Subscriber management — Aurora subscribers table, CRUD API, SES suppression list | Backend Engineer | Medium | 6 | COMPLETE |
+| T-18.4 | Email voice attachment ingest — SES inbound rule, MIME parser Lambda, S3 + pipeline trigger | Platform Engineer | High | 10 | COMPLETE |
+
+**EPIC-18 GATE: VERIFIED** — Podcast feed validates, newsletter renders in Outlook, subscribers managed, voice emails ingested.
+
+---
+
+## EPIC-19: Voice Interview Mode [Phase 5B]
+
+**Status: COMPLETE**
+
+This epic adds structured voice interview capability. Interview templates stored in DynamoDB define question flows with follow-ups and expected durations; 5 standard templates are seeded per tenant. A mobile guided recording UI presents questions one at a time with progress tracking, skip option, and batch upload. A multi-answer processor launches separate Step Functions executions per answer, linked by interviewId, and publishes results as a navigable content series. Interview scheduling generates ICS calendar events sent via SES and triggers Expo push notification reminders 30 minutes before.
+
+| Task | Description | Role | Complexity | Hours | Status |
+|------|-------------|------|------------|-------|--------|
+| T-19.1 | Interview templates — DynamoDB storage, CRUD API, 5 standard templates seeded | Backend Engineer | Medium | 6 | COMPLETE |
+| T-19.2 | Guided recording UI — mobile Q&A flow, progress bar, skip option, batch upload | Mobile Engineer | High | 10 | COMPLETE |
+| T-19.3 | Multi-answer processor — per-answer Step Functions, interviewId linking, series navigation | Backend Engineer | High | 10 | COMPLETE |
+| T-19.4 | Interview scheduling — ICS calendar events, SES delivery, Expo push 30-min reminder | Full Stack Engineer | Medium | 8 | COMPLETE |
+
+**EPIC-19 GATE: VERIFIED** — Interview templates created, mobile recording works, answers processed as series, scheduling sends ICS.

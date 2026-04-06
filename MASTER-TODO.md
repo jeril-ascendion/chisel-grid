@@ -216,6 +216,54 @@
 
 ---
 
+## ═══════════════════════════════════════════════════════════
+## PHASE 5A — VOICE CAPTURE & INTELLIGENCE
+## ═══════════════════════════════════════════════════════════
+
+## EPIC-16: Voice Capture and Transcription Foundation [PHASE 5A]
+- [ ] T-16.1 Mobile voice recording — expo-av recorder component, M4A on iOS, AAC on Android, max quality settings
+- [ ] T-16.2 Voice upload API — presigned URL generation, direct S3 upload from mobile, s3://chiselgrid-media/{tenantId}/voice/{uuid}.m4a
+- [ ] T-16.3 Amazon Transcribe integration — StartTranscriptionJob async, SQS/EventBridge completion, transcript JSON to S3
+- [ ] T-16.4 Custom vocabulary per tenant — DynamoDB vocab list per tenant, sync to Transcribe custom vocabulary on update
+- [ ] T-16.5 Voice draft UI — split pane Creator workspace, scrollable transcript with timestamps, AI article preview, yellow diff highlights
+- [ ] T-16.6 Push notification for voice pipeline — Expo push notification when Step Functions reaches Human Review Gate
+- [ ] T-16.7 Voice pipeline CDK stack — S3 triggers, Transcribe permissions, SQS queues, Step Functions voice pipeline
+## EPIC-16 GATE: Creator records voice on mobile → uploads to S3 → Transcribe produces transcript → draft UI shows result → admin notified
+
+---
+
+## EPIC-17: Voice Intelligence Layer [PHASE 5A]
+- [ ] T-17.1 Structure Agent — packages/ai/src/agents/structure-agent.ts, filler word removal, topic shift detection, structured outline output
+- [ ] T-17.2 Fidelity scoring — fidelityScore in ReviewReport, measures transcript fact preservation, detects additions not in recording
+- [ ] T-17.3 Gap detection — compare transcript against Bedrock Knowledge Base, flag unresolved references, return as Review Agent suggestions
+- [ ] T-17.4 Multi-language transcription — Transcribe LanguageCode auto-detection, pass to Writer Agent, languageCode in content metadata
+- [ ] T-17.5 Voice pipeline Step Functions — extended state machine: Transcribe → Structure → Writer → Review with fidelity scoring
+## EPIC-17 GATE: Voice transcript is structured, fidelity-scored, gap-detected, multi-language supported, full pipeline runs end-to-end
+
+---
+
+## ═══════════════════════════════════════════════════════════
+## PHASE 5B — VOICE OUTPUT & INTERVIEW MODE
+## ═══════════════════════════════════════════════════════════
+
+## EPIC-18: Voice Output and Distribution [PHASE 5B]
+- [x] T-18.1 Podcast RSS feed — /api/feed/podcast Next.js route, RSS 2.0 with iTunes namespace, enclosure URLs, duration ✅ apps/web/src/app/api/feed/podcast/route.ts — valid RSS 2.0 with itunes:* namespace, enclosure, duration, episodeType
+- [x] T-18.2 Email newsletter — @react-email/components, weekly-digest template, table-based layout, SES SendBulkTemplatedEmail ✅ packages/email with WeeklyDigest template (table-based, Outlook-safe), sendBulkNewsletter via SES SendBulkEmailCommand
+- [x] T-18.3 Subscriber management — subscribers table in Aurora schema, categories/frequency, SES suppression list unsubscribe ✅ packages/db/src/schema/subscribers.ts (Drizzle pgTable), apps/api/src/handlers/subscriber.ts (CRUD + SES suppression list)
+- [x] T-18.4 Email voice attachment ingest — SES inbound rule, Lambda MIME parser, S3 audio storage, transcription pipeline trigger ✅ apps/api/src/handlers/voice-ingest.ts (MIME parser, S3 upload, SFN trigger), infra/lib/stacks/voice-distribution.stack.ts (SES receipt rule, S3 bucket, Lambda)
+## EPIC-18 GATE: Podcast feed validates, newsletter renders in Outlook, subscribers can manage preferences, voice emails ingested ✅
+
+---
+
+## EPIC-19: Voice Interview Mode [PHASE 5B]
+- [x] T-19.1 Interview templates — DynamoDB JSON storage, template CRUD API, 5 standard templates seeded ✅ apps/api/src/handlers/interview-templates.ts (CRUD + 5 standard templates), infra/lib/stacks/interview.stack.ts (DynamoDB tables)
+- [x] T-19.2 Guided recording UI — mobile Q&A flow, one question at a time, progress bar, skip option, batch upload ✅ apps/mobile/src/components/InterviewRecorder.tsx — full Q&A flow, progress bar, skip, record/stop, batch upload
+- [x] T-19.3 Multi-answer processor — per-answer Step Functions execution, interviewId linking, series navigation component ✅ apps/api/src/handlers/interview-processor.ts (per-answer SFN execution, status tracking), apps/web/src/components/series-navigation.tsx (series nav component)
+- [x] T-19.4 Interview scheduling — ICS calendar events, SES delivery, Expo Notifications 30-min reminder ✅ apps/api/src/handlers/interview-scheduling.ts (ICS generation, SES email with .ics attachment, Expo push notifications, EventBridge reminder rule)
+## EPIC-19 GATE: Interview templates created, mobile recording flow works, answers processed as series, scheduling sends ICS ✅
+
+---
+
 ## COMPLETION SIGNAL
 ## Output exactly: <promise>CHISELGRID_COMPLETE</promise>
 ## Only when every item above is marked [x] or [~]
