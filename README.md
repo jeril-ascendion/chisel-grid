@@ -2,105 +2,114 @@
 
 ## What is ChiselGrid
 
-ChiselGrid is an AI-native content management system. It is not a traditional CMS with AI features bolted on as an afterthought. Every part of the platform — from content creation to review to publication — is designed around AI agents that do the heavy lifting while humans provide editorial judgment and governance.
+ChiselGrid is an AI-native content management system. It is not a traditional CMS with AI features bolted on as an afterthought. Every layer of the platform — from content creation to review to publishing to audio narration — is designed around AI agents that do the heavy lifting while humans provide editorial judgment and governance.
 
-The core thesis behind ChiselGrid is simple: **Content is a workflow. AI is the workforce. Humans are the editorial judgment layer.** When an engineer wants to share knowledge, they should not spend hours formatting, diagramming, and polishing. They should focus on the ideas, and let AI agents handle the production work. The human's role is to guide, review, and approve — never to be replaced, but always to be amplified.
+The core thesis is simple: **Content is a workflow. AI is the workforce. Humans are the editorial judgment layer.** When a creator starts a new article, they describe what they want. AI agents research, write, diagram, review, and narrate the content. The human creator reviews and refines the output. An admin approves it for publication. The result is high-quality, multi-modal technical content produced at a fraction of the time and cost of traditional authoring.
 
-The first deployment of ChiselGrid powers the Ascendion Engineering Portal at [ascendion.engineering](https://ascendion.engineering) and [chiselgrid.com](https://chiselgrid.com). This portal serves as a living knowledge base for Ascendion's engineering organization, where engineers contribute standards, best practices, architecture patterns, and technical deep-dives — all assisted by AI.
+ChiselGrid's initial deployment is the **Ascendion Engineering Portal** at [ascendion.engineering](https://ascendion.engineering) and [chiselgrid.com](https://chiselgrid.com). This portal serves as the knowledge hub for Ascendion's 7,000+ software engineers — publishing engineering standards, architecture best practices, technical deep-dives, and mentoring content.
 
-Looking ahead, ChiselGrid is being built as a white-label SaaS platform. Enterprise clients will be able to deploy their own branded instance for internal training portals, company announcements, knowledge sharing hubs, and engineering documentation — all powered by the same AI-native content pipeline that drives the Ascendion portal.
+The long-term vision is a **white-label SaaS platform** sold to enterprise clients. Any organization that needs an internal knowledge portal — for engineering training, compliance documentation, onboarding programs, or corporate communications — can deploy their own branded ChiselGrid instance with custom domains, branding, and billing. Multi-tenancy is built into the data model from day one, not retrofitted.
 
 ## The Ascendion Engineering Mentoring Program
 
-The Ascendion Engineering Portal is the flagship deployment of ChiselGrid, built with a clear intent: create a dynamic, AI-driven knowledge portal that mentors Ascendion engineers at every level. Rather than static documentation that goes stale, the portal is a living system where knowledge is continuously created, reviewed, and refined.
+ChiselGrid was born from a specific need: Ascendion wanted to build a dynamic, AI-driven knowledge portal that actively mentors its engineers. The idea is that engineers learn not only by reading but by creating. When an engineer writes about an architecture pattern, they internalize it. When they submit a blog post about a project learning, the organization captures institutional knowledge that would otherwise walk out the door.
 
-Engineers learn by doing — by reading engineering standards, creating technical content, and contributing their expertise back to the organization. The portal encourages this cycle by making content creation frictionless. An engineer can start with a rough idea, a voice note, or an uploaded document, and AI agents will research, write, diagram, and narrate the content. The engineer focuses on knowledge sharing, not formatting.
+The portal publishes two types of content. **Standard Documentation** covers engineering standards, architecture guidelines, and best practices — these are authoritative reference materials created and maintained by engineering leads and admins. **Blog Posts** are submitted by any Ascendion engineer (Creator role) and go through an AI-assisted writing workflow followed by admin review before publication. This two-track approach means the portal is both a curated reference library and a living, contributor-driven knowledge base.
 
-The portal supports two content types that serve different purposes. **Standard Documentation** covers engineering standards, architecture guidelines, and best practices — these are created and maintained by Admin-level engineering leads and represent the organization's canonical technical guidance. **Blog Posts** are engineering insights, project learnings, and technical deep-dives submitted by any Ascendion engineer (Creators) and reviewed by Admins before publication.
+AI agents dramatically lower the barrier to contribution. An engineer does not need to be a skilled technical writer. They describe what they want to share — a project learning, a tool evaluation, an architecture decision — and the AI agents handle research, structuring, diagram generation, code formatting, SEO optimization, and audio narration. The engineer reviews the output, makes corrections, and submits. The admin reviews for accuracy and approves. The result is a polished, multi-modal article in a fraction of the time it would take to write from scratch.
 
-Beyond individual skill development, the portal builds the Ascendion engineering brand externally, captures institutional knowledge that would otherwise live only in people's heads, and accelerates onboarding for new engineers who can immerse themselves in a rich library of standards and real-world technical content from day one.
+The portal serves three strategic goals for Ascendion: it builds the Ascendion engineering brand externally, it captures and distributes institutional knowledge internally, and it accelerates onboarding for new engineers who can read, listen to, and search a comprehensive knowledge base from day one.
 
 ## Platform Availability
 
 - **Web:** [chiselgrid.com](https://chiselgrid.com) (primary platform) and [ascendion.engineering](https://ascendion.engineering) (engineering portal)
 - **iOS App:** Available on the Apple App Store (link TBD)
-- **Android App:** Available on Google Play Store (link TBD)
-- **Mobile features:** Offline reading, native audio player with background playback, push notifications by category
+- **Android App:** Available on the Google Play Store (link TBD)
+- **Mobile Features:** Offline reading with SQLite caching, native audio player with background playback and speed controls, push notifications by category, debounced search with recent search history
 
 ## User Roles and Flows
 
 ### Readers (No Login Required)
 
-Readers are the primary audience — any engineer or visitor who wants to learn from the content.
+Readers are the primary consumers of ChiselGrid content. No account is needed to read.
 
 - Browse engineering articles, standards, and best practices on the homepage and category pages
-- Search by topic, tag, or category with full-text search and result highlighting
-- Listen to the AI-generated audio version of any article via the built-in audio player
-- Share articles via direct link — every article has clean URLs and Open Graph metadata for rich social previews
+- Search by topic, tag, or category using full-text PostgreSQL search with result highlighting
+- Listen to the AI-generated audio narration of any published article via the built-in audio player
+- Share articles via direct URL — every article has Open Graph tags optimized for LinkedIn and Twitter
+- Subscribe to the RSS feed at `/feed.xml` for new article notifications
+- Toggle dark/light mode for comfortable reading
+- Read offline on mobile by saving articles for later
 
 ### Creators (Ascendion Employees, Login Required)
 
 Creators are Ascendion engineers who contribute content to the portal.
 
-- Log in via Ascendion Azure AD SSO — no separate account needed
-- Open the AI workspace: type a topic, upload a document, or record a voice note
-- Watch AI agents research, write, design, and diagram the content in real time via WebSocket streaming
-- Review and edit the AI-generated draft using the block-based content editor
-- Submit the finished draft for Admin review with category, tags, and slug
-- Track review status and receive feedback from Admins
+- Log in via Ascendion Azure AD SSO — no separate password needed
+- Open the AI Workspace: type a topic, upload a reference document, or provide voice notes
+- Watch AI agents research, write, design diagrams, and structure the content in real time via WebSocket streaming
+- Review and edit the AI-generated draft using the block editor — modify text, code, callouts, and diagrams inline
+- Preview the article exactly as readers will see it, including SEO metadata and estimated read time
+- Submit the finished draft for admin review with category, tags, and slug assignment
+- Track the review status of submitted articles and respond to admin feedback
 
 ### Admins (Engineering Leads, Login Required)
 
 Admins govern the content lifecycle and manage the platform.
 
-- All Creator capabilities — Admins can also create content via the AI workspace
-- Create and manage Standard Documentation that represents canonical engineering guidance
-- Review and approve or reject Creator blog submissions with detailed feedback
-- Manage content hierarchy, categories, tags, and user accounts
-- View AI usage analytics including token consumption, cost estimates, and per-creator usage
-- Configure AI agent settings and content workflow parameters
+- All Creator capabilities — admins can also create and submit content
+- Create and manage Standard Documentation — authoritative engineering standards that bypass the creator submission flow
+- Review the content queue: see AI quality scores, read the full draft, and approve or reject with feedback
+- Manage the content lifecycle: view all content by status (draft, in review, approved, published, deprecated, rejected)
+- Edit any published content with the full block editor, with version history tracking
+- Manage users: view all accounts, change roles (admin/creator/reader), enable or disable accounts
+- Manage categories: create, edit, reorder, and delete the category hierarchy with slug management
+- View AI usage analytics: tokens consumed per agent, estimated costs, per-creator usage, and daily trend charts
+- Configure content workflow settings and review thresholds
 
 ## AI Brain — How It Works
 
-When a Creator starts a new article, seven specialized AI agents collaborate to produce publication-ready content:
+When a Creator starts a new article in the AI Workspace, a coordinated pipeline of AI agents collaborates to produce a complete, multi-modal article. The pipeline is orchestrated by AWS Step Functions and runs asynchronously — the creator watches progress in real time via WebSocket but is never blocked waiting for a synchronous response.
 
-1. **Research Agent** — Searches the web and internal knowledge base to produce a structured research brief on the topic, gathering relevant sources and technical context.
+**Research Agent** — Searches the web and internal knowledge base to produce a structured research brief on the topic, gathering relevant sources and technical context. (Planned for v2.0 — currently the Writer Agent works directly from the creator's topic description.)
 
-2. **Writer Agent** — Takes the research brief and drafts a full structured article as `ContentBlock[]` JSON using Claude Sonnet via AWS Bedrock. The output includes headings, paragraphs, code blocks, callouts, and placeholders for diagrams.
+**Writer Agent** — Receives the topic and context and generates a full structured article as an array of ContentBlock objects (headings, paragraphs, code blocks, callouts, diagrams). Uses Claude Sonnet via AWS Bedrock. Targets 1,500-3,000 words of professional technical prose aimed at senior software engineers.
 
-3. **Diagram Agent** — Generates Mermaid architecture diagrams and flow charts from content descriptions. Complex diagrams can also be rendered in D2 format.
+**Design Agent** — Plans the visual structure and layout of the article, determining where diagrams, code examples, and callouts should appear for maximum clarity. (Planned for v2.0.)
 
-4. **Review Agent** — Scores the draft across five dimensions: accuracy, completeness, readability, SEO quality, and technical depth. Drafts that fall below the quality threshold are automatically sent back to the Writer Agent for revision, creating a self-improving loop.
+**Diagram Agent** — Generates Mermaid diagram code from architecture and process descriptions embedded in the article. Supports flowcharts, sequence diagrams, class diagrams, state diagrams, and entity-relationship diagrams. Output is valid Mermaid.js v10+ syntax.
 
-5. **SEO Agent** — Generates meta titles, descriptions, Open Graph tags, JSON-LD structured data, keyword maps, and internal link suggestions to maximize discoverability.
+**Illustration Agent** — Generates supporting graphics and hero images for articles. (Planned for v2.0.)
 
-6. **Audio Agent** — Converts the finished article to SSML with a 40+ term technical pronunciation dictionary, then generates natural-speech MP3 narration via Amazon Polly Neural TTS. Every published article is listenable.
+**Review Agent** — Scores the draft across five dimensions: accuracy (0-100), completeness (0-100), readability (0-100), SEO quality (0-100), and technical depth (0-100). If the overall score falls below the revision threshold (default 60), the article automatically enters a revision loop — the Writer Agent receives the Review Agent's specific feedback and revision instructions and produces an improved draft. This loop runs up to 3 times before escalating to human review regardless of score.
 
-7. **Illustration Agent** — Generates supporting graphics and illustrations for the article (planned for v2.0).
+**SEO Agent** — Generates meta titles (50-60 characters), meta descriptions (150-160 characters), 5-8 keywords, Open Graph tags, and JSON-LD Article structured data. Also suggests internal link opportunities to other articles in the portal.
 
-After the AI agents complete their work, a **human review gate** ensures that an Admin always has final approval before any content goes live. Admins receive email notifications for pending reviews and can approve, reject with feedback, or request revisions.
+**Audio Agent** — Converts the finished article to SSML (Speech Synthesis Markup Language) with a pronunciation dictionary for 60+ technical terms (AWS, API, K8s, PostgreSQL, CI/CD, gRPC, etc.), then synthesizes natural-speech MP3 narration via Amazon Polly Neural TTS with the Matthew voice. Code blocks are skipped with a "code example omitted in audio version" notice. Every published article is listenable.
 
-**The principle: AI produces, humans govern.**
+**Human Review Gate** — After the AI pipeline completes, the article enters a human review queue. An admin receives an SES email notification, reviews the article with full AI quality scores visible, and approves or rejects with feedback. This gate ensures that no AI-generated content goes live without human approval.
+
+**The principle: AI produces, humans govern.** The AI agents handle the labor-intensive parts of content creation — research, writing, formatting, diagramming, narration. Humans provide the judgment — topic selection, accuracy verification, editorial approval. This division of labor produces better content faster.
 
 ## Content Types
 
 - **Standard Documentation** — Engineering standards, architecture guidelines, coding best practices, and operational runbooks. Created by Admins with AI assistance. These represent the organization's canonical technical guidance.
-
-- **Blog Posts** — Engineering insights, project learnings, technical deep-dives, and conference takeaways. Submitted by Creators (any Ascendion engineer), reviewed and approved by Admins before publication.
-
-- **All content is multi-modal:** Every published article includes structured text, embedded Mermaid diagrams, syntax-highlighted code blocks, AI-generated audio narration, and (in v2.0) generated illustrations.
+- **Blog Posts** — Engineering insights, project learnings, technical deep-dives, tool evaluations, and conference takeaways. Submitted by Creators (any Ascendion engineer), reviewed and approved by Admins before publication.
+- **All content is multi-modal:** Every published article includes structured text with headings, embedded Mermaid diagrams for architecture and flow visualization, syntax-highlighted code blocks with filenames, callout blocks for warnings and key takeaways, and AI-generated MP3 audio narration.
 
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
-| **Frontend** | Next.js 14 App Router with ISR, TypeScript, Tailwind CSS, Radix UI |
-| **Backend** | AWS Lambda, API Gateway, Aurora Serverless v2 PostgreSQL, Drizzle ORM |
-| **AI** | AWS Bedrock Claude Sonnet, Amazon Polly Neural TTS, Step Functions orchestration |
-| **Auth** | AWS Cognito, Azure AD SSO for Ascendion employees |
-| **Infrastructure** | AWS CDK TypeScript, CloudFront, S3, SQS, EventBridge |
-| **Mobile** | React Native Expo, shared API client with web |
-| **Monorepo** | pnpm workspaces and Turborepo |
+|-------|------------|
+| **Frontend** | Next.js App Router with ISR, TypeScript, Tailwind CSS |
+| **Backend** | AWS Lambda, API Gateway (REST + WebSocket), Aurora Serverless v2 PostgreSQL |
+| **ORM** | Drizzle ORM with typed repositories, cursor pagination, full-text search |
+| **AI** | AWS Bedrock (Claude Sonnet), Amazon Polly Neural TTS, Step Functions orchestration |
+| **Auth** | AWS Cognito User Pools, Azure AD SSO federation, JWT Lambda authorizer |
+| **Infrastructure** | AWS CDK (TypeScript), CloudFront, S3, SQS, EventBridge, SES |
+| **Mobile** | React Native with Expo SDK 52, Expo Router, expo-av, expo-sqlite, expo-secure-store |
+| **Monorepo** | pnpm workspaces, Turborepo, 9 packages |
+| **Testing** | Vitest (146 unit/integration tests), Playwright E2E, GitHub Actions CI |
 
 ## Architecture Overview
 
@@ -113,13 +122,32 @@ Reader (Web/Mobile)        Creator (Web/Mobile)        Admin (Web)
                                   |
                   +───────────────+────────────────+
                   |                                |
-          Next.js Frontend            API Gateway + Lambda
+           Next.js Frontend            API Gateway + Lambda
                   |                                |
-          Aurora PostgreSQL             AWS Bedrock AI Brain
+           Aurora PostgreSQL             AWS Bedrock AI Brain
                   |                                |
                  S3                   Step Functions Workflow
-          Media and Audio                          |
-                                         Amazon Polly Audio
+           Media and Audio                         |
+                                          Amazon Polly Audio
+```
+
+**Monorepo structure:**
+
+```
+chisel-grid/
+  apps/
+    web/          — Next.js App Router frontend (@chiselgrid/web)
+    api/          — Lambda API handlers (@chiselgrid/api)
+    mobile/       — React Native Expo app (@chiselgrid/mobile)
+  packages/
+    ai/           — AI agents, Bedrock client, SSML converter (@chiselgrid/ai)
+    db/           — Drizzle ORM schema and repositories (@chiselgrid/db)
+    types/        — Shared Zod schemas and TypeScript types (@chiselgrid/types)
+    api-client/   — Shared REST API client with Zod validation (@chiselgrid/api-client)
+    ui/           — Shared React component library (@chiselgrid/ui)
+    config/       — Shared ESLint, TypeScript, Prettier configs (@chiselgrid/config)
+  infra/          — AWS CDK infrastructure (7 stacks)
+  e2e/            — Playwright end-to-end tests
 ```
 
 ## Branching and Deployment Flow
@@ -128,53 +156,61 @@ Reader (Web/Mobile)        Creator (Web/Mobile)        Admin (Web)
 epic/* branches → develop → staging → main
 ```
 
-- **epic/\*** — Feature work happens on epic branches, built by Claude Code and Ralph Loop
-- **develop** — Integration branch where all features merge. CI runs typecheck and tests on every push
-- **staging** — Pre-production environment. Auto-deploys to AWS staging. Playwright E2E tests run against this environment
-- **main** — Production only. Deploys to chiselgrid.com and ascendion.engineering
+- **epic/*** — Feature work happens on epic branches, built by Claude Code and Ralph Loop. Each EPIC gets its own branch (e.g., `epic/10-testing`, `epic/12-mobile`).
+- **develop** — Integration branch. All completed EPICs merge here. CI runs typecheck and unit/integration tests on every push.
+- **staging** — Pre-production environment. Auto-deploys to AWS staging via CDK when develop merges. Playwright E2E tests run against the staging URL.
+- **main** — Production only. Deploys to [chiselgrid.com](https://chiselgrid.com) and [ascendion.engineering](https://ascendion.engineering). Protected branch requiring PR approval.
 
 ## Local Development Setup
 
 1. **Prerequisites:** Node.js 20 LTS, pnpm 9+, AWS CLI v2, Docker Desktop (with WSL2 on Windows)
 2. **Clone:** `git clone git@github.com:jeril-ascendion/chisel-grid.git`
 3. **Install:** `pnpm install`
-4. **Environment:** `cp .env.example .env.local` and fill in the required values
+4. **Environment:** `cp .env.example .env.local` and fill in AWS credentials, Cognito pool IDs, and database connection string
 5. **Database migrations:** `pnpm db:migrate`
-6. **Start development:** `pnpm dev`
-7. **Open:** [http://localhost:3000](http://localhost:3000) for web and [http://localhost:3001](http://localhost:3001) for API
+6. **Seed data:** `pnpm db:seed`
+7. **Start development:** `pnpm dev`
+8. **Open:** [http://localhost:3000](http://localhost:3000) for web, [http://localhost:3001](http://localhost:3001) for API
 
 ## Key Commands
 
 | Command | Description |
-|---|---|
+|---------|-------------|
 | `pnpm dev` | Start all apps in development |
 | `pnpm typecheck` | TypeScript check all 9 packages |
-| `pnpm test` | Run all unit and integration tests |
+| `pnpm test` | Run all unit and integration tests (146 tests across 4 packages) |
+| `pnpm test:e2e` | Run Playwright E2E tests against local dev server |
 | `pnpm build` | Production build |
 | `pnpm db:generate` | Generate Drizzle migrations from schema changes |
-| `pnpm db:migrate` | Apply pending migrations |
+| `pnpm db:migrate` | Apply pending database migrations |
+| `pnpm db:seed` | Seed database with default tenant and category tree |
 | `pnpm cdk:diff` | Preview AWS infrastructure changes |
-| `pnpm cdk:deploy` | Deploy to AWS dev environment |
+| `pnpm cdk:deploy` | Deploy to AWS environment |
+| `pnpm cdk:synth` | Synthesize CloudFormation templates |
 
 ## Product Roadmap
 
-| Version | Milestone |
-|---|---|
-| **v1.0** (current) | Ascendion Engineering Portal — Admin CMS, AI content pipeline, Reader frontend, Audio generation, Content migration from static site |
-| **v1.1** | White-label packaging — multi-tenancy, custom domains, Stripe billing, self-service onboarding, cloud-agnostic content export |
-| **v2.0** | Full AI Brain — all 7 agents fully operational, image generation, RAG knowledge base, analytics dashboard |
-| **v2.5** | Commercial SaaS — Starter, Professional, and Enterprise tiers, dedicated CSM, SLA guarantees |
+| Version | Focus | Status |
+|---------|-------|--------|
+| **v1.0** (current) | Ascendion Engineering Portal — Admin CMS, AI content pipeline, Reader frontend, Audio generation, Testing infrastructure, Mobile app | In Development |
+| **v1.1** | White-label packaging — Multi-tenancy, custom domains, Stripe billing, self-service onboarding, cloud-agnostic content export | Planned |
+| **v2.0** | Full AI Brain — All 7 agents including Research, Design, and Illustration, RAG knowledge base, Analytics dashboard | Planned |
+| **v2.5** | Commercial SaaS — Starter/Professional/Enterprise tiers, dedicated CSM, SLA guarantees | Planned |
 
 ## The Five Core Principles
 
-1. **AI produces, humans govern** — Every piece of content flows through AI agents for generation and a human for approval.
-2. **Multi-modal from day one** — Text, audio, diagrams, and graphics are generated as part of every published article.
-3. **White-label is a first-class citizen** — Tenancy is in the data model, not retrofitted.
-4. **Async by default** — AI workflows never block the user. Every job is queued, tracked, and streamed via WebSocket.
-5. **AWS-native, not AWS-locked** — The AI layer can be swapped, the frontend can move to Vercel, the database can migrate to Neon.
+1. **AI produces, humans govern** — Every piece of content flows through AI agents for generation and a human admin for approval. No content goes live without human judgment.
+
+2. **Multi-modal from day one** — Text, audio, diagrams, and code blocks are generated as part of every published article. Content is not text-only with media added later.
+
+3. **White-label is a first-class citizen** — Tenancy is in the data model from the beginning, not retrofitted. Every database query is scoped by tenantId. Row-level security is enforced at the PostgreSQL layer.
+
+4. **Async by default** — AI workflows never block the user. Every AI job is queued, tracked in the database, and streamed to the client via WebSocket. The user watches progress in real time but can navigate away and return.
+
+5. **AWS-native, not AWS-locked** — The platform is built on AWS services (Bedrock, Polly, Aurora, CDK) but the architecture allows swapping: the AI layer can move to a different LLM provider, the frontend can deploy to Vercel, the database can migrate to Neon or any PostgreSQL host.
 
 ## Contributing
 
 **Internal Ascendion contributors:** Log in at [chiselgrid.com](https://chiselgrid.com) with your Ascendion Azure AD credentials and submit content via the Creator workspace. No git access is required for content contributions.
 
-**Engineering contributions:** Create a feature branch from `develop`, follow the branching strategy above, and open a PR to `develop`.
+**Engineering contributions:** Create a feature branch from `develop`, follow the branching strategy described above, and open a pull request to `develop`. CI will run typecheck and tests automatically. See `CLAUDE.md` for codebase conventions and architecture decisions.
