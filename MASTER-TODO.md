@@ -197,11 +197,11 @@
 ---
 
 ## EPIC-14: Billing & White Label Onboarding [PHASE 4]
-- [ ] T-14.1 Stripe integration — Stripe Subscriptions API, webhook handler (checkout.session.completed, customer.subscription.updated)
-- [ ] T-14.2 Tier enforcement — starter/professional/enterprise limits enforced at API layer (AI tokens, content count, features)
-- [ ] T-14.3 Usage metering — monthly token aggregation from ai_jobs table, overage calculation, billing Lambda
-- [ ] T-14.4 Self-service onboarding — signup flow, Stripe checkout, Cognito pool provisioning, S3 prefix, welcome email
-- [ ] T-14.5 Tenant health dashboard — uptime, API error rate, storage usage, AI budget remaining, billing status
+- [x] T-14.1 Stripe integration — Stripe Subscriptions API, webhook handler (checkout.session.completed, customer.subscription.updated) ✅ Webhook handler for 5 event types, billing API (checkout/portal/status), Stripe v22 integration, DynamoDB subscription state tracking
+- [x] T-14.2 Tier enforcement — starter/professional/enterprise limits enforced at API layer (AI tokens, content count, features) ✅ Tier enforcement middleware with enforceFeature() and enforceLimit(), 4 plan configs (internal/starter/professional/enterprise), DynamoDB plan cache, upgrade prompts
+- [x] T-14.3 Usage metering — monthly token aggregation from ai_jobs table, overage calculation, billing Lambda ✅ Usage metering API (current/history), incrementUsage() utility, monthly billing aggregation Lambda, overage calculation, DynamoDB usage table
+- [x] T-14.4 Self-service onboarding — signup flow, Stripe checkout, Cognito pool provisioning, S3 prefix, welcome email ✅ 4-step onboarding wizard (plan/info/checkout/complete), plan comparison cards, subdomain validation, Stripe checkout redirect, onboarding API route
+- [x] T-14.5 Tenant health dashboard — uptime, API error rate, storage usage, AI budget remaining, billing status ✅ Health metrics grid (uptime/error rate/response time/users), usage bars with limits, billing summary card, recent errors table, time range selector
 ## EPIC-14 GATE: New tenant can self-onboard, pay via Stripe, get isolated environment, see their billing
 
 ---
