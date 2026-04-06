@@ -18,7 +18,7 @@
   },
   "context": {
     "dev": {
-      "account": "000000000000",
+      "account": "852973339602",
       "region": "ap-southeast-1",
       "domain": "dev.ascendion.engineering",
       "auroraMinAcu": 0.5,
@@ -27,7 +27,7 @@
       "enableDeletion": true
     },
     "staging": {
-      "account": "000000000000",
+      "account": "852973339602",
       "region": "ap-southeast-1",
       "domain": "staging.ascendion.engineering",
       "auroraMinAcu": 0.5,
@@ -36,7 +36,7 @@
       "enableDeletion": false
     },
     "prod": {
-      "account": "000000000000",
+      "account": "852973339602",
       "region": "ap-southeast-1",
       "domain": "ascendion.engineering",
       "auroraMinAcu": 1,

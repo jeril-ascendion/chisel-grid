@@ -6,7 +6,6 @@ import {
   RemovalPolicy,
   Duration,
   aws_rds as rds,
-  aws_ec2 as ec2,
 } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../config';
@@ -45,7 +44,7 @@ export class DataStack extends Stack {
     // Aurora Serverless v2 Cluster — PostgreSQL 15
     const cluster = new rds.DatabaseCluster(this, 'AuroraCluster', {
       engine: rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_15_4,
+        version: rds.AuroraPostgresEngineVersion.VER_15_8,
       }),
       writer: rds.ClusterInstance.serverlessV2('Writer', {
         scaleWithWriter: true,
@@ -69,9 +68,6 @@ export class DataStack extends Stack {
       deletionProtection: !config.enableDeletion,
       iamAuthentication: true,
     });
-
-    // Suppress lint for unused variable
-    void ec2;
 
     const secret = cluster.secret!;
 
