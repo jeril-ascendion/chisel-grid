@@ -186,12 +186,12 @@
 ## ═══════════════════════════════════════════════════════════
 
 ## EPIC-13: Multi-Tenancy Foundation [PHASE 4]
-- [ ] T-13.1 Tenant data isolation — Aurora RLS by tenantId enforced on all tables, automated isolation tests
-- [ ] T-13.2 Cognito per-tenant pools — CDK construct creates isolated User Pool per tenant, tenant claim in JWT
-- [ ] T-13.3 CloudFront tenant routing — Lambda@Edge extracts hostname, resolves tenantId from DynamoDB Global Table
-- [ ] T-13.4 Tenant branding injection — CSS custom properties injected by Lambda@Edge from tenant branding config
-- [ ] T-13.5 Custom domain SSL — ACM certificate per tenant custom domain, CloudFront CNAME validation
-- [ ] T-13.6 Tenant admin portal — tenant settings UI, branding config (colors, logo, fonts), feature flags
+- [x] T-13.1 Tenant data isolation — Aurora RLS by tenantId enforced on all tables, automated isolation tests ✅ Enhanced RLS with per-operation policies (SELECT/INSERT/UPDATE/DELETE), FORCE RLS on all 10 tables, tenant-context utility, 16 automated isolation tests
+- [x] T-13.2 Cognito per-tenant pools — CDK construct creates isolated User Pool per tenant, tenant claim in JWT ✅ TenantUserPool CDK construct, MultiTenantAuthStack with DynamoDB mapping, runtime provisioning handler, multi-issuer JWT authorizer, tenant resolver with cache
+- [x] T-13.3 CloudFront tenant routing — Lambda@Edge extracts hostname, resolves tenantId from DynamoDB Global Table ✅ Lambda@Edge origin-request handler, DynamoDB tenant lookup with cache, TenantRoutingStack CDK, subdomain + custom domain resolution
+- [x] T-13.4 Tenant branding injection — CSS custom properties injected by Lambda@Edge from tenant branding config ✅ TenantBrandingSchema with Zod, Lambda@Edge branding-injector, TenantBrandingProvider React context, plan-based feature flags, light/dark mode CSS vars
+- [x] T-13.5 Custom domain SSL — ACM certificate per tenant custom domain, CloudFront CNAME validation ✅ TenantCustomDomain CDK construct, ACM DNS validation, CloudFront CNAME attachment API, certificate lifecycle handler (request/check/attach)
+- [x] T-13.6 Tenant admin portal — tenant settings UI, branding config (colors, logo, fonts), feature flags ✅ Tabbed settings page (general/branding/features/domain), live branding preview, color pickers, font selectors, feature flag toggles, usage limit config, sidebar nav item
 ## EPIC-13 GATE: Two test tenants run on same infra with isolated data and different branding
 
 ---

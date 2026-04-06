@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1025.0",
     "@chiselgrid/types": "workspace:*",
     "drizzle-orm": "^0.31.0",
     "pg": "^8.11.0"
