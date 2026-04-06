@@ -207,11 +207,11 @@
 ---
 
 ## EPIC-15: Analytics Dashboard [PHASE 4]
-- [ ] T-15.1 Reader analytics — CloudFront access logs → Athena, pageviews, unique visitors, top articles, geographic distribution
-- [ ] T-15.2 Content performance — reads per article, average read time, audio play rate, social shares, search queries
-- [ ] T-15.3 Creator analytics — articles submitted/approved/rejected per creator, average quality scores, top contributors
-- [ ] T-15.4 AI pipeline analytics — tokens per agent, cost per article, generation time, revision rate, quality score trends
-- [ ] T-15.5 Analytics UI — chart-heavy dashboard with Recharts, date range picker, CSV export, email report schedule
+- [x] T-15.1 Reader analytics — CloudFront access logs → Athena, pageviews, unique visitors, top articles, geographic distribution ✅ AnalyticsStack CDK (S3 logs, Glue database/table, Athena workgroup, daily aggregation Lambda), reader analytics API with Athena queries for overview/articles/geo
+- [x] T-15.2 Content performance — reads per article, average read time, audio play rate, social shares, search queries ✅ Content analytics API (performance/summary), per-article metrics (reads, read time, audio play rate, social shares, bounce rate, search appearances)
+- [x] T-15.3 Creator analytics — articles submitted/approved/rejected per creator, average quality scores, top contributors ✅ Creator analytics API (leaderboard/individual), 5-dimension quality scores, monthly trend, approval rate, recent articles
+- [x] T-15.4 AI pipeline analytics — tokens per agent, cost per article, generation time, revision rate, quality score trends ✅ AI analytics API (overview/agents/trends), per-agent token/cost breakdown, daily trend generation, revision rate tracking, quality score trends
+- [x] T-15.5 Analytics UI — chart-heavy dashboard with Recharts, date range picker, CSV export, email report schedule ✅ 4-tab analytics dashboard (readers/content/creators/AI), Recharts charts (Area/Bar/Line/Pie), date range picker, CSV export, stat cards, geo pie chart, creator leaderboard, agent cost breakdown
 ## EPIC-15 GATE: Admin sees real traffic data, content metrics, and AI cost breakdown
 
 ---

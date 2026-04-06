@@ -232,16 +232,16 @@ echo "  Window 2 (stream-c): STREAM C prompt — Audio + Migration"
 ## Most controlled approach. Catches issues before they compound.
 
 ## PHASE 1 (run first, wait for completion):
-/ralph-loop "Complete Phase 1 of ChiselGrid: EPIC-02 Authentication and EPIC-03 Content Model. Read CLAUDE.md and MASTER-TODO.md. Work through every task in EPIC-02 and EPIC-03 in order. Mark each [x] as complete. Update project-status.md. Validate each EPIC GATE before moving to next EPIC. Output <promise>PHASE1_COMPLETE</promise> when both EPIC-02 and EPIC-03 gates are verified." --max-iterations 60 --completion-promise "PHASE1_COMPLETE"
+/ralph-loop:ralph-loop "Complete Phase 1 of ChiselGrid: EPIC-02 Authentication and EPIC-03 Content Model. Read CLAUDE.md and MASTER-TODO.md. Work through every task in EPIC-02 and EPIC-03 in order. Mark each [x] as complete. Update project-status.md. Validate each EPIC GATE before moving to next EPIC. Output <promise>PHASE1_COMPLETE</promise> when both EPIC-02 and EPIC-03 gates are verified." --max-iterations 60 --completion-promise "PHASE1_COMPLETE"
 
 ## PHASE 2A (start after PHASE 1 verified by human):
-/ralph-loop "Complete Phase 2A of ChiselGrid: EPIC-04 AI Brain, EPIC-05 Content Workspace, EPIC-07 Admin Dashboard. Read CLAUDE.md and MASTER-TODO.md. Work through tasks in order: all of EPIC-04 first, then EPIC-05, then EPIC-07. Mark each [x]. Update project-status.md. Output <promise>PHASE2A_COMPLETE</promise> when all three EPIC gates are verified." --max-iterations 120 --completion-promise "PHASE2A_COMPLETE"
+/ralph-loop:ralph-loop "Complete Phase 2A of ChiselGrid: EPIC-04 AI Brain, EPIC-05 Content Workspace, EPIC-07 Admin Dashboard. Read CLAUDE.md and MASTER-TODO.md. Work through tasks in order: all of EPIC-04 first, then EPIC-05, then EPIC-07. Mark each [x]. Update project-status.md. Output <promise>PHASE2A_COMPLETE</promise> when all three EPIC gates are verified." --max-iterations 120 --completion-promise "PHASE2A_COMPLETE"
 
 ## PHASE 2B (run parallel to 2A if using tmux):
 /ralph-loop "Complete Phase 2B of ChiselGrid: EPIC-06 Reader Frontend, EPIC-08 Audio Pipeline, EPIC-09 Content Migration, EPIC-11 SEO. Read CLAUDE.md and MASTER-TODO.md. Work through all tasks in these four EPICs. Mark each [x]. Output <promise>PHASE2B_COMPLETE</promise> when all four EPIC gates are verified." --max-iterations 100 --completion-promise "PHASE2B_COMPLETE"
 
 ## PHASE 3 (after human verifies Phase 2):
-/ralph-loop "Complete Phase 3 of ChiselGrid: EPIC-10 Testing Infrastructure, EPIC-12 Mobile App. Read CLAUDE.md and MASTER-TODO.md. EPIC-10 first (tests all existing code), then EPIC-12 (Expo mobile app). Output <promise>PHASE3_COMPLETE</promise> when both EPIC gates pass." --max-iterations 100 --completion-promise "PHASE3_COMPLETE"
+/ralph-loop:ralph-loop "Complete Phase 3 of ChiselGrid: EPIC-10 Testing Infrastructure, EPIC-12 Mobile App. Read CLAUDE.md and MASTER-TODO.md. EPIC-10 first (tests all existing code), then EPIC-12 (Expo mobile app). Output <promise>PHASE3_COMPLETE</promise> when both EPIC gates pass." --max-iterations 100 --completion-promise "PHASE3_COMPLETE"
 
 ## PHASE 4 — v1.1 White Label (separate engagement):
 /ralph-loop "Complete Phase 4 of ChiselGrid v1.1: EPIC-13 Multi-Tenancy, EPIC-14 Billing, EPIC-15 Analytics. Read CLAUDE.md and MASTER-TODO.md. Sequential order only — EPIC-13 must complete before EPIC-14. Output <promise>PHASE4_COMPLETE</promise> when all three EPIC gates pass." --max-iterations 100 --completion-promise "PHASE4_COMPLETE"

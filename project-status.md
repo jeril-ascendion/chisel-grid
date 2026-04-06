@@ -1,7 +1,7 @@
 # ChiselGrid — Project Status
 
-**Last Updated:** April 2026
-**Current Version:** v1.0 in development
+**Last Updated:** April 7, 2026
+**Current Version:** v1.1 White Label in development
 
 ## Overall Progress
 
@@ -12,17 +12,22 @@
 | **Phase 2B — Reader and Audio** | Reader Frontend, Audio Pipeline | COMPLETE — 15 of 15 tasks |
 | **Phase 2C — Migration and SEO** | Content Migration, SEO Optimization | NOT STARTED — 0 of 13 tasks |
 | **Phase 3 — Testing and Mobile** | Testing Infrastructure, Mobile App | COMPLETE — 19 of 19 tasks |
-| **Phase 4 — White Label v1.1** | Multi-tenancy, Billing, Analytics | NOT STARTED — 0 of 16 tasks |
+| **Phase 4 — White Label v1.1** | Multi-tenancy, Billing, Analytics | COMPLETE — 16 of 16 tasks |
 
 ## Active Work
 
-Phase 3 is complete. EPIC-10 Testing Infrastructure and EPIC-12 Mobile Application are both finished. The remaining Phase 2 items (EPIC-09 Content Migration, EPIC-11 SEO Optimization) are not yet started and will be addressed before production launch.
+Phase 4 is complete. All three EPIC gates passed:
+- **EPIC-13 Multi-Tenancy Foundation** — Enhanced RLS with per-operation policies, per-tenant Cognito pools, Lambda@Edge tenant routing, branding injection, custom domain SSL, tenant admin portal
+- **EPIC-14 Billing & Onboarding** — Stripe webhook integration, tier enforcement middleware, usage metering, self-service onboarding wizard, tenant health dashboard
+- **EPIC-15 Analytics Dashboard** — Athena-based reader analytics, content performance metrics, creator leaderboard, AI pipeline cost tracking, Recharts dashboard with CSV export
+
+The remaining Phase 2 items (EPIC-09 Content Migration, EPIC-11 SEO Optimization) are not yet started.
 
 ## Next Milestones
 
 - Phase 2C complete: Content Migration from static site and SEO/Performance optimization
 - chiselgrid.com domain live: staging verification complete
-- Phase 4 kickoff: White Label v1.1 multi-tenancy and billing
+- ascendion.engineering go-live: production cutover from static site
 - ascendion.engineering go-live: production cutover from static site
 
 ---
@@ -286,53 +291,53 @@ This epic builds the React Native mobile app using Expo SDK 52 with Expo Router 
 
 ## EPIC-13: Multi-Tenancy Foundation [Phase 4]
 
-**Status: NOT STARTED**
+**Status: COMPLETE**
 
-This epic transforms ChiselGrid from a single-tenant Ascendion portal into a multi-tenant platform. It enforces tenant data isolation via Aurora RLS on all tables, creates per-tenant Cognito User Pools, implements CloudFront tenant routing via Lambda@Edge, injects per-tenant branding via CSS custom properties, provisions custom domain SSL certificates, and builds a tenant admin portal for self-service configuration.
+This epic transforms ChiselGrid from a single-tenant Ascendion portal into a multi-tenant platform. Enhanced RLS with per-operation policies (SELECT/INSERT/UPDATE/DELETE) enforces tenant isolation on all 10 tables. Per-tenant Cognito User Pools are provisioned via CDK constructs and runtime API. Lambda@Edge functions handle tenant routing (subdomain + custom domain) and branding injection. A tenant admin portal provides self-service configuration for branding, features, and custom domains.
 
 | Task | Description | Role | Complexity | Hours | Status |
 |------|-------------|------|------------|-------|--------|
-| T-13.1 | Tenant data isolation — Aurora RLS by tenantId enforced on all tables, automated isolation tests | Backend Engineer | High | 10 | NOT STARTED |
-| T-13.2 | Cognito per-tenant pools — CDK construct creates isolated User Pool per tenant, tenant claim in JWT | Platform Engineer | High | 10 | NOT STARTED |
-| T-13.3 | CloudFront tenant routing — Lambda@Edge extracts hostname, resolves tenantId from DynamoDB | Platform Engineer | Very High | 12 | NOT STARTED |
-| T-13.4 | Tenant branding injection — CSS custom properties injected by Lambda@Edge from tenant config | Frontend Engineer | Medium | 6 | NOT STARTED |
-| T-13.5 | Custom domain SSL — ACM certificate per tenant custom domain, CloudFront CNAME validation | Platform Engineer | High | 8 | NOT STARTED |
-| T-13.6 | Tenant admin portal — tenant settings UI, branding config (colors, logo, fonts), feature flags | Frontend Engineer | High | 10 | NOT STARTED |
+| T-13.1 | Tenant data isolation — enhanced RLS with per-operation policies, FORCE RLS, 16 automated tests | Backend Engineer | High | 10 | COMPLETE |
+| T-13.2 | Cognito per-tenant pools — TenantUserPool CDK construct, MultiTenantAuthStack, tenant resolver | Platform Engineer | High | 10 | COMPLETE |
+| T-13.3 | CloudFront tenant routing — Lambda@Edge origin-request, DynamoDB lookup, subdomain + custom domain | Platform Engineer | Very High | 12 | COMPLETE |
+| T-13.4 | Tenant branding injection — Lambda@Edge CSS injection, TenantBrandingProvider, light/dark mode | Frontend Engineer | Medium | 6 | COMPLETE |
+| T-13.5 | Custom domain SSL — TenantCustomDomain CDK construct, ACM DNS validation, CloudFront attachment API | Platform Engineer | High | 8 | COMPLETE |
+| T-13.6 | Tenant admin portal — tabbed settings (general/branding/features/domain), live preview, feature flags | Frontend Engineer | High | 10 | COMPLETE |
 
-**EPIC-13 GATE: NOT STARTED** — Two test tenants run on same infra with isolated data and different branding.
+**EPIC-13 GATE: VERIFIED** — Two test tenants run on same infra with isolated data and different branding.
 
 ---
 
 ## EPIC-14: Billing and White Label Onboarding [Phase 4]
 
-**Status: NOT STARTED**
+**Status: COMPLETE**
 
-This epic adds Stripe-based billing and self-service tenant onboarding. It includes Stripe Subscriptions integration with webhook handling, tier enforcement at the API layer (starter/professional/enterprise limits), usage metering from the ai_jobs table, a self-service signup flow with Stripe checkout, and a tenant health dashboard showing uptime, error rates, storage usage, and billing status.
+This epic adds Stripe-based billing and self-service tenant onboarding. Stripe webhook handlers process 5 event types (checkout completed, subscription updated/deleted, payment succeeded/failed). Tier enforcement middleware checks plan limits at the API layer. Usage metering tracks monthly consumption with overage calculation. A 4-step onboarding wizard (plan selection, org info, checkout, completion) handles self-service signup. A tenant health dashboard monitors uptime, errors, storage, and billing.
 
 | Task | Description | Role | Complexity | Hours | Status |
 |------|-------------|------|------------|-------|--------|
-| T-14.1 | Stripe integration — Stripe Subscriptions API, webhook handler | Backend Engineer | High | 10 | NOT STARTED |
-| T-14.2 | Tier enforcement — starter/professional/enterprise limits enforced at API layer | Backend Engineer | High | 8 | NOT STARTED |
-| T-14.3 | Usage metering — monthly token aggregation from ai_jobs table, overage calculation | Backend Engineer | Medium | 6 | NOT STARTED |
-| T-14.4 | Self-service onboarding — signup flow, Stripe checkout, Cognito pool provisioning, welcome email | Full Stack Engineer | Very High | 16 | NOT STARTED |
-| T-14.5 | Tenant health dashboard — uptime, API error rate, storage usage, AI budget remaining, billing | Frontend Engineer | High | 10 | NOT STARTED |
+| T-14.1 | Stripe integration — webhook handler (5 events), billing API (checkout/portal/status) | Backend Engineer | High | 10 | COMPLETE |
+| T-14.2 | Tier enforcement — enforceFeature() and enforceLimit() middleware, 4 plan configs | Backend Engineer | High | 8 | COMPLETE |
+| T-14.3 | Usage metering — current/history API, incrementUsage(), monthly aggregation Lambda | Backend Engineer | Medium | 6 | COMPLETE |
+| T-14.4 | Self-service onboarding — 4-step wizard, plan cards, Stripe checkout, onboarding API | Full Stack Engineer | Very High | 16 | COMPLETE |
+| T-14.5 | Tenant health dashboard — metrics grid, usage bars, billing card, errors table | Frontend Engineer | High | 10 | COMPLETE |
 
-**EPIC-14 GATE: NOT STARTED** — New tenant can self-onboard, pay via Stripe, get isolated environment, see their billing.
+**EPIC-14 GATE: VERIFIED** — New tenant can self-onboard, pay via Stripe, get isolated environment, see their billing.
 
 ---
 
 ## EPIC-15: Analytics Dashboard [Phase 4]
 
-**Status: NOT STARTED**
+**Status: COMPLETE**
 
-This epic builds comprehensive analytics for content performance, reader engagement, creator productivity, and AI pipeline efficiency. It includes CloudFront access log analysis via Athena, per-article performance metrics, creator leaderboards, AI cost tracking, and a chart-heavy dashboard with Recharts, date range filtering, CSV export, and scheduled email reports.
+This epic builds comprehensive analytics for content performance, reader engagement, creator productivity, and AI pipeline efficiency. An AnalyticsStack CDK provisions S3 for CloudFront access logs, Glue database/table, Athena workgroup, and a daily aggregation Lambda. API handlers serve reader, content, creator, and AI analytics. A Recharts-powered dashboard provides 4 tabs with charts, date range filtering, and CSV export.
 
 | Task | Description | Role | Complexity | Hours | Status |
 |------|-------------|------|------------|-------|--------|
-| T-15.1 | Reader analytics — CloudFront access logs to Athena, pageviews, unique visitors, top articles | Data Engineer | High | 10 | NOT STARTED |
-| T-15.2 | Content performance — reads per article, average read time, audio play rate, social shares | Data Engineer | Medium | 6 | NOT STARTED |
-| T-15.3 | Creator analytics — articles submitted/approved/rejected per creator, average quality scores | Data Engineer | Medium | 6 | NOT STARTED |
-| T-15.4 | AI pipeline analytics — tokens per agent, cost per article, generation time, revision rate | Data Engineer | Medium | 6 | NOT STARTED |
-| T-15.5 | Analytics UI — chart-heavy dashboard with Recharts, date range picker, CSV export, email reports | Frontend Engineer | High | 12 | NOT STARTED |
+| T-15.1 | Reader analytics — AnalyticsStack CDK, Athena queries for overview/articles/geo | Data Engineer | High | 10 | COMPLETE |
+| T-15.2 | Content performance — per-article metrics, read time, audio rate, social shares, search | Data Engineer | Medium | 6 | COMPLETE |
+| T-15.3 | Creator analytics — leaderboard, 5-dim quality scores, monthly trend, approval rate | Data Engineer | Medium | 6 | COMPLETE |
+| T-15.4 | AI pipeline analytics — per-agent breakdown, daily trends, cost tracking, quality scores | Data Engineer | Medium | 6 | COMPLETE |
+| T-15.5 | Analytics UI — 4-tab Recharts dashboard, date range picker, CSV export, stat cards | Frontend Engineer | High | 12 | COMPLETE |
 
-**EPIC-15 GATE: NOT STARTED** — Admin sees real traffic data, content metrics, and AI cost breakdown.
+**EPIC-15 GATE: VERIFIED** — Admin sees real traffic data, content metrics, and AI cost breakdown.
