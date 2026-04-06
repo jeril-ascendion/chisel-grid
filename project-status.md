@@ -1,76 +1,53 @@
 # ChiselGrid — Project Status
 
 **Last Updated:** 2026-04-06
-**Current Sprint:** Sprint 3 — Phase 2B Complete
-**Active EPIC:** Phase 2B COMPLETE (EPIC-06, EPIC-08, EPIC-09, EPIC-11)
+**Current Sprint:** Phase 2 COMPLETE
+**Active EPIC:** All Phase 2 EPICs complete
 
-## Completed — Phase 2B
+## Completed — Phase 2A (branch: epic/04-ai-brain, epic/07-admin-dashboard)
 
-### EPIC-06: Reader-Facing Frontend (branch: epic/06-reader-frontend)
-- [x] T-06.1: Design system — CSS custom properties, typography scale, dark/light mode
-- [x] T-06.2: Navigation — header, mobile menu, search bar, theme toggle
-- [x] T-06.3: Article page — ISR revalidate:60, sticky ToC, audio player, related articles
-- [x] T-06.4: Content block renderer — text/heading/code/callout/diagram blocks
-- [x] T-06.5: Homepage — hero feature, category grid, recent articles, newsletter
-- [x] T-06.6: Category listing — pagination, tag filter, breadcrumbs
-- [x] T-06.7: Search page — debounced input, result highlighting
-- [x] T-06.8: Article card component
-- [x] T-06.9: RSS feed (/feed.xml)
-- [x] T-06.10: Open Graph & JSON-LD
+### EPIC-04: AI Brain — Core Agents
+- [x] T-04.1: Bedrock client — typed invoke/stream, token tracking, exponential backoff retry
+- [x] T-04.2: Writer Agent — ContentBlock[] output, Zod validation, write/revise
+- [x] T-04.3: Review Agent — 5-dimension scoring, ReviewReport schema
+- [x] T-04.4: Step Functions pipeline — Writer → Review → revision loop → SEO → Human Gate → Publish
+- [x] T-04.5: Diagram Agent — Mermaid code generation
+- [x] T-04.6: SEO Agent — meta/OG/JSON-LD/keywords/link suggestions
+- [x] T-04.7: Human review gate — SES email, callback handler
 
-### EPIC-08: Audio Generation Pipeline (branch: epic/08-audio-pipeline)
-- [x] T-08.1: ContentToSSML converter (40+ term pronunciation dict)
-- [x] T-08.2: Polly Neural TTS Lambda (async, Matthew voice, MP3 to S3)
-- [x] T-08.3: SQS job queue + EventBridge rule + DLQ (CDK audio stack)
-- [x] T-08.4: Audio player component (waveform, seek, speed control)
-- [x] T-08.5: Batch audio generation script
+### EPIC-05: Content Creation Workspace
+- [x] T-05.1: AI chat interface — split-pane layout, ChatPanel, AgentTimeline
+- [x] T-05.2: WebSocket streaming — handler, broadcastAgentEvent
+- [x] T-05.3: Block preview editor — BlockEditor, Zustand store
+- [x] T-05.4: Code block renderer — copy-to-clipboard, syntax display
+- [x] T-05.5: Diagram block renderer
+- [x] T-05.6: SEO panel — Google preview, keywords, stats
+- [x] T-05.7: Submit flow — category/tag/slug, draft save, submit
+- [x] T-05.8: File upload — presigned S3 URL API
 
-### EPIC-09: Content Migration (branch: epic/09-migration)
-- [x] T-09.1: Static site crawler (HTML/MD/MMD + frontmatter)
-- [x] T-09.2: Content converter (MD/HTML → ContentBlock[])
-- [x] T-09.3: Mermaid importer (.mmd → DiagramBlock)
-- [x] T-09.4: URL slug mapper + redirect generator
-- [x] T-09.5: Bulk DB importer (batched, idempotent)
-- [x] T-09.6: CloudFront redirect rules (generated JS function)
-- [x] T-09.7: Migration validation (concurrent URL checker)
+### EPIC-07: Admin Dashboard
+- [x] T-07.1: Dashboard shell — sidebar nav, breadcrumbs, admin layout
+- [x] T-07.2: Content queue — review table, AI scores, approve/reject
+- [x] T-07.3: Content status board — 6 status cards with counts
+- [x] T-07.4: Content edit page — BlockEditor, version history, publish
+- [x] T-07.5: User management — role change, deactivate/reactivate
+- [x] T-07.6: Category management — edit, reorder, slug management
+- [x] T-07.7: AI usage panel — agent breakdown, daily trend, creator usage
 
-### EPIC-11: SEO & Performance (branch: epic/11-seo)
-- [x] T-11.1: Lighthouse CI config (CWV thresholds)
-- [x] T-11.2: Core Web Vitals (next/image, web-vitals reporter)
-- [x] T-11.3: Sitemap generation (/sitemap.xml)
-- [x] T-11.4: Structured data (Article, BreadcrumbList, Organization, WebSite JSON-LD)
-- [x] T-11.5: CloudFront cache optimization (headers, security)
-- [x] T-11.6: Bundle analysis (analyze script, optimizeCss)
+## Completed — Phase 2B (parallel streams)
+### EPIC-06: Reader-Facing Frontend
+### EPIC-08: Audio Generation Pipeline
+### EPIC-09: Content Migration
+### EPIC-11: SEO & Performance
 
 ## Completed — Phase 1
-
-### EPIC-01: Foundation & Infrastructure Setup
-- [x] T-01.1–T-01.6: All deployed to dev (ap-southeast-1)
-
+### EPIC-01: Foundation & Infrastructure
 ### EPIC-02: Authentication & User Management
-- [x] T-02.1–T-02.5: Cognito, NextAuth, JWT authorizer, user management API
-
 ### EPIC-03: Content Model & Database Schema
-- [x] T-03.1–T-03.5: 10 tables, repositories, seed data, RLS
-
-## Deployed Resources (dev / ap-southeast-1)
-- VPC: vpc-0ae155cc9e8c03fa4 (10.0.0.0/16)
-- Aurora: chiselgrid-dev-data-auroracluster23d869c0-tcmmbxk2uwgn (PostgreSQL 15.8, available)
-- CloudFront: d1f3r42tp7znsx.cloudfront.net (EWLP3KOX3KKTV)
-- S3 Media: chiselgrid-media-dev-storage
-- S3 Frontend: chiselgrid-frontend-dev-storage
 
 ## Validation
-- `pnpm typecheck` — passes on all packages per branch
-- `cdk synth` — all stacks synthesize successfully
-- EPIC-06: 20 files, full reader frontend with mock data
-- EPIC-08: SSML converter, Polly Lambda, CDK audio stack
-- EPIC-09: 8-file migration toolkit (tools/migration)
-- EPIC-11: Lighthouse CI, structured data, cache headers
-
-## Blocked
-- Git push — GitHub HTTPS credentials not configured. See BLOCKED.md.
+- `pnpm typecheck` — 6/6 packages pass on all branches
+- All EPIC gates verified
 
 ## Next Up
-- Phase 2A: EPIC-04 (AI Brain), EPIC-05 (Creation Workspace), EPIC-07 (Admin Dashboard)
 - Phase 3: EPIC-10 (Testing), EPIC-12 (Mobile)

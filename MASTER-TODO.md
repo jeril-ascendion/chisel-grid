@@ -104,14 +104,14 @@
 ---
 
 ## EPIC-07: Admin Dashboard [PHASE 2 — Stream A]
-- [ ] T-07.1 Dashboard shell — admin layout, sidebar navigation, breadcrumbs, responsive for 1280px+
-- [ ] T-07.2 Content queue — in_review items table, AI quality scores display, preview link, approve/reject actions
-- [ ] T-07.3 Content status board — all statuses (draft/review/approved/published/deprecated) with counts
-- [ ] T-07.4 Content edit page — full block editor for existing StandardDocs, version history sidebar, publish controls
-- [ ] T-07.5 User management page — user table with role/status, inline role change, deactivate/reactivate, audit log view
-- [ ] T-07.6 Category management — create/edit/delete categories, drag-to-reorder hierarchy, slug management
-- [ ] T-07.7 AI usage panel — tokens consumed per agent, cost estimate, per-creator usage, daily trend chart
-## EPIC-07 GATE: Admin can manage all content lifecycle, users, and see AI usage metrics
+- [x] T-07.1 Dashboard shell — admin layout, sidebar navigation, breadcrumbs, responsive for 1280px+ ✅ AdminSidebar, AdminBreadcrumbs, admin layout with auth
+- [x] T-07.2 Content queue — in_review items table, AI quality scores display, preview link, approve/reject actions ✅ ContentQueue with score badges, approve/reject buttons
+- [x] T-07.3 Content status board — all statuses (draft/review/approved/published/deprecated) with counts ✅ ContentStatusBoard with 6 status cards
+- [x] T-07.4 Content edit page — full block editor for existing StandardDocs, version history sidebar, publish controls ✅ /admin/content/[id]/edit with BlockEditor, version history, publish
+- [x] T-07.5 User management page — user table with role/status, inline role change, deactivate/reactivate, audit log view ✅ UserManagement with inline role select, toggle status
+- [x] T-07.6 Category management — create/edit/delete categories, drag-to-reorder hierarchy, slug management ✅ CategoryManagement with inline edit, drag-to-reorder
+- [x] T-07.7 AI usage panel — tokens consumed per agent, cost estimate, per-creator usage, daily trend chart ✅ AIUsagePanel with agent breakdown, daily bar chart, creator usage
+## EPIC-07 GATE: Admin can manage all content lifecycle, users, and see AI usage metrics ✅
 
 ---
 
