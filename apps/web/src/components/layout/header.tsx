@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { getCategories } from '@/lib/mock-data';
 import { ThemeToggle } from './theme-toggle';

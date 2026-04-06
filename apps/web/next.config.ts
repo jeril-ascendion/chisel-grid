@@ -25,26 +25,6 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Static assets: long cache with stale-while-revalidate
-        source: '/_next/static/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        // Images: cache for 30 days
-        source: '/_next/image(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=2592000, stale-while-revalidate=86400',
-          },
-        ],
-      },
-      {
         // RSS and sitemap: cache for 1 hour
         source: '/(feed.xml|sitemap.xml)',
         headers: [
