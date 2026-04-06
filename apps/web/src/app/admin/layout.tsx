@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/sidebar';
 import { AdminBreadcrumbs } from '@/components/admin/breadcrumbs';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminLayout({
   children,
 }: {

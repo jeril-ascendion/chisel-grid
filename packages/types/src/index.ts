@@ -1,3 +1,3 @@
-export * from './content.js';
-export * from './user.js';
-export * from './tenant.js';
+export * from './content';
+export * from './user';
+export * from './tenant';

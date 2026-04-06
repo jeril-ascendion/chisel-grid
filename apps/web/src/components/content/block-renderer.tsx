@@ -1,3 +1,5 @@
+'use client';
+
 import type { ContentBlock } from '@chiselgrid/types';
 import { cn } from '@/lib/utils';
 

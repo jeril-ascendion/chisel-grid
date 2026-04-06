@@ -8,6 +8,7 @@ import { AuthStack } from '../lib/stacks/auth.stack';
 import { StorageStack } from '../lib/stacks/storage.stack';
 import { ApiStack } from '../lib/stacks/api.stack';
 import { AiStack } from '../lib/stacks/ai.stack';
+import { AudioStack } from '../lib/stacks/audio.stack';
 
 const app = new App();
 const { env, config } = getConfig(app);
@@ -22,9 +23,13 @@ const authStack = new AuthStack(app, `${prefix}-Auth`, config, envProps);
 const storageStack = new StorageStack(app, `${prefix}-Storage`, config, envProps);
 const apiStack = new ApiStack(app, `${prefix}-Api`, networkStack, dataStack, config, envProps);
 const aiStack = new AiStack(app, `${prefix}-Ai`, config, envProps);
+const audioStack = new AudioStack(app, `${prefix}-Audio`, config, {
+  mediaBucket: storageStack.outputs.mediaBucket,
+  cloudFrontDomain: storageStack.outputs.mediaDistributionDomain,
+}, envProps);
 
 // Suppress unused variable warnings for stacks not yet fully wired
-void storageStack; void apiStack; void aiStack;
+void apiStack; void aiStack; void audioStack;
 
 // Global tags on all stacks
 Tags.of(app).add('Project', 'ChiselGrid');

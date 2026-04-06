@@ -10,17 +10,22 @@
     "db:generate": "turbo --filter=@chiselgrid/db db:generate",
     "db:migrate": "turbo --filter=@chiselgrid/db db:migrate",
     "db:seed": "turbo --filter=@chiselgrid/db db:seed",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "cdk:diff": "cd infra && cdk diff",
     "cdk:deploy": "cd infra && cdk deploy --all --require-approval never",
     "cdk:synth": "cd infra && cdk synth"
   },
   "devDependencies": {
-    "turbo": "^2.0.0",
-    "typescript": "^5.4.0",
-    "prettier": "^3.2.0",
+    "@playwright/test": "^1.59.1",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.57.0"
+    "@vitest/coverage-v8": "^1.6.1",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.1"
   },
   "engines": {
     "node": ">=20.0.0",

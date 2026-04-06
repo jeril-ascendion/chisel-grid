@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
+import { NewsletterForm } from '@/components/common/newsletter-form';
 import { formatDate } from '@/lib/utils';
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -107,20 +108,7 @@ export default function HomePage() {
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Get the latest engineering insights delivered to your inbox. No spam, just quality technical content.
           </p>
-          <form className="flex gap-2 max-w-sm mx-auto">
-            <input
-              type="email"
-              placeholder="you@example.com"
-              className="flex-1 min-w-0 px-4 py-2.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-              aria-label="Email for newsletter"
-            />
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
-            >
-              Subscribe
-            </button>
-          </form>
+          <NewsletterForm className="flex gap-2 max-w-sm mx-auto" />
         </div>
       </section>
     </div>

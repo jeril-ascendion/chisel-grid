@@ -1,0 +1,45 @@
+{
+  "name": "@chiselgrid/mobile",
+  "version": "0.0.1",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@chiselgrid/types": "workspace:*",
+    "expo": "~52.0.0",
+    "expo-auth-session": "~6.0.0",
+    "expo-av": "~15.0.0",
+    "expo-constants": "~17.0.0",
+    "expo-crypto": "~14.0.0",
+    "expo-device": "~7.0.0",
+    "expo-linking": "~7.0.0",
+    "expo-notifications": "~0.29.0",
+    "expo-router": "~4.0.0",
+    "expo-secure-store": "~14.0.0",
+    "expo-splash-screen": "~0.29.0",
+    "expo-sqlite": "~15.0.0",
+    "expo-status-bar": "~2.0.0",
+    "expo-web-browser": "~14.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-safe-area-context": "~5.4.0",
+    "react-native-screens": "~4.10.0",
+    "react-native-web": "~0.19.13",
+    "zod": "^3.23.0",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.0",
+    "@types/react": "~18.3.0",
+    "typescript": "~5.3.0"
+  }
+}

@@ -37,15 +37,17 @@ export class AudioStack extends Stack {
     Tags.of(this).add('Project', 'ChiselGrid');
     Tags.of(this).add('ManagedBy', 'CDK');
 
+    const envName = id.split('-')[1]?.toLowerCase() ?? 'dev';
+
     // ── Dead Letter Queue ──────────────────────────────────
     const dlq = new sqs.Queue(this, 'AudioDLQ', {
-      queueName: `chiselgrid-${config.stage}-audio-dlq`,
+      queueName: `chiselgrid-${envName}-audio-dlq`,
       retentionPeriod: Duration.days(14),
     });
 
     // ── Audio Job Queue ────────────────────────────────────
     const audioQueue = new sqs.Queue(this, 'AudioQueue', {
-      queueName: `chiselgrid-${config.stage}-audio-jobs`,
+      queueName: `chiselgrid-${envName}-audio-jobs`,
       visibilityTimeout: Duration.minutes(10), // Must be > Lambda timeout
       retentionPeriod: Duration.days(4),
       deadLetterQueue: {
@@ -56,7 +58,7 @@ export class AudioStack extends Stack {
 
     // ── EventBridge Rule: content.published → SQS ──────────
     const eventBus = new events.EventBus(this, 'ChiselGridEventBus', {
-      eventBusName: `chiselgrid-${config.stage}-events`,
+      eventBusName: `chiselgrid-${envName}-events`,
     });
 
     new events.Rule(this, 'ContentPublishedRule', {
@@ -71,7 +73,7 @@ export class AudioStack extends Stack {
 
     // ── Audio Generation Lambda ────────────────────────────
     const audioLambda = new lambda.Function(this, 'AudioGenerateFn', {
-      functionName: `chiselgrid-${config.stage}-audio-generate`,
+      functionName: `chiselgrid-${envName}-audio-generate`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handlers/audio-generate.handler',
       code: lambda.Code.fromAsset('../apps/api/dist'),
@@ -117,7 +119,7 @@ export class AudioStack extends Stack {
 
     // ── Batch Audio Lambda ─────────────────────────────────
     const batchLambda = new lambda.Function(this, 'AudioBatchFn', {
-      functionName: `chiselgrid-${config.stage}-audio-batch`,
+      functionName: `chiselgrid-${envName}-audio-batch`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handlers/audio-batch.handler',
       code: lambda.Code.fromAsset('../apps/api/dist'),

@@ -37,8 +37,14 @@ jobs:
       - name: Lint
         run: pnpm lint || true  # Non-blocking in early dev
 
-      - name: Test
+      - name: Unit & Integration Tests
         run: pnpm test
+
+      - name: Test Coverage (AI & DB)
+        run: |
+          pnpm --filter @chiselgrid/ai test:coverage || true
+          pnpm --filter @chiselgrid/db test:coverage || true
+        continue-on-error: true
 
   cdk-diff:
     name: CDK Diff

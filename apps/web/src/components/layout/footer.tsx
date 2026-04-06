@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getCategories } from '@/lib/mock-data';
+import { NewsletterForm } from '@/components/common/newsletter-form';
 
 export function Footer() {
   const categories = getCategories();
@@ -64,23 +65,7 @@ export function Footer() {
             <p className="text-sm text-muted-foreground mb-3">
               Get the latest engineering articles delivered to your inbox.
             </p>
-            <form
-              onSubmit={(e) => e.preventDefault()}
-              className="flex gap-2"
-            >
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                aria-label="Email for newsletter"
-              />
-              <button
-                type="submit"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-              >
-                Subscribe
-              </button>
-            </form>
+            <NewsletterForm />
           </div>
         </div>
 
