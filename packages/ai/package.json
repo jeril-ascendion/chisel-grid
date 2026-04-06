@@ -3,15 +3,22 @@
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "typecheck": "tsc --noEmit" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.600.0",
+    "@aws-sdk/client-ses": "^3.1024.0",
+    "@aws-sdk/client-sfn": "^3.1024.0",
     "@chiselgrid/types": "workspace:*",
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
-    "@chiselgrid/config": "workspace:*"
+    "@chiselgrid/config": "workspace:*",
+    "@types/node": "^25.5.2",
+    "typescript": "^5.4.0"
   }
 }
