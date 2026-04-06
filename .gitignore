@@ -146,3 +146,5 @@ cdk.out/
 
 # macOS
 .DS_Store
+apps/mobile/.expo/
+.claude/ralph-loop.local.md
