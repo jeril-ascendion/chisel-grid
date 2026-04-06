@@ -1,4 +1,5 @@
 import { signIn } from '@/auth';
+import { CredentialsForm } from './credentials-form';
 
 export default function LoginPage({
   searchParams,
@@ -55,6 +56,8 @@ async function LoginForm({
           Sign in with Ascendion SSO
         </button>
       </form>
+
+      <CredentialsForm callbackUrl={callbackUrl} />
     </div>
   );
 }
