@@ -116,12 +116,12 @@
 ---
 
 ## EPIC-08: Audio Generation Pipeline [PHASE 2 — Stream C]
-- [ ] T-08.1 ContentToSSML converter — text blocks to SSML, heading emphasis, code blocks skipped, technical term pronunciation dictionary
-- [ ] T-08.2 Polly Neural TTS Lambda — async Polly job, Neural voice (Matthew), MP3 to S3, audioUrl saved to content record
-- [ ] T-08.3 SQS audio job queue — EventBridge rule content.published → SQS → Lambda, DLQ for failures, retry policy
-- [ ] T-08.4 Audio player component — HTML5 audio, custom UI (play/pause/seek/speed), sticky bottom bar, waveform display
-- [ ] T-08.5 Audio generation for migrated content — batch script triggers audio generation for all imported articles
-## EPIC-08 GATE: Every published article has Polly MP3 in S3, audio player renders and plays on article page
+- [x] T-08.1 ContentToSSML converter — text blocks to SSML, heading emphasis, code blocks skipped, technical term pronunciation dictionary ✅ packages/ai/src/audio/ssml-converter.ts with 40+ term pronunciation dict
+- [x] T-08.2 Polly Neural TTS Lambda — async Polly job, Neural voice (Matthew), MP3 to S3, audioUrl saved to content record ✅ apps/api/src/handlers/audio-generate.ts, async Polly + S3
+- [x] T-08.3 SQS audio job queue — EventBridge rule content.published → SQS → Lambda, DLQ for failures, retry policy ✅ infra/lib/stacks/audio.stack.ts — SQS + DLQ + EventBridge rule + Lambda
+- [x] T-08.4 Audio player component — HTML5 audio, custom UI (play/pause/seek/speed), sticky bottom bar, waveform display ✅ apps/web/src/components/audio/audio-player.tsx with waveform canvas
+- [x] T-08.5 Audio generation for migrated content — batch script triggers audio generation for all imported articles ✅ apps/api/src/handlers/audio-batch.ts — SQS batch sender
+## EPIC-08 GATE: Every published article has Polly MP3 in S3, audio player renders and plays on article page ✅
 
 ---
 

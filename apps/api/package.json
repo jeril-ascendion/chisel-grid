@@ -9,7 +9,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.1024.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.600.0",
+    "@aws-sdk/client-polly": "^3.600.0",
+    "@aws-sdk/client-s3": "^3.1024.0",
+    "@aws-sdk/client-sqs": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.1024.0",
+    "@chiselgrid/ai": "workspace:*",
     "@chiselgrid/db": "workspace:*",
     "@chiselgrid/types": "workspace:*",
     "jsonwebtoken": "^9.0.3",
