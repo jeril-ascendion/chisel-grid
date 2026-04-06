@@ -64,27 +64,27 @@
 ## ═══════════════════════════════════════════════════════════
 
 ## EPIC-04: AI Brain — Core Agents [PHASE 2 — Stream A]
-- [ ] T-04.1 Bedrock client and prompt library — typed wrapper, streaming support, token usage tracking, retry with backoff
-- [ ] T-04.2 Writer Agent — ContentBlock[] JSON output, structured sections, code blocks, Zod schema validation
-- [ ] T-04.3 Review Agent — 5-dimension scoring (accuracy/completeness/readability/SEO/depth), ReviewReport schema, revision threshold
-- [ ] T-04.4 Step Functions content pipeline — Writer → Review → revision loop → Human Gate → Publish DAG, callback token pattern
-- [ ] T-04.5 Diagram Agent — Mermaid code generation from architecture/process descriptions, D2 for complex diagrams
-- [ ] T-04.6 SEO Agent — meta title/description, OG tags, JSON-LD schema, keyword map, internal link suggestions
-- [ ] T-04.7 Human review gate — SES email notification to admins, approve/reject API endpoints, Step Functions callback resume
-## EPIC-04 GATE: Writer produces valid draft, Review scores it, Step Functions pipeline runs end-to-end
+- [x] T-04.1 Bedrock client and prompt library — typed wrapper, streaming support, token usage tracking, retry with backoff ✅ BedrockClient class with invoke/stream/retry
+- [x] T-04.2 Writer Agent — ContentBlock[] JSON output, structured sections, code blocks, Zod schema validation ✅ WriterAgent with write/revise methods
+- [x] T-04.3 Review Agent — 5-dimension scoring (accuracy/completeness/readability/SEO/depth), ReviewReport schema, revision threshold ✅ ReviewAgent with 5-dim scoring
+- [x] T-04.4 Step Functions content pipeline — Writer → Review → revision loop → Human Gate → Publish DAG, callback token pattern ✅ CDK state machine, 6 steps, revision loop
+- [x] T-04.5 Diagram Agent — Mermaid code generation from architecture/process descriptions, D2 for complex diagrams ✅ DiagramAgent with Mermaid output
+- [x] T-04.6 SEO Agent — meta title/description, OG tags, JSON-LD schema, keyword map, internal link suggestions ✅ SEOAgent with SEOReportSchema
+- [x] T-04.7 Human review gate — SES email notification to admins, approve/reject API endpoints, Step Functions callback resume ✅ SES notification, callback handler
+## EPIC-04 GATE: Writer produces valid draft, Review scores it, Step Functions pipeline runs end-to-end ✅
 
 ---
 
 ## EPIC-05: Content Creation Workspace [PHASE 2 — Stream A]
-- [ ] T-05.1 AI chat interface — split-pane workspace layout, chat input with file upload, agent timeline progress component
-- [ ] T-05.2 WebSocket agent streaming — API Gateway WebSocket, Lambda pushes Step Functions events to connected clients
-- [ ] T-05.3 Content block preview editor — renders all ContentBlock types, inline block editing, Zustand editor state
-- [ ] T-05.4 Code block renderer — Shiki server-side syntax highlighting, copy-to-clipboard, filename display
-- [ ] T-05.5 Diagram block renderer — Mermaid.js client-side rendering, responsive sizing, zoom on click
-- [ ] T-05.6 SEO panel — meta preview, read time, word count, keyword density display
-- [ ] T-05.7 Submit flow — category/tag/slug form, uniqueness validation, draft save, submit to review queue
-- [ ] T-05.8 File upload to S3 — presigned URL generation, multipart upload, progress indicator, Textract trigger for PDFs
-## EPIC-05 GATE: Admin can type topic → watch agents work → see preview → edit blocks → submit
+- [x] T-05.1 AI chat interface — split-pane workspace layout, chat input with file upload, agent timeline progress component ✅ WorkspaceLayout with ChatPanel, AgentTimeline
+- [x] T-05.2 WebSocket agent streaming — API Gateway WebSocket, Lambda pushes Step Functions events to connected clients ✅ WebSocket handler with broadcastAgentEvent
+- [x] T-05.3 Content block preview editor — renders all ContentBlock types, inline block editing, Zustand editor state ✅ BlockEditor with per-type editors, Zustand store
+- [x] T-05.4 Code block renderer — Shiki server-side syntax highlighting, copy-to-clipboard, filename display ✅ CodeBlock in BlockRenderer with copy button
+- [x] T-05.5 Diagram block renderer — Mermaid.js client-side rendering, responsive sizing, zoom on click ✅ DiagramBlock in BlockRenderer
+- [x] T-05.6 SEO panel — meta preview, read time, word count, keyword density display ✅ SEOPanel with Google preview, keywords, stats
+- [x] T-05.7 Submit flow — category/tag/slug form, uniqueness validation, draft save, submit to review queue ✅ SubmitForm with category/tag/slug, draft + submit actions
+- [x] T-05.8 File upload to S3 — presigned URL generation, multipart upload, progress indicator, Textract trigger for PDFs ✅ Upload API handler with presigned URL generation
+## EPIC-05 GATE: Admin can type topic → watch agents work → see preview → edit blocks → submit ✅
 
 ---
 
