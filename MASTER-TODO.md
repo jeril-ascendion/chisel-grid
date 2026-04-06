@@ -64,14 +64,14 @@
 ## ═══════════════════════════════════════════════════════════
 
 ## EPIC-04: AI Brain — Core Agents [PHASE 2 — Stream A]
-- [ ] T-04.1 Bedrock client and prompt library — typed wrapper, streaming support, token usage tracking, retry with backoff
-- [ ] T-04.2 Writer Agent — ContentBlock[] JSON output, structured sections, code blocks, Zod schema validation
-- [ ] T-04.3 Review Agent — 5-dimension scoring (accuracy/completeness/readability/SEO/depth), ReviewReport schema, revision threshold
-- [ ] T-04.4 Step Functions content pipeline — Writer → Review → revision loop → Human Gate → Publish DAG, callback token pattern
-- [ ] T-04.5 Diagram Agent — Mermaid code generation from architecture/process descriptions, D2 for complex diagrams
-- [ ] T-04.6 SEO Agent — meta title/description, OG tags, JSON-LD schema, keyword map, internal link suggestions
-- [ ] T-04.7 Human review gate — SES email notification to admins, approve/reject API endpoints, Step Functions callback resume
-## EPIC-04 GATE: Writer produces valid draft, Review scores it, Step Functions pipeline runs end-to-end
+- [x] T-04.1 Bedrock client and prompt library — typed wrapper, streaming support, token usage tracking, retry with backoff ✅ BedrockClient class with invoke/stream/retry, typecheck passes
+- [x] T-04.2 Writer Agent — ContentBlock[] JSON output, structured sections, code blocks, Zod schema validation ✅ WriterAgent with write/revise methods, Zod-validated output
+- [x] T-04.3 Review Agent — 5-dimension scoring (accuracy/completeness/readability/SEO/depth), ReviewReport schema, revision threshold ✅ ReviewAgent with 5-dim scoring, ReviewReportSchema
+- [x] T-04.4 Step Functions content pipeline — Writer → Review → revision loop → Human Gate → Publish DAG, callback token pattern ✅ CDK state machine with 6 steps, revision loop choice, waitForTaskToken
+- [x] T-04.5 Diagram Agent — Mermaid code generation from architecture/process descriptions, D2 for complex diagrams ✅ DiagramAgent with Mermaid output parsing
+- [x] T-04.6 SEO Agent — meta title/description, OG tags, JSON-LD schema, keyword map, internal link suggestions ✅ SEOAgent with SEOReportSchema validation
+- [x] T-04.7 Human review gate — SES email notification to admins, approve/reject API endpoints, Step Functions callback resume ✅ SES notification, SendTaskSuccess/Failure callback
+## EPIC-04 GATE: Writer produces valid draft, Review scores it, Step Functions pipeline runs end-to-end ✅
 
 ---
 
@@ -89,17 +89,17 @@
 ---
 
 ## EPIC-06: Reader-Facing Frontend [PHASE 2 — Stream B]
-- [ ] T-06.1 ChiselGrid design system — CSS custom properties, Tailwind theme extension, typography scale, dark/light mode
-- [ ] T-06.2 Navigation component — top nav with category links, mobile hamburger, search bar, dark mode toggle
-- [ ] T-06.3 Article page — ISR revalidate:60, hero image, author/date/readtime, sticky ToC, audio player, related articles
-- [ ] T-06.4 Content block renderer (reader) — all block types, responsive images, accessible code blocks
-- [ ] T-06.5 Homepage — hero feature article, category grid with icons, 6 recent articles, newsletter signup
-- [ ] T-06.6 Category listing page — paginated article cards (12/page), tag filter, breadcrumb navigation
-- [ ] T-06.7 Search page — full-text search via PostgreSQL tsvector, debounced input, result highlighting
-- [ ] T-06.8 Article card component — hero image, title, excerpt, author avatar, date, read time, tags
-- [ ] T-06.9 RSS feed — /feed.xml route, valid RSS 2.0, all published articles, CloudFront cache headers
-- [ ] T-06.10 Open Graph & JSON-LD — per-article OG tags, Article schema, BreadcrumbList, correct canonical URLs
-## EPIC-06 GATE: Reader can browse homepage, navigate categories, read full articles, search content
+- [x] T-06.1 ChiselGrid design system — CSS custom properties, Tailwind theme extension, typography scale, dark/light mode ✅ globals.css design tokens, prose-chisel typography
+- [x] T-06.2 Navigation component — top nav with category links, mobile hamburger, search bar, dark mode toggle ✅ Header, MobileMenu, ThemeToggle components
+- [x] T-06.3 Article page — ISR revalidate:60, hero image, author/date/readtime, sticky ToC, audio player, related articles ✅ /articles/[slug] with ISR, ToC, audio, related
+- [x] T-06.4 Content block renderer (reader) — all block types, responsive images, accessible code blocks ✅ BlockRenderer handles text/heading/code/callout/diagram
+- [x] T-06.5 Homepage — hero feature article, category grid with icons, 6 recent articles, newsletter signup ✅ Hero, category grid, recent articles, newsletter CTA
+- [x] T-06.6 Category listing page — paginated article cards (12/page), tag filter, breadcrumb navigation ✅ /category/[slug] with pagination, tag filter, breadcrumbs
+- [x] T-06.7 Search page — full-text search via PostgreSQL tsvector, debounced input, result highlighting ✅ /search with debounced input, result highlighting
+- [x] T-06.8 Article card component — hero image, title, excerpt, author avatar, date, read time, tags ✅ ArticleCard component with all fields
+- [x] T-06.9 RSS feed — /feed.xml route, valid RSS 2.0, all published articles, CloudFront cache headers ✅ /feed.xml route with RSS 2.0, cache headers
+- [x] T-06.10 Open Graph & JSON-LD — per-article OG tags, Article schema, BreadcrumbList, correct canonical URLs ✅ generateMetadata, JSON-LD Article + BreadcrumbList
+## EPIC-06 GATE: Reader can browse homepage, navigate categories, read full articles, search content ✅
 
 ---
 
