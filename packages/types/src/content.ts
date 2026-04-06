@@ -1,0 +1,68 @@
+import { z } from 'zod';
+
+export const ContentTypeEnum = z.enum(['standard_doc', 'blog_post']);
+export type ContentType = z.infer<typeof ContentTypeEnum>;
+
+export const ContentStatusEnum = z.enum([
+  'draft', 'submitted', 'in_review', 'approved', 'published', 'deprecated', 'rejected',
+]);
+export type ContentStatus = z.infer<typeof ContentStatusEnum>;
+
+export const TextBlockSchema = z.object({
+  type: z.literal('text'),
+  content: z.string(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export const HeadingBlockSchema = z.object({
+  type: z.literal('heading'),
+  level: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  content: z.string(),
+});
+
+export const CodeBlockSchema = z.object({
+  type: z.literal('code'),
+  language: z.string(),
+  content: z.string(),
+  filename: z.string().optional(),
+});
+
+export const CalloutBlockSchema = z.object({
+  type: z.literal('callout'),
+  variant: z.enum(['info', 'warning', 'danger', 'success']),
+  content: z.string(),
+});
+
+export const DiagramBlockSchema = z.object({
+  type: z.literal('diagram'),
+  diagramType: z.enum(['mermaid', 'd2', 'svg']),
+  content: z.string(),
+  caption: z.string().optional(),
+});
+
+export const ContentBlockSchema = z.discriminatedUnion('type', [
+  TextBlockSchema,
+  HeadingBlockSchema,
+  CodeBlockSchema,
+  CalloutBlockSchema,
+  DiagramBlockSchema,
+]);
+
+export type ContentBlock = z.infer<typeof ContentBlockSchema>;
+
+export const ContentMetadataSchema = z.object({
+  title: z.string(),
+  slug: z.string(),
+  description: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  audioUrl: z.string().url().optional(),
+  heroImageUrl: z.string().url().optional(),
+  readTimeMinutes: z.number().optional(),
+  seo: z.object({
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
+    ogImageUrl: z.string().optional(),
+  }).optional(),
+});
+
+export type ContentMetadata = z.infer<typeof ContentMetadataSchema>;

@@ -1,0 +1,11 @@
+{
+  "name": "@chiselgrid/config",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./typescript": "./typescript/base.json",
+    "./typescript/nextjs.json": "./typescript/nextjs.json",
+    "./eslint": "./eslint/index.js",
+    "./prettier": "./prettier/index.js"
+  }
+}

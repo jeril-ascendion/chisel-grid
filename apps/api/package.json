@@ -1,0 +1,25 @@
+{
+  "name": "@chiselgrid/api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/local-server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.600.0",
+    "@chiselgrid/db": "workspace:*",
+    "@chiselgrid/types": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@chiselgrid/config": "workspace:*",
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^20",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

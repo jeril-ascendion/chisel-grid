@@ -1,0 +1,88 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, Typecheck & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint || true  # Non-blocking in early dev
+
+      - name: Test
+        run: pnpm test
+
+  cdk-diff:
+    name: CDK Diff
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_CDK_ROLE_ARN }}
+          aws-region: ap-southeast-1
+
+      - name: Install CDK dependencies
+        run: cd infra && npm ci
+
+      - name: CDK Diff
+        id: cdk_diff
+        run: |
+          cd infra
+          DIFF_OUTPUT=$(npx cdk diff --context env=staging --all 2>&1 || true)
+          echo "diff_output<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF_OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post CDK Diff as PR Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const diff = `${{ steps.cdk_diff.outputs.diff_output }}`;
+            const body = `## CDK Diff (staging)\n\`\`\`\n${diff.substring(0, 60000)}\n\`\`\``;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });

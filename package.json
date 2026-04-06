@@ -1,0 +1,30 @@
+{
+  "name": "chiselgrid",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "db:generate": "turbo --filter=@chiselgrid/db db:generate",
+    "db:migrate": "turbo --filter=@chiselgrid/db db:migrate",
+    "db:seed": "turbo --filter=@chiselgrid/db db:seed",
+    "cdk:diff": "cd infra && cdk diff",
+    "cdk:deploy": "cd infra && cdk deploy --all --require-approval never",
+    "cdk:synth": "cd infra && cdk synth"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0",
+    "prettier": "^3.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
