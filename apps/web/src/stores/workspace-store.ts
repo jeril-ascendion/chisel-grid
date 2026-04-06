@@ -27,18 +27,15 @@ export interface SEOData {
 }
 
 export interface WorkspaceState {
-  // Chat
   messages: ChatMessage[];
   isGenerating: boolean;
   addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   setGenerating: (v: boolean) => void;
 
-  // Agent timeline
   agentEvents: AgentEvent[];
   addAgentEvent: (evt: Omit<AgentEvent, 'id' | 'timestamp'>) => void;
   clearAgentEvents: () => void;
 
-  // Content blocks (editor)
   blocks: ContentBlock[];
   setBlocks: (blocks: ContentBlock[]) => void;
   updateBlock: (index: number, block: ContentBlock) => void;
@@ -46,11 +43,9 @@ export interface WorkspaceState {
   moveBlock: (from: number, to: number) => void;
   insertBlock: (index: number, block: ContentBlock) => void;
 
-  // SEO
   seo: SEOData | null;
   setSeo: (seo: SEOData | null) => void;
 
-  // Submit form
   title: string;
   slug: string;
   categoryId: string;
@@ -60,13 +55,11 @@ export interface WorkspaceState {
   setCategoryId: (v: string) => void;
   setTags: (v: string[]) => void;
 
-  // Pipeline state
   pipelineStatus: 'idle' | 'writing' | 'reviewing' | 'revising' | 'seo' | 'human_review' | 'approved' | 'rejected' | 'published';
   setPipelineStatus: (v: WorkspaceState['pipelineStatus']) => void;
   contentId: string | null;
   setContentId: (v: string | null) => void;
 
-  // Reset
   reset: () => void;
 }
 
@@ -94,28 +87,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     set((s) => ({
       messages: [...s.messages, { ...msg, id: `msg-${++messageCounter}`, timestamp: Date.now() }],
     })),
-
   setGenerating: (v) => set({ isGenerating: v }),
 
   addAgentEvent: (evt) =>
     set((s) => ({
       agentEvents: [...s.agentEvents, { ...evt, id: `evt-${++eventCounter}`, timestamp: Date.now() }],
     })),
-
   clearAgentEvents: () => set({ agentEvents: [] }),
 
   setBlocks: (blocks) => set({ blocks }),
-
   updateBlock: (index, block) =>
-    set((s) => ({
-      blocks: s.blocks.map((b, i) => (i === index ? block : b)),
-    })),
-
+    set((s) => ({ blocks: s.blocks.map((b, i) => (i === index ? block : b)) })),
   removeBlock: (index) =>
-    set((s) => ({
-      blocks: s.blocks.filter((_, i) => i !== index),
-    })),
-
+    set((s) => ({ blocks: s.blocks.filter((_, i) => i !== index) })),
   moveBlock: (from, to) =>
     set((s) => {
       const blocks = [...s.blocks];
@@ -123,7 +107,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       if (moved) blocks.splice(to, 0, moved);
       return { blocks };
     }),
-
   insertBlock: (index, block) =>
     set((s) => {
       const blocks = [...s.blocks];
@@ -134,11 +117,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   setSeo: (seo) => set({ seo }),
 
   setTitle: (title) =>
-    set({
-      title,
-      slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-    }),
-
+    set({ title, slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }),
   setSlug: (slug) => set({ slug }),
   setCategoryId: (categoryId) => set({ categoryId }),
   setTags: (tags) => set({ tags }),

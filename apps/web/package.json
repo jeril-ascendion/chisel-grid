@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "analyze": "ANALYZE=true next build",
+    "lighthouse": "lhci autorun"
   },
   "dependencies": {
     "@chiselgrid/types": "workspace:*",
@@ -15,7 +17,6 @@
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "zod": "^3.23.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
