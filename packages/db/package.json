@@ -8,6 +8,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrations/run.ts",
     "db:seed": "tsx src/seeds/run.ts",
+    "db:rls": "tsx src/rls/apply-rls.ts",
+    "db:rls:verify": "tsx src/rls/verify-rls.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

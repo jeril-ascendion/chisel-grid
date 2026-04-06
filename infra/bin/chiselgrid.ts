@@ -23,8 +23,8 @@ const storageStack = new StorageStack(app, `${prefix}-Storage`, config, envProps
 const apiStack = new ApiStack(app, `${prefix}-Api`, networkStack, dataStack, config, envProps);
 const aiStack = new AiStack(app, `${prefix}-Ai`, config, envProps);
 
-// Suppress unused variable warnings for stacks not yet wired
-void authStack; void storageStack; void apiStack; void aiStack;
+// Suppress unused variable warnings for stacks not yet fully wired
+void storageStack; void apiStack; void aiStack;
 
 // Global tags on all stacks
 Tags.of(app).add('Project', 'ChiselGrid');

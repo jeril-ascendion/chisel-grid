@@ -1,2 +1,6 @@
-// Schema exports — tables will be added in EPIC-03
-export {};
+export * from './tenants';
+export * from './users';
+export * from './content';
+export * from './media';
+export * from './ai-jobs';
+export * from './audit-log';

@@ -12,11 +12,14 @@
     "@aws-sdk/client-cognito-identity-provider": "^3.600.0",
     "@chiselgrid/db": "workspace:*",
     "@chiselgrid/types": "workspace:*",
+    "jsonwebtoken": "^9.0.3",
+    "jwks-rsa": "^4.0.1",
     "zod": "^3.23.0"
   },
   "devDependencies": {
     "@chiselgrid/config": "workspace:*",
-    "@types/aws-lambda": "^8.10.0",
+    "@types/aws-lambda": "^8.10.161",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "tsx": "^4.11.0",
     "typescript": "^5.4.0",

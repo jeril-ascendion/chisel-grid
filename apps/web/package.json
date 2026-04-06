@@ -10,21 +10,23 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@chiselgrid/types": "workspace:*",
+    "@chiselgrid/ui": "workspace:*",
     "next": "16.2.2",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "@chiselgrid/types": "workspace:*",
-    "@chiselgrid/ui": "workspace:*"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@auth/core": "^0.34.3",
+    "@chiselgrid/config": "workspace:*",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "next-auth": "5.0.0-beta.30",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "@chiselgrid/config": "workspace:*"
+    "typescript": "^5"
   }
 }
