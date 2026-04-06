@@ -1,5 +1,3 @@
-'use client';
-
 import type { ContentBlock } from '@chiselgrid/types';
 import { cn } from '@/lib/utils';
 
@@ -21,7 +19,7 @@ function HeadingBlock({ block }: { block: Extract<ContentBlock, { type: 'heading
   const Tag = `h${block.level}` as 'h1' | 'h2' | 'h3' | 'h4';
 
   return (
-    <Tag id={id} className="scroll-mt-20 font-semibold">
+    <Tag id={id} className="prose-chisel group scroll-mt-20">
       <a href={`#${id}`} className="no-underline hover:underline">
         {block.content}
       </a>
@@ -31,15 +29,15 @@ function HeadingBlock({ block }: { block: Extract<ContentBlock, { type: 'heading
 
 function CodeBlock({ block }: { block: Extract<ContentBlock, { type: 'code' }> }) {
   return (
-    <div className="group relative my-6 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-[#1e1e2e]">
+    <div className="relative my-6 rounded-lg overflow-hidden border border-border bg-[#1e1e2e]">
       {block.filename && (
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700 bg-[#181825] text-xs text-[#cdd6f4]">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 bg-[#181825] text-xs text-[#cdd6f4]">
           <span className="font-mono">{block.filename}</span>
           <span className="text-[#6c7086]">{block.language}</span>
         </div>
       )}
       {!block.filename && block.language && (
-        <div className="absolute top-2 right-12 text-xs text-[#6c7086] font-mono">
+        <div className="absolute top-2 right-3 text-xs text-[#6c7086] font-mono">
           {block.language}
         </div>
       )}
@@ -53,13 +51,13 @@ function CodeBlock({ block }: { block: Extract<ContentBlock, { type: 'code' }> }
 
 function CalloutBlock({ block }: { block: Extract<ContentBlock, { type: 'callout' }> }) {
   const styles: Record<string, { border: string; bg: string; icon: string }> = {
-    info: { border: 'border-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', icon: 'i' },
-    warning: { border: 'border-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/20', icon: '!' },
-    danger: { border: 'border-red-400', bg: 'bg-red-50 dark:bg-red-900/20', icon: '!!' },
-    success: { border: 'border-green-400', bg: 'bg-green-50 dark:bg-green-900/20', icon: '\u2713' },
+    info: { border: 'border-info', bg: 'bg-info/10', icon: 'i' },
+    warning: { border: 'border-warning', bg: 'bg-warning/10', icon: '!' },
+    danger: { border: 'border-destructive', bg: 'bg-destructive/10', icon: '!!' },
+    success: { border: 'border-success', bg: 'bg-success/10', icon: '\u2713' },
   };
 
-  const s = styles[block.variant] ?? styles['info']!;
+  const s = styles[block.variant] ?? styles.info;
 
   return (
     <aside
@@ -83,13 +81,13 @@ function CalloutBlock({ block }: { block: Extract<ContentBlock, { type: 'callout
 function DiagramBlock({ block }: { block: Extract<ContentBlock, { type: 'diagram' }> }) {
   return (
     <figure className="my-6">
-      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 overflow-x-auto">
-        <pre className="text-sm font-mono text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+      <div className="rounded-lg border border-border bg-muted p-4 overflow-x-auto">
+        <pre className="text-sm font-mono text-muted-foreground whitespace-pre-wrap">
           {block.content}
         </pre>
       </div>
       {block.caption && (
-        <figcaption className="mt-2 text-center text-sm text-gray-500 italic">
+        <figcaption className="mt-2 text-center text-sm text-muted-foreground italic">
           {block.caption}
         </figcaption>
       )}
@@ -116,7 +114,7 @@ function CopyButton({ code }: { code: string }) {
 
 export function BlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
   return (
-    <div className="space-y-4">
+    <div className="prose-chisel">
       {blocks.map((block, i) => {
         switch (block.type) {
           case 'text':
@@ -141,6 +139,7 @@ export function BlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
   );
 }
 
+/** Minimal markdown-lite: handles **bold**, *italic*, `code`, [links](url), and line breaks */
 function renderMarkdownLite(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -149,6 +148,6 @@ function renderMarkdownLite(text: string): string {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-blue-600 hover:underline">$1</a>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>')
     .replace(/\n/g, '<br />');
 }

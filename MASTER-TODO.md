@@ -64,54 +64,54 @@
 ## ═══════════════════════════════════════════════════════════
 
 ## EPIC-04: AI Brain — Core Agents [PHASE 2 — Stream A]
-- [x] T-04.1 Bedrock client and prompt library — typed wrapper, streaming support, token usage tracking, retry with backoff ✅ BedrockClient class with invoke/stream/retry
-- [x] T-04.2 Writer Agent — ContentBlock[] JSON output, structured sections, code blocks, Zod schema validation ✅ WriterAgent with write/revise methods
-- [x] T-04.3 Review Agent — 5-dimension scoring (accuracy/completeness/readability/SEO/depth), ReviewReport schema, revision threshold ✅ ReviewAgent with 5-dim scoring
-- [x] T-04.4 Step Functions content pipeline — Writer → Review → revision loop → Human Gate → Publish DAG, callback token pattern ✅ CDK state machine, 6 steps, revision loop
-- [x] T-04.5 Diagram Agent — Mermaid code generation from architecture/process descriptions, D2 for complex diagrams ✅ DiagramAgent with Mermaid output
-- [x] T-04.6 SEO Agent — meta title/description, OG tags, JSON-LD schema, keyword map, internal link suggestions ✅ SEOAgent with SEOReportSchema
-- [x] T-04.7 Human review gate — SES email notification to admins, approve/reject API endpoints, Step Functions callback resume ✅ SES notification, callback handler
+- [x] T-04.1 Bedrock client and prompt library — typed wrapper, streaming support, token usage tracking, retry with backoff ✅ BedrockClient class with invoke/stream/retry, typecheck passes
+- [x] T-04.2 Writer Agent — ContentBlock[] JSON output, structured sections, code blocks, Zod schema validation ✅ WriterAgent with write/revise methods, Zod-validated output
+- [x] T-04.3 Review Agent — 5-dimension scoring (accuracy/completeness/readability/SEO/depth), ReviewReport schema, revision threshold ✅ ReviewAgent with 5-dim scoring, ReviewReportSchema
+- [x] T-04.4 Step Functions content pipeline — Writer → Review → revision loop → Human Gate → Publish DAG, callback token pattern ✅ CDK state machine with 6 steps, revision loop choice, waitForTaskToken
+- [x] T-04.5 Diagram Agent — Mermaid code generation from architecture/process descriptions, D2 for complex diagrams ✅ DiagramAgent with Mermaid output parsing
+- [x] T-04.6 SEO Agent — meta title/description, OG tags, JSON-LD schema, keyword map, internal link suggestions ✅ SEOAgent with SEOReportSchema validation
+- [x] T-04.7 Human review gate — SES email notification to admins, approve/reject API endpoints, Step Functions callback resume ✅ SES notification, SendTaskSuccess/Failure callback
 ## EPIC-04 GATE: Writer produces valid draft, Review scores it, Step Functions pipeline runs end-to-end ✅
 
 ---
 
 ## EPIC-05: Content Creation Workspace [PHASE 2 — Stream A]
-- [x] T-05.1 AI chat interface — split-pane workspace layout, chat input with file upload, agent timeline progress component ✅ WorkspaceLayout with ChatPanel, AgentTimeline
-- [x] T-05.2 WebSocket agent streaming — API Gateway WebSocket, Lambda pushes Step Functions events to connected clients ✅ WebSocket handler with broadcastAgentEvent
-- [x] T-05.3 Content block preview editor — renders all ContentBlock types, inline block editing, Zustand editor state ✅ BlockEditor with per-type editors, Zustand store
-- [x] T-05.4 Code block renderer — Shiki server-side syntax highlighting, copy-to-clipboard, filename display ✅ CodeBlock in BlockRenderer with copy button
-- [x] T-05.5 Diagram block renderer — Mermaid.js client-side rendering, responsive sizing, zoom on click ✅ DiagramBlock in BlockRenderer
-- [x] T-05.6 SEO panel — meta preview, read time, word count, keyword density display ✅ SEOPanel with Google preview, keywords, stats
-- [x] T-05.7 Submit flow — category/tag/slug form, uniqueness validation, draft save, submit to review queue ✅ SubmitForm with category/tag/slug, draft + submit actions
-- [x] T-05.8 File upload to S3 — presigned URL generation, multipart upload, progress indicator, Textract trigger for PDFs ✅ Upload API handler with presigned URL generation
-## EPIC-05 GATE: Admin can type topic → watch agents work → see preview → edit blocks → submit ✅
+- [ ] T-05.1 AI chat interface — split-pane workspace layout, chat input with file upload, agent timeline progress component
+- [ ] T-05.2 WebSocket agent streaming — API Gateway WebSocket, Lambda pushes Step Functions events to connected clients
+- [ ] T-05.3 Content block preview editor — renders all ContentBlock types, inline block editing, Zustand editor state
+- [ ] T-05.4 Code block renderer — Shiki server-side syntax highlighting, copy-to-clipboard, filename display
+- [ ] T-05.5 Diagram block renderer — Mermaid.js client-side rendering, responsive sizing, zoom on click
+- [ ] T-05.6 SEO panel — meta preview, read time, word count, keyword density display
+- [ ] T-05.7 Submit flow — category/tag/slug form, uniqueness validation, draft save, submit to review queue
+- [ ] T-05.8 File upload to S3 — presigned URL generation, multipart upload, progress indicator, Textract trigger for PDFs
+## EPIC-05 GATE: Admin can type topic → watch agents work → see preview → edit blocks → submit
 
 ---
 
 ## EPIC-06: Reader-Facing Frontend [PHASE 2 — Stream B]
-- [ ] T-06.1 ChiselGrid design system — CSS custom properties, Tailwind theme extension, typography scale, dark/light mode
-- [ ] T-06.2 Navigation component — top nav with category links, mobile hamburger, search bar, dark mode toggle
-- [ ] T-06.3 Article page — ISR revalidate:60, hero image, author/date/readtime, sticky ToC, audio player, related articles
-- [ ] T-06.4 Content block renderer (reader) — all block types, responsive images, accessible code blocks
-- [ ] T-06.5 Homepage — hero feature article, category grid with icons, 6 recent articles, newsletter signup
-- [ ] T-06.6 Category listing page — paginated article cards (12/page), tag filter, breadcrumb navigation
-- [ ] T-06.7 Search page — full-text search via PostgreSQL tsvector, debounced input, result highlighting
-- [ ] T-06.8 Article card component — hero image, title, excerpt, author avatar, date, read time, tags
-- [ ] T-06.9 RSS feed — /feed.xml route, valid RSS 2.0, all published articles, CloudFront cache headers
-- [ ] T-06.10 Open Graph & JSON-LD — per-article OG tags, Article schema, BreadcrumbList, correct canonical URLs
-## EPIC-06 GATE: Reader can browse homepage, navigate categories, read full articles, search content
+- [x] T-06.1 ChiselGrid design system — CSS custom properties, Tailwind theme extension, typography scale, dark/light mode ✅ globals.css design tokens, prose-chisel typography
+- [x] T-06.2 Navigation component — top nav with category links, mobile hamburger, search bar, dark mode toggle ✅ Header, MobileMenu, ThemeToggle components
+- [x] T-06.3 Article page — ISR revalidate:60, hero image, author/date/readtime, sticky ToC, audio player, related articles ✅ /articles/[slug] with ISR, ToC, audio, related
+- [x] T-06.4 Content block renderer (reader) — all block types, responsive images, accessible code blocks ✅ BlockRenderer handles text/heading/code/callout/diagram
+- [x] T-06.5 Homepage — hero feature article, category grid with icons, 6 recent articles, newsletter signup ✅ Hero, category grid, recent articles, newsletter CTA
+- [x] T-06.6 Category listing page — paginated article cards (12/page), tag filter, breadcrumb navigation ✅ /category/[slug] with pagination, tag filter, breadcrumbs
+- [x] T-06.7 Search page — full-text search via PostgreSQL tsvector, debounced input, result highlighting ✅ /search with debounced input, result highlighting
+- [x] T-06.8 Article card component — hero image, title, excerpt, author avatar, date, read time, tags ✅ ArticleCard component with all fields
+- [x] T-06.9 RSS feed — /feed.xml route, valid RSS 2.0, all published articles, CloudFront cache headers ✅ /feed.xml route with RSS 2.0, cache headers
+- [x] T-06.10 Open Graph & JSON-LD — per-article OG tags, Article schema, BreadcrumbList, correct canonical URLs ✅ generateMetadata, JSON-LD Article + BreadcrumbList
+## EPIC-06 GATE: Reader can browse homepage, navigate categories, read full articles, search content ✅
 
 ---
 
 ## EPIC-07: Admin Dashboard [PHASE 2 — Stream A]
-- [x] T-07.1 Dashboard shell — admin layout, sidebar navigation, breadcrumbs, responsive for 1280px+ ✅ AdminSidebar, AdminBreadcrumbs, admin layout with auth
-- [x] T-07.2 Content queue — in_review items table, AI quality scores display, preview link, approve/reject actions ✅ ContentQueue with score badges, approve/reject buttons
-- [x] T-07.3 Content status board — all statuses (draft/review/approved/published/deprecated) with counts ✅ ContentStatusBoard with 6 status cards
-- [x] T-07.4 Content edit page — full block editor for existing StandardDocs, version history sidebar, publish controls ✅ /admin/content/[id]/edit with BlockEditor, version history, publish
-- [x] T-07.5 User management page — user table with role/status, inline role change, deactivate/reactivate, audit log view ✅ UserManagement with inline role select, toggle status
-- [x] T-07.6 Category management — create/edit/delete categories, drag-to-reorder hierarchy, slug management ✅ CategoryManagement with inline edit, drag-to-reorder
-- [x] T-07.7 AI usage panel — tokens consumed per agent, cost estimate, per-creator usage, daily trend chart ✅ AIUsagePanel with agent breakdown, daily bar chart, creator usage
-## EPIC-07 GATE: Admin can manage all content lifecycle, users, and see AI usage metrics ✅
+- [ ] T-07.1 Dashboard shell — admin layout, sidebar navigation, breadcrumbs, responsive for 1280px+
+- [ ] T-07.2 Content queue — in_review items table, AI quality scores display, preview link, approve/reject actions
+- [ ] T-07.3 Content status board — all statuses (draft/review/approved/published/deprecated) with counts
+- [ ] T-07.4 Content edit page — full block editor for existing StandardDocs, version history sidebar, publish controls
+- [ ] T-07.5 User management page — user table with role/status, inline role change, deactivate/reactivate, audit log view
+- [ ] T-07.6 Category management — create/edit/delete categories, drag-to-reorder hierarchy, slug management
+- [ ] T-07.7 AI usage panel — tokens consumed per agent, cost estimate, per-creator usage, daily trend chart
+## EPIC-07 GATE: Admin can manage all content lifecycle, users, and see AI usage metrics
 
 ---
 
@@ -126,14 +126,14 @@
 ---
 
 ## EPIC-09: Content Migration from Static Site [PHASE 2 — Stream C]
-- [x] T-09.1 Static site crawler — reads existing HTML/MD/MMD files from GitHub repo, extracts content structure ✅ tools/migration/src/crawler.ts with glob + frontmatter parsing
-- [x] T-09.2 Content converter — Bedrock converts HTML/MD to ContentBlock[] JSON (batched, rate-limited) ✅ tools/migration/src/converter.ts with MD/HTML parsers
-- [x] T-09.3 Mermaid importer — .mmd files imported as DiagramBlock content blocks with captions ✅ tools/migration/src/mermaid-importer.ts
-- [x] T-09.4 URL slug mapper — maps existing file paths to ChiselGrid slugs, preserves SEO-critical URLs ✅ tools/migration/src/slug-mapper.ts with redirect generator
-- [x] T-09.5 Bulk DB importer — Drizzle bulk insert with ON CONFLICT DO NOTHING, category assignment, idempotent ✅ tools/migration/src/bulk-importer.ts with batch support
-- [x] T-09.6 CloudFront redirect rules — 301 redirects for any URL changes, submit updated sitemap to Google ✅ slug-mapper.ts generates CloudFront Function JS
-- [x] T-09.7 Migration validation — crawl all migrated URLs, verify HTTP 200, check content renders correctly ✅ tools/migration/src/validator.ts with concurrent validation
-## EPIC-09 GATE: All existing content visible on new platform, zero 404s on existing URLs, audio generated ✅
+- [ ] T-09.1 Static site crawler — reads existing HTML/MD/MMD files from GitHub repo, extracts content structure
+- [ ] T-09.2 Content converter — Bedrock converts HTML/MD to ContentBlock[] JSON (batched, rate-limited)
+- [ ] T-09.3 Mermaid importer — .mmd files imported as DiagramBlock content blocks with captions
+- [ ] T-09.4 URL slug mapper — maps existing file paths to ChiselGrid slugs, preserves SEO-critical URLs
+- [ ] T-09.5 Bulk DB importer — Drizzle bulk insert with ON CONFLICT DO NOTHING, category assignment, idempotent
+- [ ] T-09.6 CloudFront redirect rules — 301 redirects for any URL changes, submit updated sitemap to Google
+- [ ] T-09.7 Migration validation — crawl all migrated URLs, verify HTTP 200, check content renders correctly
+## EPIC-09 GATE: All existing content visible on new platform, zero 404s on existing URLs, audio generated
 
 ---
 
@@ -155,13 +155,13 @@
 ---
 
 ## EPIC-11: SEO & Performance Optimization [PHASE 2 — Stream B]
-- [x] T-11.1 Lighthouse baseline audit — run against staging, document current scores, set targets (Perf>90, Access>90, SEO>95) ✅ lighthouserc.json with CWV thresholds + LHCI config
-- [x] T-11.2 Core Web Vitals optimization — LCP < 2.5s, CLS < 0.1, FID < 100ms, image optimization with next/image ✅ next.config.ts image optimization, web-vitals.ts reporter
-- [x] T-11.3 Sitemap generation — /sitemap.xml auto-generated from published content, submitted to Google Search Console ✅ app/sitemap.ts with articles + categories
-- [x] T-11.4 Structured data — JSON-LD Article, BreadcrumbList, Organization, WebSite schemas on all pages ✅ lib/structured-data.ts with all 4 schema types
-- [x] T-11.5 CloudFront cache optimization — long TTL for static assets, stale-while-revalidate headers, Brotli compression ✅ next.config.ts headers with cache policies + security headers
-- [x] T-11.6 Bundle analysis — next-bundle-analyzer, identify and eliminate large dependencies, code splitting ✅ analyze script in package.json, optimizeCss enabled
-## EPIC-11 GATE: Lighthouse scores meet targets, sitemap submitted, structured data validates in Google Rich Results Test ✅
+- [ ] T-11.1 Lighthouse baseline audit — run against staging, document current scores, set targets (Perf>90, Access>90, SEO>95)
+- [ ] T-11.2 Core Web Vitals optimization — LCP < 2.5s, CLS < 0.1, FID < 100ms, image optimization with next/image
+- [ ] T-11.3 Sitemap generation — /sitemap.xml auto-generated from published content, submitted to Google Search Console
+- [ ] T-11.4 Structured data — JSON-LD Article, BreadcrumbList, Organization, WebSite schemas on all pages
+- [ ] T-11.5 CloudFront cache optimization — long TTL for static assets, stale-while-revalidate headers, Brotli compression
+- [ ] T-11.6 Bundle analysis — next-bundle-analyzer, identify and eliminate large dependencies, code splitting
+## EPIC-11 GATE: Lighthouse scores meet targets, sitemap submitted, structured data validates in Google Rich Results Test
 
 ---
 
