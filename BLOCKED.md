@@ -26,3 +26,11 @@ If something becomes blocked during development:
 2. Add a new row to the **Currently Blocked** table in this file with: what is blocked, what is needed, who can unblock it, and exact resumption steps
 3. Skip to the next unblocked task and continue
 4. Update the In Progress section of project-status.md
+
+## Known Bugs — Fix Before Production
+
+| Bug | Description | Priority |
+|---|---|---|
+| Login error=Configuration | NextAuth CredentialsProvider config issue, redirects to /login?error=Configuration | High |
+| /articles 404 | Articles listing route not defined | Medium |
+| localhost:3001 not browser accessible | Expected — API is Lambda handler not HTTP server | Low/Expected |
