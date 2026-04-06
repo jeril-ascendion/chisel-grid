@@ -59,6 +59,43 @@ RULES:
 - Suggest 3-5 internal link opportunities based on topic relevance
 - JSON-LD should follow Article schema (schema.org/Article)
 - OG tags optimized for LinkedIn and Twitter sharing`,
+  structureTranscript: `You are a transcript structuring specialist. Convert raw voice transcripts into organized, clean outlines.
+
+RULES:
+- Output ONLY valid JSON matching the StructuredTranscript schema
+- Identify natural topic shifts and create sections
+- Remove remaining filler words, false starts, and self-corrections
+- Extract 2-5 key points per section
+- Suggest a concise, descriptive article title
+- List 3-8 detected topics/themes
+- Preserve the speaker's core message and intent
+- Do NOT add information that isn't in the transcript
+- Clean up grammar while preserving technical accuracy`,
+
+  gapDetection: `You are a knowledge gap analyst for technical content.
+
+Your job is to identify unresolved references, vague mentions, and knowledge gaps in transcripts that need clarification before publishing.
+
+RULES:
+- Output ONLY valid JSON matching the GapDetection schema
+- Flag references like "the standard pattern we use", "that thing from last week", "the usual approach"
+- Flag mentions of specific tools, frameworks, or processes without sufficient context
+- Suggest specific questions or lookups to resolve each gap
+- Rate severity: info (nice to resolve), warning (should resolve), critical (must resolve)
+- Count resolved vs unresolved references`,
+
+  fidelityCheck: `You are a fidelity analyst comparing a source transcript against an AI-generated article.
+
+Your job is to verify that the article faithfully represents the transcript content.
+
+RULES:
+- Output ONLY valid JSON matching the FidelityReport schema
+- Extract all factual claims from the transcript
+- Check each fact against the article — is it present and accurately represented?
+- Detect any content in the article NOT present in the transcript
+- Rate additions: acceptable (helpful context), minor (editorial embellishment), major (fabrication)
+- Compute fidelityScore: 100 = perfect match, 0 = completely unfaithful
+- Focus on technical accuracy and factual preservation`,
 } as const;
 
 export interface PromptTemplate {
@@ -191,6 +228,118 @@ Respond with a JSON object:
     { "anchor": "<suggested anchor text>", "targetTopic": "<related topic>" }
   ]
 }`;
+    },
+  },
+  structureTranscript: {
+    system: SYSTEM_PROMPTS.structureTranscript,
+    buildUserMessage: (vars: Record<string, string>) => {
+      const transcript = vars['transcript'] ?? '';
+      const languageCode = vars['languageCode'] ?? 'en-US';
+      const durationSeconds = vars['durationSeconds'] ?? '0';
+
+      return `Structure this voice transcript into an organized outline.
+
+Language: ${languageCode}
+Recording duration: ${durationSeconds} seconds
+
+Transcript:
+${transcript}
+
+Respond with a JSON object:
+{
+  "cleanedText": "<full cleaned transcript text>",
+  "sections": [
+    {
+      "title": "<section title>",
+      "content": "<cleaned section content>",
+      "startTimeApprox": <approximate start time in seconds>,
+      "endTimeApprox": <approximate end time in seconds>,
+      "keyPoints": ["point1", "point2"]
+    }
+  ],
+  "suggestedTitle": "<suggested article title>",
+  "detectedTopics": ["topic1", "topic2"],
+  "fillerWordsRemoved": <count of additional fillers removed>,
+  "languageCode": "${languageCode}"
+}`;
+    },
+  },
+
+  checkFidelity: {
+    system: SYSTEM_PROMPTS.fidelityCheck,
+    buildUserMessage: (vars: Record<string, string>) => {
+      const transcript = vars['transcript'] ?? '';
+      const article = vars['article'] ?? '';
+
+      return `Compare this source transcript against the AI-generated article.
+
+SOURCE TRANSCRIPT:
+${transcript}
+
+AI-GENERATED ARTICLE:
+${article}
+
+Respond with a JSON object:
+{
+  "fidelityScore": <0-100>,
+  "factsPreserved": [
+    { "fact": "<fact from transcript>", "preserved": <boolean>, "articleLocation": "<where in article>" }
+  ],
+  "additionsDetected": [
+    { "addition": "<content not in transcript>", "severity": "acceptable|minor|major", "reason": "<why>" }
+  ],
+  "summary": "<2-3 sentence fidelity assessment>"
+}`;
+    },
+  },
+
+  detectGaps: {
+    system: SYSTEM_PROMPTS.gapDetection,
+    buildUserMessage: (vars: Record<string, string>) => {
+      const transcript = vars['transcript'] ?? '';
+      const knowledgeContext = vars['knowledgeContext'] ?? '';
+
+      return `Analyze this transcript for knowledge gaps and unresolved references.
+
+TRANSCRIPT:
+${transcript}
+
+${knowledgeContext ? `KNOWLEDGE BASE CONTEXT:\n${knowledgeContext}` : ''}
+
+Respond with a JSON object:
+{
+  "gaps": [
+    {
+      "reference": "<the vague or unresolved reference>",
+      "context": "<surrounding context in transcript>",
+      "suggestion": "<how to resolve this gap>",
+      "severity": "info|warning|critical"
+    }
+  ],
+  "unresolvedCount": <number>,
+  "resolvedCount": <number>
+}`;
+    },
+  },
+
+  writeFromTranscript: {
+    system: SYSTEM_PROMPTS.writer,
+    buildUserMessage: (vars: Record<string, string>) => {
+      const structuredTranscript = vars['structuredTranscript'] ?? '';
+      const languageCode = vars['languageCode'] ?? 'en-US';
+      const contentType = vars['contentType'] ?? 'standard_doc';
+
+      return `Write a technical article based on this structured voice transcript.
+
+Content type: ${contentType}
+Language: ${languageCode}
+
+Structured transcript:
+${structuredTranscript}
+
+IMPORTANT: Stay faithful to the content in the transcript. Do not add facts or claims not present in the original recording. You may improve structure, grammar, and clarity.
+
+Respond with a JSON array of ContentBlock objects.`;
     },
   },
 } as const satisfies Record<string, PromptTemplate>;

@@ -84,6 +84,64 @@ export const PipelineStateSchema = z.object({
 });
 export type PipelineState = z.infer<typeof PipelineStateSchema>;
 
+// --- Structure Agent schemas (T-17.1) ---
+
+export const TranscriptSectionOutputSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  startTimeApprox: z.number().optional(),
+  endTimeApprox: z.number().optional(),
+  keyPoints: z.array(z.string()),
+});
+
+export const StructuredTranscriptOutputSchema = z.object({
+  cleanedText: z.string(),
+  sections: z.array(TranscriptSectionOutputSchema).min(1),
+  suggestedTitle: z.string(),
+  detectedTopics: z.array(z.string()),
+  fillerWordsRemoved: z.number(),
+  languageCode: z.string(),
+});
+export type StructuredTranscriptOutput = z.infer<typeof StructuredTranscriptOutputSchema>;
+
+// --- Fidelity Report schemas (T-17.2) ---
+
+export const FidelityFactSchema = z.object({
+  fact: z.string(),
+  preserved: z.boolean(),
+  articleLocation: z.string().optional(),
+});
+
+export const FidelityAdditionSchema = z.object({
+  addition: z.string(),
+  severity: z.enum(['acceptable', 'minor', 'major']),
+  reason: z.string(),
+});
+
+export const FidelityReportSchema = z.object({
+  fidelityScore: z.number().min(0).max(100),
+  factsPreserved: z.array(FidelityFactSchema),
+  additionsDetected: z.array(FidelityAdditionSchema),
+  summary: z.string(),
+});
+export type FidelityReport = z.infer<typeof FidelityReportSchema>;
+
+// --- Gap Detection schemas (T-17.3) ---
+
+export const GapItemSchema = z.object({
+  reference: z.string(),
+  context: z.string(),
+  suggestion: z.string(),
+  severity: z.enum(['info', 'warning', 'critical']),
+});
+
+export const GapDetectionResultSchema = z.object({
+  gaps: z.array(GapItemSchema),
+  unresolvedCount: z.number(),
+  resolvedCount: z.number(),
+});
+export type GapDetectionResult = z.infer<typeof GapDetectionResultSchema>;
+
 // --- Human Review schemas ---
 
 export const HumanReviewDecisionSchema = z.object({

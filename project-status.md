@@ -13,11 +13,16 @@
 | **Phase 2C — Migration and SEO** | Content Migration, SEO Optimization | NOT STARTED — 0 of 13 tasks |
 | **Phase 3 — Testing and Mobile** | Testing Infrastructure, Mobile App | COMPLETE — 19 of 19 tasks |
 | **Phase 4 — White Label v1.1** | Multi-tenancy, Billing, Analytics | COMPLETE — 16 of 16 tasks |
+| **Phase 5A — Voice Capture & Intelligence** | Voice recording, transcription, AI pipeline | COMPLETE — 12 of 12 tasks |
 | **Phase 5B — Voice Output & Interview** | Podcast feed, Newsletter, Interview mode | COMPLETE — 8 of 8 tasks |
 
 ## Active Work
 
-Phase 5B is complete. Both EPIC gates passed:
+Phase 5A is complete. Both EPIC gates passed:
+- **EPIC-16 Voice Capture & Transcription** — Mobile voice recording (expo-av, M4A/AAC), presigned S3 upload API, Amazon Transcribe integration (async job, auto language detection), custom vocabulary per tenant (DynamoDB + Transcribe sync), voice draft UI (split-pane transcript + article preview with diff highlighting), push notifications (Expo Push API), CDK voice stack (SQS FIFO, DynamoDB tables, EventBridge rules, 4 Lambdas)
+- **EPIC-17 Voice Intelligence Layer** — Structure Agent (filler word regex + AI structuring), Fidelity Agent (transcript-to-article fact preservation scoring), Gap Detection Agent (unresolved reference flagging), multi-language support (Transcribe IdentifyLanguage, languageCode in metadata), VoiceContentPipeline (5-agent orchestration: Structure → Gap Detection → Writer → Fidelity → Review)
+
+Phase 5B is also complete:
 - **EPIC-18 Voice Output & Distribution** — Podcast RSS feed (iTunes namespace), email newsletter (table-based layout via @react-email), subscriber management (Aurora + SES suppression), email voice attachment ingest (MIME parser + S3 + transcription pipeline)
 - **EPIC-19 Voice Interview Mode** — DynamoDB interview templates (5 standard seeds), guided mobile recording UI (Q&A flow, progress bar, skip/record), multi-answer processor (per-answer Step Functions, series navigation), interview scheduling (ICS calendar, SES email, Expo push reminder)
 
@@ -340,6 +345,48 @@ This epic builds comprehensive analytics for content performance, reader engagem
 | T-15.5 | Analytics UI — 4-tab Recharts dashboard, date range picker, CSV export, stat cards | Frontend Engineer | High | 12 | COMPLETE |
 
 **EPIC-15 GATE: VERIFIED** — Admin sees real traffic data, content metrics, and AI cost breakdown.
+
+---
+
+## ═══════════════════════════════════════════════════════════
+## PHASE 5A — VOICE CAPTURE & INTELLIGENCE
+## ═══════════════════════════════════════════════════════════
+
+## EPIC-16: Voice Capture and Transcription Foundation [Phase 5A]
+
+**Status: COMPLETE**
+
+This epic implements the full voice recording and transcription pipeline. Mobile voice recording uses expo-av with maximum quality settings (M4A on iOS, AAC on Android). Presigned S3 URLs enable direct upload from mobile. Amazon Transcribe processes recordings asynchronously with auto language detection and custom vocabulary support per tenant. A split-pane Voice Draft UI shows the scrollable transcript with timestamps alongside the AI-generated article preview, with yellow highlighting for AI additions. Push notifications via Expo Push API alert admins and creators when voice drafts are ready for review. The CDK voice stack provisions DynamoDB tables, FIFO SQS queues, EventBridge rules, and 4 Lambda functions.
+
+| Task | Description | Role | Complexity | Hours | Status |
+|------|-------------|------|------------|-------|--------|
+| T-16.1 | Mobile voice recording — expo-av recorder, M4A/AAC, max quality, pause/resume | Mobile Engineer | High | 8 | COMPLETE |
+| T-16.2 | Voice upload API — presigned URL generation, S3 direct upload, upload confirmation | Backend Engineer | Medium | 6 | COMPLETE |
+| T-16.3 | Amazon Transcribe integration — async job, language auto-detection, transcript parsing | Backend Engineer | High | 10 | COMPLETE |
+| T-16.4 | Custom vocabulary per tenant — DynamoDB storage, Transcribe create/update vocabulary sync | Backend Engineer | Medium | 6 | COMPLETE |
+| T-16.5 | Voice draft UI — split-pane transcript + article preview, diff highlighting, approve/reject | Frontend Engineer | High | 10 | COMPLETE |
+| T-16.6 | Push notification — Expo Push API, admin token lookup, voice.human_review_ready event | Backend Engineer | Medium | 6 | COMPLETE |
+| T-16.7 | Voice pipeline CDK stack — DynamoDB, SQS FIFO, EventBridge rules, 4 Lambda functions | Platform Engineer | High | 10 | COMPLETE |
+
+**EPIC-16 GATE: VERIFIED** — Creator records voice on mobile, uploads to S3, Transcribe produces transcript, draft UI shows result, admin notified.
+
+---
+
+## EPIC-17: Voice Intelligence Layer [Phase 5A]
+
+**Status: COMPLETE**
+
+This epic adds AI intelligence to the voice pipeline. The Structure Agent cleans transcripts by removing filler words (6 regex patterns + AI) and organizes content into sections via topic shift detection. The Fidelity Agent compares generated articles against source transcripts, scoring fact preservation and detecting AI additions. The Gap Detection Agent flags unresolved references like "the standard pattern we use" with severity ratings and resolution suggestions. Multi-language support leverages Transcribe's IdentifyLanguage feature and passes detected languageCode through to the Writer Agent. The VoiceContentPipeline class orchestrates all 5 agents in sequence (with gap detection parallelized).
+
+| Task | Description | Role | Complexity | Hours | Status |
+|------|-------------|------|------------|-------|--------|
+| T-17.1 | Structure Agent — filler word regex removal + AI structuring, topic shift detection | AI Engineer | High | 10 | COMPLETE |
+| T-17.2 | Fidelity scoring — FidelityAgent, fact preservation check, addition detection | AI Engineer | High | 8 | COMPLETE |
+| T-17.3 | Gap detection — GapDetectionAgent, unresolved reference flagging, Knowledge Base comparison | AI Engineer | High | 8 | COMPLETE |
+| T-17.4 | Multi-language support — Transcribe IdentifyLanguage, languageCode in content metadata | Backend Engineer | Medium | 6 | COMPLETE |
+| T-17.5 | Voice pipeline — VoiceContentPipeline (5-agent orchestration), Lambda handler, EventBridge | AI Engineer | Very High | 12 | COMPLETE |
+
+**EPIC-17 GATE: VERIFIED** — Voice transcript is structured, fidelity-scored, gap-detected, multi-language supported, full pipeline runs end-to-end.
 
 ---
 

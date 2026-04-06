@@ -58,6 +58,8 @@ export const ContentMetadataSchema = z.object({
   audioUrl: z.string().url().optional(),
   heroImageUrl: z.string().url().optional(),
   readTimeMinutes: z.number().optional(),
+  languageCode: z.string().optional(),
+  voiceId: z.string().uuid().optional(),
   seo: z.object({
     metaTitle: z.string().optional(),
     metaDescription: z.string().optional(),
