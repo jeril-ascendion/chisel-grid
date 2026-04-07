@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { getCognitoSession } from '@/lib/cognito-client';
 
 interface ArticleAdminBarProps {
@@ -12,23 +11,19 @@ interface ArticleAdminBarProps {
 
 export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
   const { data: session, status } = useSession();
-  const [isAdmin, setIsAdmin] = useState(false);
-
   const pathname = usePathname();
 
-  useEffect(() => {
-    // Check NextAuth session
-    if (status === 'authenticated' && session?.user) {
-      setIsAdmin(session.user.role === 'admin');
-      return;
-    }
-    // Fallback: check client-side Cognito session (static site)
-    const cs = getCognitoSession();
-    if (cs?.role === 'admin') setIsAdmin(true);
-  }, [session, status]);
+  // Never show on admin pages
+  if (pathname?.startsWith('/admin')) return null;
+  // Wait for session to load
+  if (status === 'loading') return null;
+
+  // Check NextAuth session first, then client-side Cognito session
+  const isAdmin =
+    (status === 'authenticated' && session?.user?.role === 'admin') ||
+    getCognitoSession()?.role === 'admin';
 
   if (!isAdmin) return null;
-  if (pathname.startsWith('/admin')) return null;
 
   return (
     <div
@@ -59,7 +54,7 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
           boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
           fontFamily: 'IBM Plex Sans, sans-serif',
           border: '1px solid rgba(255,255,255,0.15)',
-          whiteSpace: 'nowrap',
+          whiteSpace: 'nowrap' as const,
         }}
       >
         &larr; Admin Dashboard
@@ -80,7 +75,7 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
             textDecoration: 'none',
             boxShadow: '0 2px 8px rgba(201,99,48,0.4)',
             fontFamily: 'IBM Plex Sans, sans-serif',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'nowrap' as const,
           }}
         >
           ✏ Edit Article
