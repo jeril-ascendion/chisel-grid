@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
-import { NewsletterForm } from '@/components/common/newsletter-form';
 import { HeroCta } from '@/components/common/hero-cta';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { formatDate } from '@/lib/utils';
@@ -99,16 +98,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section className="py-8 pb-16">
-        <div className="rounded-2xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-border p-8 sm:p-12 text-center">
-          <h2 className="text-2xl font-bold mb-2">Stay in the loop</h2>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Get the latest engineering insights delivered to your inbox. No spam, just quality technical content.
-          </p>
-          <NewsletterForm className="flex gap-2 max-w-sm mx-auto" />
-        </div>
-      </section>
     </div>
   );
 }

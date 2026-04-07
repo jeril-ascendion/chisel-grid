@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface ArticleAdminBarProps {
@@ -12,14 +13,16 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
   const { data: session, status } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const pathname = usePathname();
+
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      console.log('[AdminBar] session role:', session.user.role);
       setIsAdmin(session.user.role === 'admin');
     }
   }, [session, status]);
 
   if (!isAdmin) return null;
+  if (pathname.startsWith('/admin')) return null;
 
   return (
     <div

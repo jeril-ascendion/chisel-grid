@@ -400,6 +400,10 @@ export function getArticleBySlug(slug: string): Article | null {
   return MOCK_ARTICLES.find((a) => a.slug === slug) ?? null;
 }
 
+export function getArticleById(contentId: string): Article | null {
+  return MOCK_ARTICLES.find((a) => a.contentId === contentId) ?? null;
+}
+
 export function getCategories(): Category[] {
   return MOCK_CATEGORIES;
 }

@@ -23,14 +23,5 @@ export function HeroCta() {
     );
   }
 
-  return (
-    <div className="mt-6 text-center">
-      <Link
-        href="/login"
-        className="inline-flex items-center rounded-md bg-gray-800 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-900 transition-colors"
-      >
-        Sign In
-      </Link>
-    </div>
-  );
+  return null;
 }

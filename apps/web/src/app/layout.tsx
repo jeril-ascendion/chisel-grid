@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { ThemeScript } from '@/components/layout/theme-script';
 import { Providers } from '@/components/providers';
+import { GlobalAdminBar } from '@/components/layout/GlobalAdminBar';
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from '@/lib/utils';
 import './globals.css';
 
@@ -60,6 +61,7 @@ export default function RootLayout({
             Skip to main content
           </a>
           <Header />
+          <GlobalAdminBar />
           <main id="main-content" className="flex-1">
             {children}
           </main>
