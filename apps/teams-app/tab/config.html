@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configure ChiselGrid Tab</title>
+  <script src="https://res.cdn.office.net/teams-js/2.31.1/js/MicrosoftTeams.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 24px; }
+    h2 { margin-bottom: 16px; color: #242424; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; }
+    select, input { width: 100%; padding: 8px 12px; border: 1px solid #d1d1d1; border-radius: 4px; font-size: 14px; margin-bottom: 16px; }
+    .description { color: #616161; font-size: 13px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <h2>ChiselGrid Tab Settings</h2>
+  <p class="description">Choose which view to display in this channel's tab.</p>
+
+  <label for="view">Tab View</label>
+  <select id="view">
+    <option value="knowledge">Knowledge Base</option>
+    <option value="category">Category Feed</option>
+    <option value="search">Search</option>
+    <option value="analytics">Analytics Dashboard</option>
+  </select>
+
+  <label for="category">Category Filter (optional)</label>
+  <input id="category" type="text" placeholder="e.g., cloud-engineering, devops" />
+
+  <script>
+    (async function() {
+      await microsoftTeams.app.initialize();
+
+      microsoftTeams.pages.config.registerOnSaveHandler((saveEvent) => {
+        const view = document.getElementById('view').value;
+        const category = document.getElementById('category').value;
+
+        const baseUrl = 'https://chiselgrid.com/teams/tab';
+        const contentUrl = baseUrl + '?view=' + view + (category ? '&category=' + category : '');
+
+        microsoftTeams.pages.config.setConfig({
+          suggestedDisplayName: 'ChiselGrid',
+          entityId: 'chiselgrid-' + view + (category ? '-' + category : ''),
+          contentUrl: contentUrl,
+          websiteUrl: 'https://chiselgrid.com',
+        });
+
+        saveEvent.notifySuccess();
+      });
+
+      microsoftTeams.pages.config.setValidityState(true);
+    })();
+  </script>
+</body>
+</html>

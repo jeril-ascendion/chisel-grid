@@ -1,0 +1,81 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "\ud83d\udd0d Knowledge Gap Detected",
+      "size": "Large",
+      "weight": "Bolder",
+      "color": "Warning",
+      "wrap": true
+    },
+    {
+      "type": "Container",
+      "style": "warning",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "${topic}",
+          "size": "Medium",
+          "weight": "Bolder",
+          "wrap": true
+        },
+        {
+          "type": "TextBlock",
+          "text": "This topic has been searched **${searchCount}** times but no articles exist in the knowledge base.",
+          "wrap": true
+        },
+        {
+          "type": "FactSet",
+          "facts": [
+            {
+              "title": "Category",
+              "value": "${category}"
+            },
+            {
+              "title": "First Searched",
+              "value": "${firstSearched}"
+            },
+            {
+              "title": "Last Searched",
+              "value": "${lastSearched}"
+            },
+            {
+              "title": "Search Count",
+              "value": "${searchCount}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Related topics: ${relatedTopics}",
+      "size": "Small",
+      "isSubtle": true,
+      "wrap": true
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Execute",
+      "title": "Create Article",
+      "verb": "startArticleDraft",
+      "data": {
+        "topic": "${topic}",
+        "contentType": "standard_doc"
+      },
+      "style": "positive"
+    },
+    {
+      "type": "Action.Execute",
+      "title": "Dismiss",
+      "verb": "dismissGap",
+      "data": {
+        "gapId": "${gapId}"
+      }
+    }
+  ]
+}

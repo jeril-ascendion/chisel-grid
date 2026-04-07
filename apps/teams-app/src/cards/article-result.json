@@ -1,0 +1,104 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "${title}",
+          "size": "Large",
+          "weight": "Bolder",
+          "wrap": true
+        },
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "by ${author}",
+                  "size": "Small",
+                  "isSubtle": true,
+                  "wrap": true
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "${publishedAt}",
+                  "size": "Small",
+                  "isSubtle": true
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "${readTime} min read",
+                  "size": "Small",
+                  "isSubtle": true
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "AI Score: ${aiScore}/100",
+                  "size": "Small",
+                  "weight": "Bolder",
+                  "color": "Good"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TextBlock",
+          "text": "${excerpt}",
+          "wrap": true,
+          "maxLines": 3
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.OpenUrl",
+      "title": "Read",
+      "url": "${articleUrl}"
+    },
+    {
+      "type": "Action.Execute",
+      "title": "Listen",
+      "verb": "listenArticle",
+      "data": {
+        "articleId": "${articleId}",
+        "audioUrl": "${audioUrl}"
+      }
+    },
+    {
+      "type": "Action.Execute",
+      "title": "Bookmark",
+      "verb": "bookmarkArticle",
+      "data": {
+        "articleId": "${articleId}"
+      }
+    }
+  ]
+}

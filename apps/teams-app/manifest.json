@@ -1,0 +1,128 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "225d1020-cae4-4b3d-8aae-6168774f69c9",
+  "developer": {
+    "name": "Ascendion",
+    "websiteUrl": "https://chiselgrid.com",
+    "privacyUrl": "https://chiselgrid.com/privacy",
+    "termsOfUseUrl": "https://chiselgrid.com/terms"
+  },
+  "name": {
+    "short": "ChiselGrid",
+    "full": "ChiselGrid — AI-Native Engineering Knowledge Platform"
+  },
+  "description": {
+    "short": "AI-powered engineering knowledge base with voice capture and content generation",
+    "full": "ChiselGrid is an AI-native CMS for engineering teams. Search the knowledge base, create AI-generated articles from voice recordings, manage content reviews, and stay updated — all from Microsoft Teams. Powered by AWS Bedrock and the Ascendion engineering knowledge base."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#6366F1",
+  "staticTabs": [
+    {
+      "entityId": "chiselgrid-home",
+      "name": "Knowledge Base",
+      "contentUrl": "https://chiselgrid.com/teams/tab?context=personal",
+      "websiteUrl": "https://chiselgrid.com",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "chiselgrid-admin",
+      "name": "Admin Dashboard",
+      "contentUrl": "https://chiselgrid.com/teams/tab?context=admin",
+      "websiteUrl": "https://chiselgrid.com/admin",
+      "scopes": ["personal"]
+    }
+  ],
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://chiselgrid.com/teams/tab/config",
+      "canUpdateConfiguration": true,
+      "scopes": ["team", "groupChat"]
+    }
+  ],
+  "bots": [
+    {
+      "botId": "placeholder-pending-it-approval",
+      "scopes": ["personal", "team", "groupChat"],
+      "supportsFiles": false,
+      "isNotificationOnly": false,
+      "commandLists": [
+        {
+          "scopes": ["personal"],
+          "commands": [
+            {
+              "title": "search",
+              "description": "Search the engineering knowledge base"
+            },
+            {
+              "title": "draft",
+              "description": "Start an AI-generated article draft"
+            },
+            {
+              "title": "reviews",
+              "description": "View pending content reviews"
+            },
+            {
+              "title": "gaps",
+              "description": "Check knowledge gaps in the system"
+            },
+            {
+              "title": "mydrafts",
+              "description": "View your pending article drafts"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "composeExtensions": [
+    {
+      "botId": "placeholder-pending-it-approval",
+      "commands": [
+        {
+          "id": "searchKnowledge",
+          "type": "query",
+          "title": "Search Knowledge",
+          "description": "Search ChiselGrid articles",
+          "initialRun": false,
+          "parameters": [
+            {
+              "name": "query",
+              "title": "Search",
+              "description": "Search for articles...",
+              "inputType": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["chiselgrid.com", "localhost"],
+  "webApplicationInfo": {
+    "id": "225d1020-cae4-4b3d-8aae-6168774f69c9",
+    "resource": "api://chiselgrid.com/225d1020-cae4-4b3d-8aae-6168774f69c9"
+  },
+  "copilotExtensions": {
+    "declarativeAgents": [
+      {
+        "id": "chiselgrid-copilot",
+        "name": "ChiselGrid Knowledge",
+        "description": "Search and interact with the Ascendion engineering knowledge base from M365 Copilot",
+        "instructions": "You are an AI assistant with access to the ChiselGrid engineering knowledge base. Use the search_knowledge tool to find articles. Always cite sources. If no content exists, suggest creating it.",
+        "capabilities": [
+          {
+            "name": "mcpServer",
+            "type": "mcpServer",
+            "server_url": "https://api.chiselgrid.com/api/mcp"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -15,20 +15,26 @@
 | **Phase 4 — White Label v1.1** | Multi-tenancy, Billing, Analytics | COMPLETE — 16 of 16 tasks |
 | **Phase 5A — Voice Capture & Intelligence** | Voice recording, transcription, AI pipeline | COMPLETE — 12 of 12 tasks |
 | **Phase 5B — Voice Output & Interview** | Podcast feed, Newsletter, Interview mode | COMPLETE — 8 of 8 tasks |
+| **Phase 6A — Teams Deep Integration** | Microsoft Teams bot, tabs, MCP, Copilot | COMPLETE — 12 of 12 tasks |
 | **Phase 6B — M365 Integrations & SCIM** | SharePoint, Outlook, Azure AD SCIM | COMPLETE — 10 of 10 tasks |
 
 ## Active Work
 
-Phase 6B is complete. All three EPIC gates passed:
-- **EPIC-21 SharePoint Integration** — Microsoft Graph client (OAuth2 client credentials, token cache), change notifications (3-day renewal, clientState validation), document extraction (.docx/.pdf via Textract, .pptx slide text), SPFx web part (iframe SSO)
-- **EPIC-22 Outlook Email Integration** — Office Add-in (manifest.xml, taskpane, mailbox.item capture), 3 React Email templates (article-published, review-request, welcome — all table-based Outlook-safe), SES configuration (config set, SNS bounce/complaint, suppression list)
-- **EPIC-23 Azure AD SCIM Provisioning** — SCIM 2.0 endpoints (ServiceProviderConfig, Schemas, Users CRUD, Groups CRUD), provisioning flow (Cognito create/disable), Azure AD admin guide (8-step setup)
+Phase 6A is complete. EPIC-20 gate passed:
+- **EPIC-20 Microsoft Teams Deep Integration** — Teams AI Library with Bedrock-backed ActionPlanner, MCP server with 5 knowledge tools, Knowledge/Creator/Admin bot actions (11 total), 4 Adaptive Card templates, Teams manifest v1.17 with M365 Copilot declarativeAgent, Teams Tab with SSO (Azure AD → ChiselGrid JWT), channel auto-post via EventBridge + webhooks, meeting recording pipeline (Graph callRecords → Transcribe → voice pipeline), CDK TeamsStack (DynamoDB, 5 Lambdas, API Gateway, EventBridge rules), App Store submission package (screenshots, privacy policy, terms)
+- **BLOCKED**: Teams Bot deployment pending Azure Bot Service registration by IT team. All code complete — add real Bot ID to env and deploy when available.
+
+Previously completed:
+- Phase 6B (EPIC-21 SharePoint, EPIC-22 Outlook, EPIC-23 SCIM)
+- Phase 5A/5B (Voice Capture, Intelligence, Output, Interview)
+- Phase 4 (Multi-tenancy, Billing, Analytics)
 
 The remaining Phase 2 items (EPIC-09 Content Migration, EPIC-11 SEO Optimization) are not yet started.
 
 ## Next Milestones
 
 - Phase 2C complete: Content Migration from static site and SEO/Performance optimization
+- Teams Bot deployment: Pending IT approval for Azure Bot Service registration
 - chiselgrid.com domain live: staging verification complete
 - ascendion.engineering go-live: production cutover from static site
 

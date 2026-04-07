@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChiselGrid Privacy Policy</title>
+  <style>
+    body { font-family: 'Segoe UI', -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6; color: #333; }
+    h1 { color: #1a1a2e; margin-bottom: 8px; }
+    h2 { color: #16213e; margin-top: 32px; }
+    .updated { color: #666; font-size: 14px; margin-bottom: 32px; }
+    ul { padding-left: 24px; }
+    li { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>ChiselGrid Privacy Policy</h1>
+  <p class="updated">Last updated: April 7, 2026</p>
+
+  <h2>1. Information We Collect</h2>
+  <p>When you use ChiselGrid through Microsoft Teams, we collect:</p>
+  <ul>
+    <li><strong>Account information:</strong> Name, email address, and Azure AD object ID from your organization's directory.</li>
+    <li><strong>Content data:</strong> Articles, drafts, voice recordings, and meeting transcripts that you create or upload.</li>
+    <li><strong>Usage data:</strong> Search queries, article views, and feature usage for analytics and improvement.</li>
+    <li><strong>Teams context:</strong> Channel IDs and team membership for channel notification routing.</li>
+  </ul>
+
+  <h2>2. How We Use Your Information</h2>
+  <ul>
+    <li>To provide and maintain the ChiselGrid knowledge base service</li>
+    <li>To authenticate you via Azure AD single sign-on</li>
+    <li>To generate AI-powered content using AWS Bedrock</li>
+    <li>To transcribe voice recordings and meeting audio</li>
+    <li>To send notifications to configured Teams channels</li>
+    <li>To improve our service through anonymized usage analytics</li>
+  </ul>
+
+  <h2>3. Data Storage and Security</h2>
+  <p>All data is stored in AWS infrastructure in the ap-southeast-1 (Singapore) region. We use:</p>
+  <ul>
+    <li>Aurora PostgreSQL with encryption at rest for structured data</li>
+    <li>S3 with server-side encryption for media and documents</li>
+    <li>AWS Secrets Manager for credential storage</li>
+    <li>TLS 1.2+ for all data in transit</li>
+  </ul>
+
+  <h2>4. Data Sharing</h2>
+  <p>We do not sell or share your data with third parties. Data is processed by:</p>
+  <ul>
+    <li><strong>AWS Bedrock:</strong> For AI content generation (data not used for model training)</li>
+    <li><strong>Amazon Transcribe:</strong> For voice-to-text conversion</li>
+    <li><strong>Microsoft Graph API:</strong> For Teams integration features</li>
+  </ul>
+
+  <h2>5. Multi-Tenant Isolation</h2>
+  <p>ChiselGrid enforces strict tenant isolation. Your organization's data is never accessible to other tenants. Row-level security policies in the database ensure complete data separation.</p>
+
+  <h2>6. Data Retention</h2>
+  <p>Content is retained as long as your subscription is active. Upon cancellation, data is retained for 30 days before permanent deletion. You may request immediate deletion at any time.</p>
+
+  <h2>7. Your Rights</h2>
+  <p>You have the right to access, correct, or delete your personal data. Contact privacy@chiselgrid.com for data requests.</p>
+
+  <h2>8. Contact</h2>
+  <p>For privacy concerns, contact us at <a href="mailto:privacy@chiselgrid.com">privacy@chiselgrid.com</a>.</p>
+</body>
+</html>

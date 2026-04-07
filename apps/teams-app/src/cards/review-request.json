@@ -1,0 +1,110 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "\ud83d\udcdd Review Request",
+      "size": "Large",
+      "weight": "Bolder",
+      "wrap": true
+    },
+    {
+      "type": "Container",
+      "style": "emphasis",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "${title}",
+          "size": "Medium",
+          "weight": "Bolder",
+          "wrap": true
+        },
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "Author: ${author}",
+                  "size": "Small",
+                  "wrap": true
+                },
+                {
+                  "type": "TextBlock",
+                  "text": "Submitted: ${submittedAt}",
+                  "size": "Small",
+                  "isSubtle": true
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "${qualityScore}/100",
+                  "size": "ExtraLarge",
+                  "weight": "Bolder",
+                  "color": "${qualityScore >= 80 ? 'Good' : qualityScore >= 60 ? 'Warning' : 'Attention'}"
+                },
+                {
+                  "type": "TextBlock",
+                  "text": "AI Quality Score",
+                  "size": "Small",
+                  "isSubtle": true,
+                  "horizontalAlignment": "Center"
+                }
+              ],
+              "verticalContentAlignment": "Center"
+            }
+          ]
+        },
+        {
+          "type": "TextBlock",
+          "text": "${preview}",
+          "wrap": true,
+          "maxLines": 5,
+          "isSubtle": true
+        }
+      ]
+    },
+    {
+      "type": "Input.Text",
+      "id": "rejectionFeedback",
+      "placeholder": "Rejection feedback (required if rejecting)",
+      "isMultiline": true,
+      "maxLength": 500
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Execute",
+      "title": "\u2705 Approve",
+      "verb": "approveArticle",
+      "data": {
+        "contentId": "${contentId}"
+      },
+      "style": "positive"
+    },
+    {
+      "type": "Action.Execute",
+      "title": "\u274c Reject",
+      "verb": "rejectArticle",
+      "data": {
+        "contentId": "${contentId}"
+      },
+      "style": "destructive"
+    },
+    {
+      "type": "Action.OpenUrl",
+      "title": "Preview",
+      "url": "${previewUrl}"
+    }
+  ]
+}

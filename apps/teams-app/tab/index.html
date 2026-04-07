@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChiselGrid — Teams Tab</title>
+  <script src="https://res.cdn.office.net/teams-js/2.31.1/js/MicrosoftTeams.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    #loading {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; font-family: 'Segoe UI', sans-serif;
+      color: #666; font-size: 16px;
+    }
+    #app-frame {
+      width: 100%; height: 100%; border: none; display: none;
+    }
+    .error {
+      color: #d13438; padding: 24px; font-family: 'Segoe UI', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">Loading ChiselGrid...</div>
+  <iframe id="app-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+  <div id="error" class="error" style="display:none"></div>
+
+  <script>
+    (async function init() {
+      const loadingEl = document.getElementById('loading');
+      const frameEl = document.getElementById('app-frame');
+      const errorEl = document.getElementById('error');
+
+      try {
+        // Initialize Teams SDK
+        await microsoftTeams.app.initialize();
+
+        // Get Teams SSO token
+        const authResult = await microsoftTeams.authentication.getAuthToken();
+        const azureAdToken = authResult;
+
+        // Exchange Azure AD token for ChiselGrid JWT
+        const apiUrl = new URLSearchParams(window.location.search).get('apiUrl')
+          || 'https://api.chiselgrid.com';
+
+        const response = await fetch(apiUrl + '/api/auth/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ azureAdToken }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Authentication failed: ' + response.statusText);
+        }
+
+        const { token, tenantUrl } = await response.json();
+
+        // Get context to determine which page to load
+        const context = await microsoftTeams.app.getContext();
+        const params = new URLSearchParams(window.location.search);
+        const pageContext = params.get('context') || 'personal';
+
+        let targetUrl = tenantUrl || 'https://chiselgrid.com';
+        if (pageContext === 'admin') {
+          targetUrl += '/admin';
+        }
+
+        // Load ChiselGrid in iframe with auth token
+        frameEl.src = targetUrl + '?teamsToken=' + encodeURIComponent(token)
+          + '&theme=' + (context.app?.theme || 'default');
+        frameEl.style.display = 'block';
+        loadingEl.style.display = 'none';
+
+      } catch (err) {
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorEl.textContent = 'Failed to load ChiselGrid: ' + (err.message || 'Unknown error');
+        console.error('[ChiselGrid Tab]', err);
+      }
+    })();
+  </script>
+</body>
+</html>

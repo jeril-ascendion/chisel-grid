@@ -1,0 +1,32 @@
+{
+  "name": "@chiselgrid/teams-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ChiselGrid Teams Deep Integration — AI-powered knowledge bot using Teams AI Library",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "dev": "ts-node-dev --respawn src/index.ts"
+  },
+  "dependencies": {
+    "@microsoft/teams-ai": "^1.5.0",
+    "@microsoft/teams-js": "^2.31.0",
+    "botbuilder": "^4.23.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.700.0",
+    "@aws-sdk/client-sfn": "^3.700.0",
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/util-dynamodb": "^3.700.0",
+    "restify": "^11.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/restify": "^8.5.12",
+    "typescript": "^5.7.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0"
+  }
+}

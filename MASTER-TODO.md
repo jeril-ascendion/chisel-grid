@@ -265,6 +265,27 @@
 ---
 
 ## ═══════════════════════════════════════════════════════════
+## PHASE 6A — MICROSOFT TEAMS DEEP INTEGRATION
+## ═══════════════════════════════════════════════════════════
+
+## EPIC-20: Microsoft Teams Deep Integration [PHASE 6A]
+- [x] T-20.1 Teams AI Library setup — @microsoft/teams-ai with BedrockChatCompletionClient wrapper, App instance with ActionPlanner, MemoryStorage, restify server ✅ apps/teams-app scaffold, bedrock-client.ts OpenAI-compat wrapper, config.ts Zod validation
+- [x] T-20.2 ChiselGrid MCP Server — packages/integrations/src/mcp-server.ts with 5 tools (search_knowledge, get_article, list_knowledge_gaps, create_draft, get_team_expertise), Lambda at /api/mcp ✅ MCP JSON-RPC protocol, Bedrock Knowledge Base RAG, Step Functions trigger
+- [x] T-20.3 Knowledge Bot — 5 AI actions (searchKnowledge, getRelatedArticles, bookmarkArticle, checkKnowledgeGap, getMyDrafts) via app.ai.action() ✅ actions/knowledge.ts with ChiselGrid API integration
+- [x] T-20.4 Creator Bot — 3 AI actions (startArticleDraft, getDraftStatus, submitDraftForReview) with Step Functions integration ✅ actions/creator.ts with SFN StartExecution/DescribeExecution
+- [x] T-20.5 Admin Bot + Monday digest — 3 AI actions (getPendingReviews, approveArticle, rejectArticle) + EventBridge Monday 9am SGT digest Lambda ✅ actions/admin.ts, handlers/monday-digest.ts with Adaptive Card webhook
+- [x] T-20.6 Adaptive Cards — 4 card templates (article-result, review-request, draft-progress, knowledge-gap) schema v1.5, Action.Execute ✅ src/cards/ with all 4 JSON templates
+- [x] T-20.7 Teams App manifest + M365 Copilot — manifest.json schema 1.17, bot/tab/messageExtension capabilities, copilotExtensions declarativeAgent ✅ manifest.json with full capabilities, MCP server copilot integration
+- [x] T-20.8 Teams Tab + SSO — iframe wrapper with Teams SSO, /api/auth/teams Lambda for Azure AD token → ChiselGrid JWT exchange ✅ tab/index.html, tab/config.html, teams-auth.ts handler
+- [x] T-20.9 Channel auto-post — DynamoDB channel mappings, admin UI at /admin/integrations/teams, EventBridge article.published → webhook post ✅ teams-channel-post.ts handler, admin page.tsx
+- [x] T-20.10 Meeting recording pipeline — Graph callRecords webhook, transcript download, S3 upload, voice pipeline trigger ✅ teams-meeting-recording.ts with Graph API integration, Transcribe + SFN pipeline
+- [x] T-20.11 CDK TeamsStack — DynamoDB tables, 5 Lambda functions, API Gateway, EventBridge rules, IAM policies ✅ infra/lib/stacks/teams.stack.ts
+- [x] T-20.12 App Store submission package — screenshots (5 desktop + 2 mobile HTML mockups), descriptions, privacy policy, terms, manifest validator ✅ store-submission/ with all assets
+## EPIC-20 GATE: Teams AI bot answers questions from knowledge base, review cards work, channel notifications post, meeting transcripts flow through pipeline, M365 Copilot extension registered ✅
+
+---
+
+## ═══════════════════════════════════════════════════════════
 ## PHASE 6B — MICROSOFT 365 INTEGRATIONS & SCIM
 ## ═══════════════════════════════════════════════════════════
 

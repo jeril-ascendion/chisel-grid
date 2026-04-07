@@ -1,0 +1,131 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "\ud83e\udd16 Draft Generation in Progress",
+      "size": "Large",
+      "weight": "Bolder",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Topic",
+          "value": "${topic}"
+        },
+        {
+          "title": "Content Type",
+          "value": "${contentType}"
+        },
+        {
+          "title": "Job ID",
+          "value": "${jobId}"
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "Current Agent: **${currentAgent}**",
+          "wrap": true
+        },
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "${progressPercent}% complete",
+                  "size": "Small"
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "ETA: ${estimatedCompletion}",
+                  "size": "Small",
+                  "isSubtle": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "width": "${progressPercent}",
+              "style": "good",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": " "
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "${100 - progressPercent}",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": " "
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Writer Agent",
+          "value": "${writerStatus}"
+        },
+        {
+          "title": "Review Agent",
+          "value": "${reviewStatus}"
+        },
+        {
+          "title": "SEO Agent",
+          "value": "${seoStatus}"
+        },
+        {
+          "title": "Diagram Agent",
+          "value": "${diagramStatus}"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Execute",
+      "title": "Refresh Status",
+      "verb": "getDraftStatus",
+      "data": {
+        "jobId": "${jobId}"
+      }
+    }
+  ]
+}

@@ -4,7 +4,9 @@
 
 ## Currently Blocked
 
-None. All development items are unblocked as of April 2026.
+| Item | Blocked By | Who Can Unblock | Resumption Steps |
+|------|-----------|----------------|-----------------|
+| Teams Bot deployment | Azure Bot Service registration by IT team | IT / Azure AD Admin | All code complete. Add real Bot ID to apps/teams-app/.env as TEAMS_BOT_ID and deploy when available. |
 
 ## Recently Unblocked
 
