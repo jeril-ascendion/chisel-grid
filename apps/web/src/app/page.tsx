@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
 import { NewsletterForm } from '@/components/common/newsletter-form';
+import { HeroCta } from '@/components/common/hero-cta';
 import { formatDate } from '@/lib/utils';
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -59,14 +60,7 @@ export default function HomePage() {
               </div>
             </div>
           </Link>
-          <div className="mt-6 text-center">
-            <Link
-              href="/login"
-              className="inline-flex items-center rounded-md bg-gray-800 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-900 transition-colors"
-            >
-              Sign In
-            </Link>
-          </div>
+          <HeroCta />
         </section>
       )}
 

@@ -47,13 +47,12 @@ export default function AdminLayout({
         <header className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-3">
           <AdminBreadcrumbs />
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">{user.email}</span>
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               user.role === 'admin'
                 ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
                 : user.role === 'creator'
                   ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                  : 'bg-gray-100 dark:bg-gray-700/30 text-gray-700 dark:text-gray-400'
+                  : 'bg-gray-100 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400'
             }`}>
               {user.role}
             </span>

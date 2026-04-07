@@ -6,6 +6,7 @@ import { BlockRenderer } from '@/components/content/block-renderer';
 import { TableOfContents } from '@/components/content/table-of-contents';
 import { AudioPlayer } from '@/components/content/audio-player';
 import { ArticleCard } from '@/components/common/article-card';
+import { ArticleAdminBar } from '@/components/article/admin-bar';
 import { formatDate, SITE_NAME, SITE_URL } from '@/lib/utils';
 import type { ContentBlock } from '@chiselgrid/types';
 
@@ -103,6 +104,8 @@ export default async function ArticlePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
+
+      <ArticleAdminBar contentId={article.contentId} />
 
       <article className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}

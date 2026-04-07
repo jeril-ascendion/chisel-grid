@@ -9,6 +9,7 @@ interface StatusCount {
   color: string;
 }
 
+// TODO: Replace hardcoded counts with real DB queries from /api/content/stats
 const statuses: StatusCount[] = [
   { status: 'draft', label: 'Drafts', count: 12, color: 'bg-gray-100 text-gray-700 border-gray-200' },
   { status: 'submitted', label: 'Submitted', count: 3, color: 'bg-blue-50 text-blue-700 border-blue-200' },

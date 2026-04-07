@@ -29,7 +29,7 @@ export function AdminSidebar({ user }: { user: { name?: string | null; email?: s
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       {/* Logo */}
-      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 px-4 py-4">
+      <Link href="/" className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm">
           CG
         </div>
@@ -37,7 +37,7 @@ export function AdminSidebar({ user }: { user: { name?: string | null; email?: s
           <div className="text-sm font-semibold text-gray-900 dark:text-white">ChiselGrid</div>
           <div className="text-xs text-gray-500">Admin Panel</div>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">

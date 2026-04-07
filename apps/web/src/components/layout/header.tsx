@@ -53,12 +53,12 @@ export function Header() {
           <ThemeToggle />
           {status === 'authenticated' && session?.user ? (
             <div className="hidden sm:flex items-center gap-2 ml-2">
-              <span className="text-sm text-muted-foreground truncate max-w-[150px]">
+              <span className="text-sm text-muted-foreground max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
                 {session.user.name ?? session.user.email}
               </span>
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="rounded-md bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
               >
                 Sign Out
               </button>
@@ -66,7 +66,7 @@ export function Header() {
           ) : status !== 'loading' ? (
             <Link
               href="/login"
-              className="hidden sm:inline-flex ml-2 items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
+              className="hidden sm:inline-flex ml-2 items-center rounded-md bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
             >
               Sign In
             </Link>
