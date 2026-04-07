@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  T-22.1 Outlook Office Add-in Manifest
+
+  Hosted on CloudFront at /addins/outlook/
+  Reads selected email conversation via Office.context.mailbox.item
+  Posts email thread content to ChiselGrid API for content creation.
+-->
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:MailApp="http://schemas.microsoft.com/office/mailappversionoverrides/1.1"
+           xsi:type="MailApp">
+
+  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
+  <Version>1.0.0</Version>
+  <ProviderName>ChiselGrid</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="ChiselGrid Content Capture" />
+  <Description DefaultValue="Capture email threads as ChiselGrid content for your engineering knowledge portal." />
+
+  <IconUrl DefaultValue="https://cdn.chiselgrid.com/addins/outlook/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://cdn.chiselgrid.com/addins/outlook/icon-64.png" />
+  <SupportUrl DefaultValue="https://docs.chiselgrid.com/outlook-addin" />
+
+  <AppDomains>
+    <AppDomain>https://cdn.chiselgrid.com</AppDomain>
+    <AppDomain>https://api.chiselgrid.com</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Mailbox" />
+  </Hosts>
+
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.1" />
+    </Sets>
+  </Requirements>
+
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://cdn.chiselgrid.com/addins/outlook/taskpane.html" />
+        <RequestedHeight>450</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+
+  <Permissions>ReadWriteMailbox</Permissions>
+
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read" />
+  </Rule>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
+
+      <Requirements>
+        <bt:Sets DefaultMinVersion="1.3">
+          <bt:Set Name="Mailbox" />
+        </bt:Sets>
+      </Requirements>
+
+      <Hosts>
+        <Host xsi:type="MailHost">
+          <DesktopFormFactor>
+            <ExtensionPoint xsi:type="MessageReadCommandSurface">
+              <OfficeTab id="TabDefault">
+                <Group id="ChiselGridGroup">
+                  <Label resid="GroupLabel" />
+                  <Control xsi:type="Button" id="CaptureButton">
+                    <Label resid="CaptureLabel" />
+                    <Supertip>
+                      <Title resid="CaptureLabel" />
+                      <Description resid="CaptureDesc" />
+                    </Supertip>
+                    <Icon>
+                      <bt:Image size="16" resid="Icon16" />
+                      <bt:Image size="32" resid="Icon32" />
+                      <bt:Image size="80" resid="Icon80" />
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                      <SourceLocation resid="TaskpaneUrl" />
+                    </Action>
+                  </Control>
+                </Group>
+              </OfficeTab>
+            </ExtensionPoint>
+          </DesktopFormFactor>
+        </Host>
+      </Hosts>
+
+      <Resources>
+        <bt:Images>
+          <bt:Image id="Icon16" DefaultValue="https://cdn.chiselgrid.com/addins/outlook/icon-16.png" />
+          <bt:Image id="Icon32" DefaultValue="https://cdn.chiselgrid.com/addins/outlook/icon-32.png" />
+          <bt:Image id="Icon80" DefaultValue="https://cdn.chiselgrid.com/addins/outlook/icon-80.png" />
+        </bt:Images>
+        <bt:Urls>
+          <bt:Url id="TaskpaneUrl" DefaultValue="https://cdn.chiselgrid.com/addins/outlook/taskpane.html" />
+        </bt:Urls>
+        <bt:ShortStrings>
+          <bt:String id="GroupLabel" DefaultValue="ChiselGrid" />
+          <bt:String id="CaptureLabel" DefaultValue="Capture to ChiselGrid" />
+        </bt:ShortStrings>
+        <bt:LongStrings>
+          <bt:String id="CaptureDesc" DefaultValue="Send this email thread to ChiselGrid to create engineering knowledge content." />
+        </bt:LongStrings>
+      </Resources>
+
+    </VersionOverrides>
+  </VersionOverrides>
+
+</OfficeApp>

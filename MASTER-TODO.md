@@ -264,6 +264,35 @@
 
 ---
 
+## ═══════════════════════════════════════════════════════════
+## PHASE 6B — MICROSOFT 365 INTEGRATIONS & SCIM
+## ═══════════════════════════════════════════════════════════
+
+## EPIC-21: SharePoint Integration [PHASE 6B]
+- [x] T-21.1 Microsoft Graph client — packages/integrations with @microsoft/microsoft-graph-client, OAuth2 app permissions, Secrets Manager token per tenant ✅ MicrosoftGraphClient class with OAuth2 client credentials flow, token cache, sites/drives/files/subscriptions API
+- [x] T-21.2 Change notifications — Graph API /subscriptions, 3-day renewal Lambda on EventBridge, clientState validation ✅ SharePointNotificationManager with subscribe/renewAll/validateNotification, DynamoDB subscription tracking
+- [x] T-21.3 Document extraction — .docx/.pdf via Textract, .pptx slide+notes extraction, map to ContentBlock[] ✅ DocumentExtractor with Textract async processing, PPTX text extraction, heuristic heading detection, ContentBlock[] output
+- [x] T-21.4 SPFx web part — apps/sharepoint-webpart scaffold, iframe to tenant URL, SSO via SharePoint context ✅ ChiselGridWebPart with AAD SSO token, configurable tenant URL, property pane, iframe sandbox
+## EPIC-21 GATE: SharePoint documents sync to ChiselGrid, change notifications trigger extraction, web part renders ✅
+
+---
+
+## EPIC-22: Outlook Email Integration [PHASE 6B]
+- [x] T-22.1 Office Add-in — apps/outlook-addin manifest.xml, CloudFront hosting, mailbox.item reader, email-thread API ✅ manifest.xml with VersionOverrides, taskpane.html/ts with Office.context.mailbox.item reader, SSO auth
+- [x] T-22.2 React Email templates — article-published, review-request, welcome templates, table layout, inline CSS ✅ 3 templates (ArticlePublished, ReviewRequest, Welcome) all table-based Outlook-safe layout + inline CSS
+- [x] T-22.3 SES configuration — configuration set, SNS bounce/complaint, suppression list Lambda, send statistics in Aurora ✅ SesConfigStack CDK (config set, SNS topic, event destination), ses-bounce-handler Lambda (suppression list + DynamoDB stats)
+## EPIC-22 GATE: Outlook add-in captures threads, email templates render in Outlook, SES bounce handling works ✅
+
+---
+
+## EPIC-23: Azure AD SCIM Provisioning [PHASE 6B]
+- [x] T-23.1 SCIM 2.0 endpoints — /scim/v2/ServiceProviderConfig, /Schemas, /Users, /Groups, bearer token auth per tenant ✅ scim-config.ts (ServiceProviderConfig + Schemas), scim-users.ts (full CRUD), scim-groups.ts (full CRUD), bearer token via Secrets Manager
+- [x] T-23.2 Provisioning flow — POST Users → Cognito + Aurora + default role, PATCH active=false → disable, DELETE → disable ✅ POST → AdminCreateUser with custom:role=reader, PATCH → AdminDisable/EnableUser, DELETE → AdminDisableUser
+- [x] T-23.3 Azure AD admin guide — step-by-step Enterprise App SCIM configuration documentation ✅ azure-ad-scim-guide.md with 8-step setup, attribute mappings, troubleshooting, endpoint reference
+## EPIC-23 GATE: SCIM endpoints pass Azure AD test connection, users provisioned/deprovisioned automatically ✅
+
+---
+
 ## COMPLETION SIGNAL
 ## Output exactly: <promise>CHISELGRID_COMPLETE</promise>
 ## Only when every item above is marked [x] or [~]

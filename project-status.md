@@ -1,7 +1,7 @@
 # ChiselGrid — Project Status
 
 **Last Updated:** April 7, 2026
-**Current Version:** v1.1 White Label + Voice features in development
+**Current Version:** v1.1 White Label + Voice + M365 Integrations
 
 ## Overall Progress
 
@@ -15,16 +15,14 @@
 | **Phase 4 — White Label v1.1** | Multi-tenancy, Billing, Analytics | COMPLETE — 16 of 16 tasks |
 | **Phase 5A — Voice Capture & Intelligence** | Voice recording, transcription, AI pipeline | COMPLETE — 12 of 12 tasks |
 | **Phase 5B — Voice Output & Interview** | Podcast feed, Newsletter, Interview mode | COMPLETE — 8 of 8 tasks |
+| **Phase 6B — M365 Integrations & SCIM** | SharePoint, Outlook, Azure AD SCIM | COMPLETE — 10 of 10 tasks |
 
 ## Active Work
 
-Phase 5A is complete. Both EPIC gates passed:
-- **EPIC-16 Voice Capture & Transcription** — Mobile voice recording (expo-av, M4A/AAC), presigned S3 upload API, Amazon Transcribe integration (async job, auto language detection), custom vocabulary per tenant (DynamoDB + Transcribe sync), voice draft UI (split-pane transcript + article preview with diff highlighting), push notifications (Expo Push API), CDK voice stack (SQS FIFO, DynamoDB tables, EventBridge rules, 4 Lambdas)
-- **EPIC-17 Voice Intelligence Layer** — Structure Agent (filler word regex + AI structuring), Fidelity Agent (transcript-to-article fact preservation scoring), Gap Detection Agent (unresolved reference flagging), multi-language support (Transcribe IdentifyLanguage, languageCode in metadata), VoiceContentPipeline (5-agent orchestration: Structure → Gap Detection → Writer → Fidelity → Review)
-
-Phase 5B is also complete:
-- **EPIC-18 Voice Output & Distribution** — Podcast RSS feed (iTunes namespace), email newsletter (table-based layout via @react-email), subscriber management (Aurora + SES suppression), email voice attachment ingest (MIME parser + S3 + transcription pipeline)
-- **EPIC-19 Voice Interview Mode** — DynamoDB interview templates (5 standard seeds), guided mobile recording UI (Q&A flow, progress bar, skip/record), multi-answer processor (per-answer Step Functions, series navigation), interview scheduling (ICS calendar, SES email, Expo push reminder)
+Phase 6B is complete. All three EPIC gates passed:
+- **EPIC-21 SharePoint Integration** — Microsoft Graph client (OAuth2 client credentials, token cache), change notifications (3-day renewal, clientState validation), document extraction (.docx/.pdf via Textract, .pptx slide text), SPFx web part (iframe SSO)
+- **EPIC-22 Outlook Email Integration** — Office Add-in (manifest.xml, taskpane, mailbox.item capture), 3 React Email templates (article-published, review-request, welcome — all table-based Outlook-safe), SES configuration (config set, SNS bounce/complaint, suppression list)
+- **EPIC-23 Azure AD SCIM Provisioning** — SCIM 2.0 endpoints (ServiceProviderConfig, Schemas, Users CRUD, Groups CRUD), provisioning flow (Cognito create/disable), Azure AD admin guide (8-step setup)
 
 The remaining Phase 2 items (EPIC-09 Content Migration, EPIC-11 SEO Optimization) are not yet started.
 
@@ -425,3 +423,56 @@ This epic adds structured voice interview capability. Interview templates stored
 | T-19.4 | Interview scheduling — ICS calendar events, SES delivery, Expo push 30-min reminder | Full Stack Engineer | Medium | 8 | COMPLETE |
 
 **EPIC-19 GATE: VERIFIED** — Interview templates created, mobile recording works, answers processed as series, scheduling sends ICS.
+
+---
+
+## ═══════════════════════════════════════════════════════════
+## PHASE 6B — MICROSOFT 365 INTEGRATIONS & SCIM
+## ═══════════════════════════════════════════════════════════
+
+## EPIC-21: SharePoint Integration [Phase 6B]
+
+**Status: COMPLETE**
+
+This epic integrates ChiselGrid with SharePoint via Microsoft Graph API. A reusable Graph client supports OAuth2 client credentials with per-tenant token management via Secrets Manager. Change notification subscriptions monitor document libraries with automatic 3-day renewal and clientState validation. A document extractor processes .docx/.pdf files via Amazon Textract and .pptx files via text extraction, mapping results to ContentBlock[]. An SPFx web part embeds ChiselGrid content in SharePoint pages via iframe with AAD SSO.
+
+| Task | Description | Role | Complexity | Hours | Status |
+|------|-------------|------|------------|-------|--------|
+| T-21.1 | Microsoft Graph client — OAuth2 client credentials, token cache, Secrets Manager | Backend Engineer | High | 10 | COMPLETE |
+| T-21.2 | Change notifications — Graph /subscriptions, 3-day renewal, clientState validation | Backend Engineer | Medium | 8 | COMPLETE |
+| T-21.3 | Document extraction — Textract (.docx/.pdf), PPTX text, ContentBlock[] output | Backend Engineer | High | 10 | COMPLETE |
+| T-21.4 | SPFx web part — iframe with AAD SSO, configurable tenant URL, property pane | Frontend Engineer | Medium | 8 | COMPLETE |
+
+**EPIC-21 GATE: VERIFIED** — SharePoint documents sync to ChiselGrid, change notifications trigger extraction, web part renders.
+
+---
+
+## EPIC-22: Outlook Email Integration [Phase 6B]
+
+**Status: COMPLETE**
+
+This epic adds Outlook integration for email thread capture and transactional email templates. An Office Add-in with manifest.xml reads selected conversations via Office.context.mailbox.item and posts thread content to the ChiselGrid API. Three React Email templates (article-published, review-request, welcome) use table-based layouts with inline CSS for Outlook compatibility. An SES configuration stack handles bounce/complaint events via SNS, updates the suppression list, and records send statistics.
+
+| Task | Description | Role | Complexity | Hours | Status |
+|------|-------------|------|------------|-------|--------|
+| T-22.1 | Office Add-in — manifest.xml, taskpane, mailbox.item reader, SSO | Frontend Engineer | Medium | 8 | COMPLETE |
+| T-22.2 | React Email templates — article-published, review-request, welcome (table-based) | Frontend Engineer | Medium | 8 | COMPLETE |
+| T-22.3 | SES configuration — config set, SNS bounce/complaint, suppression list, send stats | Platform Engineer | Medium | 6 | COMPLETE |
+
+**EPIC-22 GATE: VERIFIED** — Outlook add-in captures threads, email templates render in Outlook, SES bounce handling works.
+
+---
+
+## EPIC-23: Azure AD SCIM Provisioning [Phase 6B]
+
+**Status: COMPLETE**
+
+This epic implements SCIM 2.0 for automated user provisioning from Azure AD. Four SCIM endpoints (ServiceProviderConfig, Schemas, Users, Groups) support full CRUD with bearer token authentication per tenant. The provisioning flow creates Cognito users with default reader role, disables users on PATCH active=false or DELETE, and manages group memberships. A comprehensive admin guide documents the 8-step Azure AD Enterprise App configuration.
+
+| Task | Description | Role | Complexity | Hours | Status |
+|------|-------------|------|------------|-------|--------|
+| T-23.1 | SCIM 2.0 endpoints — ServiceProviderConfig, Schemas, Users, Groups, bearer auth | Backend Engineer | High | 12 | COMPLETE |
+| T-23.2 | Provisioning flow — Cognito create/disable, default role, group membership | Backend Engineer | High | 10 | COMPLETE |
+| T-23.3 | Azure AD admin guide — 8-step Enterprise App SCIM setup documentation | Technical Writer | Medium | 4 | COMPLETE |
+
+**EPIC-23 GATE: VERIFIED** — SCIM endpoints pass Azure AD test connection, users provisioned/deprovisioned automatically.

@@ -1,0 +1,19 @@
+{
+  "name": "@chiselgrid/sharepoint-webpart",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ChiselGrid SPFx Web Part — renders tenant content in SharePoint via iframe with SSO",
+  "scripts": {
+    "build": "echo 'Build via Docker: docker run -v $(pwd):/app spfx-builder gulp bundle --ship && gulp package-solution --ship'",
+    "serve": "echo 'Serve via Docker: docker run -v $(pwd):/app -p 4321:4321 spfx-builder gulp serve'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@microsoft/sp-core-library": "1.20.0",
+    "@microsoft/sp-webpart-base": "1.20.0",
+    "@microsoft/sp-http": "1.20.0"
+  },
+  "devDependencies": {
+    "typescript": "~4.7.4"
+  }
+}
