@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getCategoryBySlug, getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
-import { TopicAnimation } from '@/components/animations/TopicAnimation';
+import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { SITE_URL } from '@/lib/utils';
 
 type Props = {
@@ -80,14 +80,18 @@ export default async function CategoryPage({ params }: Props) {
           </ol>
         </nav>
 
-        {/* Header */}
-        <header className="relative mb-8">
-          <TopicAnimation category={slug} />
-          <div className="relative z-[1]">
-          <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
-          {category.description && (
-            <p className="text-lg text-muted-foreground">{category.description}</p>
-          )}
+        {/* Header with animation */}
+        <header className="mb-8">
+          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ height: '180px', borderRadius: '10px', background: 'var(--bg-subtle, #F8F7F5)', border: '1px solid var(--border-ae, #E8E8E6)', overflow: 'hidden' }}>
+              <HeroAnimation category={slug} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
+              {category.description && (
+                <p className="text-lg text-muted-foreground">{category.description}</p>
+              )}
+            </div>
           </div>
         </header>
 

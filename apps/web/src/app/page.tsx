@@ -3,7 +3,7 @@ import { getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
 import { NewsletterForm } from '@/components/common/newsletter-form';
 import { HeroCta } from '@/components/common/hero-cta';
-import { TopicAnimation } from '@/components/animations/TopicAnimation';
+import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { formatDate } from '@/lib/utils';
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -24,20 +24,14 @@ export default function HomePage() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       {/* Hero: Featured Article */}
       {featured && (
-        <section className="relative py-8 sm:py-12">
-          <TopicAnimation category="default" />
+        <section className="py-8 sm:py-12">
           <Link
             href={`/articles/${featured.slug}`}
             className="group block rounded-2xl border border-border bg-card overflow-hidden hover:shadow-xl hover:border-primary/20 transition-all duration-300"
           >
             <div className="grid md:grid-cols-2 gap-0">
-              <div className="aspect-video md:aspect-auto bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center min-h-[200px]">
-                <svg width="80" height="80" viewBox="0 0 32 32" fill="none" className="text-primary/20">
-                  <rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" />
-                  <rect x="18" y="2" width="12" height="12" rx="2" fill="currentColor" opacity="0.6" />
-                  <rect x="2" y="18" width="12" height="12" rx="2" fill="currentColor" opacity="0.6" />
-                  <rect x="18" y="18" width="12" height="12" rx="2" fill="currentColor" opacity="0.3" />
-                </svg>
+              <div className="aspect-video md:aspect-auto flex items-center justify-center min-h-[200px]" style={{ background: 'var(--bg-subtle, #F8F7F5)', overflow: 'hidden' }}>
+                <HeroAnimation category="platform" />
               </div>
               <div className="p-6 sm:p-8 flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">

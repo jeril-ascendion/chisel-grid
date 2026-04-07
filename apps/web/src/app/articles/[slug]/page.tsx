@@ -6,7 +6,8 @@ import { BlockRenderer } from '@/components/content/block-renderer';
 import { TableOfContents } from '@/components/content/table-of-contents';
 import { AudioPlayer } from '@/components/content/audio-player';
 import { ArticleCard } from '@/components/common/article-card';
-import { TopicAnimation } from '@/components/animations/TopicAnimation';
+import { ArticleAdminBar } from '@/components/article/ArticleAdminBar';
+import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { formatDate, SITE_NAME, SITE_URL } from '@/lib/utils';
 import type { ContentBlock } from '@chiselgrid/types';
 
@@ -105,64 +106,63 @@ export default async function ArticlePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
-      <article className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <li>
-              <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-            </li>
-            <li><span className="mx-1">/</span></li>
-            <li>
+      <ArticleAdminBar contentId={article.contentId} />
+
+      {/* Hero section with animation */}
+      <section style={{ borderBottom: '1px solid var(--border)', padding: '2rem 1rem', background: 'var(--bg, #fff)', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '1160px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative', height: '280px', borderRadius: '10px', background: 'var(--bg-subtle, #F8F7F5)', border: '1px solid var(--border-ae, #E8E8E6)', overflow: 'hidden' }}>
+            <HeroAnimation category={article.categorySlug} />
+          </div>
+          <div>
+            <nav aria-label="Breadcrumb" style={{ marginBottom: '0.75rem' }}>
+              <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <li>
+                  <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+                </li>
+                <li><span className="mx-1">/</span></li>
+                <li>
+                  <Link
+                    href={`/category/${article.categorySlug}`}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {article.categoryName}
+                  </Link>
+                </li>
+                <li><span className="mx-1">/</span></li>
+                <li className="text-foreground font-medium truncate max-w-[200px]">
+                  {article.title}
+                </li>
+              </ol>
+            </nav>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
               <Link
                 href={`/category/${article.categorySlug}`}
-                className="hover:text-foreground transition-colors"
+                className="font-medium text-primary hover:underline"
               >
                 {article.categoryName}
               </Link>
-            </li>
-            <li><span className="mx-1">/</span></li>
-            <li className="text-foreground font-medium truncate max-w-[200px]">
+              <span>&middot;</span>
+              <span>{article.readTimeMinutes} min read</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-3">
               {article.title}
-            </li>
-          </ol>
-        </nav>
-
-        {/* Article Header */}
-        <header className="relative max-w-3xl mb-8">
-          <TopicAnimation category={article.categorySlug} />
-          <div className="relative z-[1]">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-            <Link
-              href={`/category/${article.categorySlug}`}
-              className="font-medium text-primary hover:underline"
-            >
-              {article.categoryName}
-            </Link>
-            <span>&middot;</span>
-            <span>{article.readTimeMinutes} min read</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
-            {article.title}
-          </h1>
-
-          <p className="text-lg text-muted-foreground mb-6">{article.description}</p>
-
-          <div className="flex items-center gap-3 pb-6 border-b border-border">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">
-              {article.authorName.charAt(0)}
-            </div>
-            <div>
-              <p className="font-medium">{article.authorName}</p>
-              <p className="text-sm text-muted-foreground">
-                {formatDate(article.publishedAt)}
-              </p>
+            </h1>
+            <p className="text-base text-muted-foreground mb-4">{article.description}</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
+                {article.authorName.charAt(0)}
+              </div>
+              <div>
+                <p className="text-sm font-medium">{article.authorName}</p>
+                <p className="text-xs text-muted-foreground">{formatDate(article.publishedAt)}</p>
+              </div>
             </div>
           </div>
-          </div>
-        </header>
+        </div>
+      </section>
 
+      <article className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Audio Player */}
         {article.audioUrl && (
           <div className="max-w-3xl mb-8">
