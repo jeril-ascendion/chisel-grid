@@ -6,7 +6,7 @@ import { BlockRenderer } from '@/components/content/block-renderer';
 import { TableOfContents } from '@/components/content/table-of-contents';
 import { AudioPlayer } from '@/components/content/audio-player';
 import { ArticleCard } from '@/components/common/article-card';
-import { ArticleAdminBar } from '@/components/article/ArticleAdminBar';
+import { AdminBarWrapper } from '@/components/article/AdminBarWrapper';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { formatDate, SITE_NAME, SITE_URL } from '@/lib/utils';
 import type { ContentBlock } from '@chiselgrid/types';
@@ -106,7 +106,7 @@ export default async function ArticlePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
-      <ArticleAdminBar contentId={article.contentId} />
+      <AdminBarWrapper contentId={article.contentId} />
 
       {/* Hero section with animation */}
       <section style={{ borderBottom: '1px solid var(--border)', padding: '2rem 1rem', background: 'var(--bg, #fff)', overflow: 'hidden' }}>

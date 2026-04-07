@@ -96,18 +96,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             (a) => a.Name === 'custom:tenantId',
           )?.Value ?? 'default';
 
-          // Fetch user's Cognito groups for role derivation
+          // Extract groups from the ID token claims (contains cognito:groups)
           let groups: string[] = [];
           try {
-            const groupsResult = await client.send(
-              new AdminListGroupsForUserCommand({
-                UserPoolId: userPoolId,
-                Username: sub,
-              }),
-            );
-            groups = groupsResult.Groups?.map((g) => g.GroupName!).filter(Boolean) ?? [];
+            const idToken = authResult.AuthenticationResult.IdToken;
+            if (idToken) {
+              const payload = JSON.parse(
+                Buffer.from(idToken.split('.')[1], 'base64').toString('utf-8'),
+              );
+              groups = (payload['cognito:groups'] as string[]) ?? [];
+            }
           } catch {
-            // If we can't fetch groups, default to empty
+            // Fallback: try admin API if ID token parsing fails
+            try {
+              const groupsResult = await client.send(
+                new AdminListGroupsForUserCommand({
+                  UserPoolId: userPoolId,
+                  Username: sub,
+                }),
+              );
+              groups = groupsResult.Groups?.map((g) => g.GroupName!).filter(Boolean) ?? [];
+            } catch {
+              // If we can't fetch groups, default to empty
+            }
           }
 
           return {

@@ -2,31 +2,79 @@
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
-export function ArticleAdminBar({ contentId }: { contentId?: string }) {
-  const { data: session } = useSession();
-  if (!session?.user || session.user.role !== 'admin') return null;
+interface ArticleAdminBarProps {
+  contentId?: string;
+}
+
+export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
+  const { data: session, status } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      console.log('[AdminBar] session role:', session.user.role);
+      setIsAdmin(session.user.role === 'admin');
+    }
+  }, [session, status]);
+
+  if (!isAdmin) return null;
+
   return (
-    <div style={{
-      position: 'fixed', top: '62px', right: '16px', zIndex: 50,
-      display: 'flex', gap: '8px', flexDirection: 'column', alignItems: 'flex-end',
-    }}>
-      <Link href="/admin" style={{
-        background: '#0F0F0F', color: '#fff', fontSize: '0.75rem',
-        padding: '6px 14px', borderRadius: '6px', textDecoration: 'none',
-        fontFamily: 'IBM Plex Sans, sans-serif', fontWeight: 500,
-        border: '1px solid rgba(255,255,255,0.15)',
-        display: 'flex', alignItems: 'center', gap: '6px',
-      }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: '70px',
+        right: '20px',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        alignItems: 'flex-end',
+      }}
+    >
+      <Link
+        href="/admin"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: '#0F0F0F',
+          color: '#FFFFFF',
+          fontSize: '13px',
+          fontWeight: 500,
+          padding: '8px 16px',
+          borderRadius: '8px',
+          textDecoration: 'none',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          fontFamily: 'IBM Plex Sans, sans-serif',
+          border: '1px solid rgba(255,255,255,0.15)',
+          whiteSpace: 'nowrap',
+        }}
+      >
         &larr; Admin Dashboard
       </Link>
       {contentId && (
-        <Link href={`/admin/content/${contentId}/edit`} style={{
-          background: '#C96330', color: '#fff', fontSize: '0.75rem',
-          padding: '6px 14px', borderRadius: '6px', textDecoration: 'none',
-          fontFamily: 'IBM Plex Sans, sans-serif', fontWeight: 500,
-        }}>
-          Edit Article
+        <Link
+          href={`/admin/content/${contentId}/edit`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: '#C96330',
+            color: '#FFFFFF',
+            fontSize: '13px',
+            fontWeight: 500,
+            padding: '8px 16px',
+            borderRadius: '8px',
+            textDecoration: 'none',
+            boxShadow: '0 2px 8px rgba(201,99,48,0.4)',
+            fontFamily: 'IBM Plex Sans, sans-serif',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          ✏ Edit Article
         </Link>
       )}
     </div>
