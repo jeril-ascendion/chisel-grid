@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
 import { getCategories } from '@/lib/mock-data';
 import { ThemeToggle } from './theme-toggle';
 import { MobileMenu } from './mobile-menu';
 
 export function Header() {
   const categories = getCategories();
+  const { data: session, status } = useSession();
 
   return (
     <header className="sticky top-0 z-40 h-[var(--header-height)] border-b border-border bg-card/80 backdrop-blur-md">
@@ -54,6 +56,26 @@ export function Header() {
             </svg>
           </Link>
           <ThemeToggle />
+          {status === 'authenticated' && session?.user ? (
+            <div className="hidden sm:flex items-center gap-2 ml-2">
+              <span className="text-sm text-muted-foreground truncate max-w-[150px]">
+                {session.user.name ?? session.user.email}
+              </span>
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : status !== 'loading' ? (
+            <Link
+              href="/login"
+              className="hidden sm:inline-flex ml-2 items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
+            >
+              Sign In
+            </Link>
+          ) : null}
           <MobileMenu categories={categories} />
         </div>
       </div>

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { ThemeScript } from '@/components/layout/theme-script';
+import { Providers } from '@/components/providers';
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from '@/lib/utils';
 import './globals.css';
 
@@ -52,14 +53,16 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeScript />
-        <a href="#main-content" className="skip-link">
-          Skip to main content
-        </a>
-        <Header />
-        <main id="main-content" className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <Providers>
+          <a href="#main-content" className="skip-link">
+            Skip to main content
+          </a>
+          <Header />
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
