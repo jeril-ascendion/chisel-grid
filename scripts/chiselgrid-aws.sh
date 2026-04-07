@@ -100,9 +100,22 @@ deploy_latest() {
   log "Building and deploying to chiselgrid.com..."
   cd ~/projects/chisel-grid
 
-  log "Building Next.js..."
+  log "Building Next.js (static export)..."
+  # API routes are incompatible with output:export — temporarily move them outside src
+  API_AUTH_DIR="apps/web/src/app/api"
+  API_BACKUP="/tmp/_chiselgrid_api_backup"
+  if [ -d "$API_AUTH_DIR" ]; then
+    rm -rf "$API_BACKUP"
+    mv "$API_AUTH_DIR" "$API_BACKUP"
+    log "Temporarily excluded API routes from static build"
+  fi
   NEXT_OUTPUT=export pnpm build --filter=@chiselgrid/web
-  if [ $? -ne 0 ]; then
+  BUILD_RC=$?
+  # Restore API routes
+  if [ -d "$API_BACKUP" ]; then
+    mv "$API_BACKUP" "$API_AUTH_DIR"
+  fi
+  if [ $BUILD_RC -ne 0 ]; then
     warn "Build failed — check errors above"
     exit 1
   fi

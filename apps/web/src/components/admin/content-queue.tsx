@@ -1,107 +1,212 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface QueueItem {
   id: string;
   title: string;
+  slug: string;
   author: string;
   submittedAt: string;
-  aiScore: number;
+  readTimeMinutes: number;
   status: 'in_review' | 'submitted';
   category: string;
+  importSource?: string;
+  description?: string;
+  hasSvgAnimation?: boolean;
 }
-
-const mockItems: QueueItem[] = [
-  { id: '1', title: 'Building Scalable Microservices with gRPC', author: 'alice@ascendion.com', submittedAt: '2026-04-05T10:30:00Z', aiScore: 78, status: 'in_review', category: 'Software Engineering' },
-  { id: '2', title: 'Zero Trust Architecture for Cloud-Native Apps', author: 'bob@ascendion.com', submittedAt: '2026-04-05T14:15:00Z', aiScore: 85, status: 'submitted', category: 'Security & Compliance' },
-  { id: '3', title: 'MLOps Pipeline Best Practices', author: 'carol@ascendion.com', submittedAt: '2026-04-04T09:00:00Z', aiScore: 62, status: 'in_review', category: 'AI & Machine Learning' },
-  { id: '4', title: 'AWS CDK Advanced Patterns', author: 'dave@ascendion.com', submittedAt: '2026-04-04T16:45:00Z', aiScore: 91, status: 'submitted', category: 'Cloud & Infrastructure' },
-  { id: '5', title: 'Event-Driven Architecture with EventBridge', author: 'eve@ascendion.com', submittedAt: '2026-04-03T11:20:00Z', aiScore: 55, status: 'in_review', category: 'Software Engineering' },
-];
 
 export function ContentQueue() {
-  const [items, setItems] = useState(mockItems);
+  const [items, setItems] = useState<QueueItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<QueueItem | null>(null);
+  const [filter, setFilter] = useState<string>('all');
 
-  const handleAction = (id: string, action: 'approve' | 'reject') => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-    // TODO: Call API to approve/reject
+  useEffect(() => {
+    fetchQueue();
+  }, []);
+
+  async function fetchQueue() {
+    try {
+      const res = await fetch('/api/admin/queue');
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data.items ?? []);
+      } else {
+        // Fallback: show instructions
+        console.log('[ContentQueue] API not available — showing placeholder');
+      }
+    } catch {
+      console.log('[ContentQueue] API not available — run import-taxonomy.ts first');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleAction = async (id: string, action: 'approve' | 'reject') => {
+    try {
+      const res = await fetch('/api/admin/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId: id, action }),
+      });
+      if (res.ok) {
+        setItems((prev) => prev.filter((item) => item.id !== id));
+        if (selectedItem?.id === id) setSelectedItem(null);
+      }
+    } catch {
+      // Optimistic remove on error too
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    }
   };
 
-  return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Title</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Author</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Category</th>
-            <th className="px-4 py-3 text-center font-medium text-gray-500">AI Score</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Submitted</th>
-            <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
-              <td className="px-4 py-3">
-                <div className="font-medium text-gray-900 dark:text-white">{item.title}</div>
-              </td>
-              <td className="px-4 py-3 text-gray-500">{item.author}</td>
-              <td className="px-4 py-3">
-                <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-xs">
-                  {item.category}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-center">
-                <ScoreBadge score={item.aiScore} />
-              </td>
-              <td className="px-4 py-3 text-gray-500 text-xs">
-                {new Date(item.submittedAt).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => handleAction(item.id, 'approve')}
-                    className="rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleAction(item.id, 'reject')}
-                    className="rounded-md border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {items.length === 0 && (
-            <tr>
-              <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
-                No items in the review queue
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+  const handleBulkApprove = () => {
+    const highScore = items.filter(i => (i.readTimeMinutes ?? 0) >= 8);
+    for (const item of highScore) {
+      handleAction(item.id, 'approve');
+    }
+  };
 
-function ScoreBadge({ score }: { score: number }) {
+  const categories = [...new Set(items.map(i => i.category))].sort();
+  const filtered = filter === 'all' ? items : items.filter(i => i.category === filter);
+
+  if (loading) {
+    return <div className="py-12 text-center text-gray-400">Loading content queue...</div>;
+  }
+
   return (
-    <span
-      className={cn(
-        'inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold',
-        score >= 80 && 'bg-green-100 text-green-700',
-        score >= 60 && score < 80 && 'bg-yellow-100 text-yellow-700',
-        score < 60 && 'bg-red-100 text-red-700',
-      )}
-    >
-      {score}
-    </span>
+    <div>
+      {/* Header stats */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-500">
+          {items.length} article{items.length !== 1 ? 's' : ''} awaiting your review
+        </p>
+        <div className="flex gap-2">
+          <select
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            className="text-xs border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 bg-white dark:bg-gray-800"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          {items.length > 0 && (
+            <button
+              onClick={handleBulkApprove}
+              className="rounded-md bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
+            >
+              Approve All (read time &ge; 8min)
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex gap-4">
+        {/* Table */}
+        <div className={cn("rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden", selectedItem ? "w-1/2" : "w-full")}>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Title</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Category</th>
+                <th className="px-4 py-3 text-center font-medium text-gray-500">Read</th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => (
+                <tr
+                  key={item.id}
+                  className={cn(
+                    "border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer",
+                    selectedItem?.id === item.id && "bg-blue-50 dark:bg-blue-900/20",
+                  )}
+                  onClick={() => setSelectedItem(item)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-gray-900 dark:text-white text-xs">{item.title}</div>
+                    {item.importSource && (
+                      <span className="mt-0.5 inline-block rounded bg-orange-100 dark:bg-orange-900/30 px-1.5 py-0.5 text-[10px] text-orange-700 dark:text-orange-400">
+                        {item.importSource}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-[10px]">
+                      {item.category}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-xs text-gray-500">{item.readTimeMinutes}m</td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleAction(item.id, 'approve'); }}
+                        className="rounded-md bg-green-600 px-2 py-1 text-[10px] font-medium text-white hover:bg-green-700"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleAction(item.id, 'reject'); }}
+                        className="rounded-md border border-red-300 px-2 py-1 text-[10px] font-medium text-red-600 hover:bg-red-50"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
+                    {items.length === 0
+                      ? 'No items in the review queue. Run the taxonomy import first.'
+                      : 'No items match the selected filter.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Preview panel */}
+        {selectedItem && (
+          <div className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 overflow-y-auto max-h-[600px]">
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">{selectedItem.title}</h3>
+              <button onClick={() => setSelectedItem(null)} className="text-gray-400 hover:text-gray-600 text-xs">&times;</button>
+            </div>
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+              <p><strong>Category:</strong> {selectedItem.category}</p>
+              <p><strong>Read time:</strong> {selectedItem.readTimeMinutes} minutes</p>
+              <p><strong>Slug:</strong> <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{selectedItem.slug}</code></p>
+              {selectedItem.description && (
+                <p><strong>Description:</strong> {selectedItem.description}</p>
+              )}
+              {selectedItem.hasSvgAnimation && (
+                <p className="text-green-600"><strong>SVG Animation:</strong> Included</p>
+              )}
+              {selectedItem.importSource && (
+                <p><strong>Source:</strong> <a href={`https://www.ascendion.engineering/${selectedItem.slug.replace('ascendion-', '').replace(/-/g, '/')}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View original</a></p>
+              )}
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => handleAction(selectedItem.id, 'approve')}
+                className="flex-1 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+              >
+                Approve &amp; Publish
+              </button>
+              <button
+                onClick={() => handleAction(selectedItem.id, 'reject')}
+                className="flex-1 rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
