@@ -27,7 +27,7 @@ export function Header() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
-          {categories.slice(0, 4).map((cat) => (
+          {categories.map((cat) => (
             <Link
               key={cat.slug}
               href={`/category/${cat.slug}`}
@@ -36,11 +36,6 @@ export function Header() {
               {cat.name}
             </Link>
           ))}
-          {categories.length > 4 && (
-            <span className="px-2 text-sm text-muted-foreground">
-              +{categories.length - 4} more
-            </span>
-          )}
         </nav>
 
         {/* Actions */}

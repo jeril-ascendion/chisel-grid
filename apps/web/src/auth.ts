@@ -6,6 +6,7 @@ import {
   CognitoIdentityProviderClient,
   InitiateAuthCommand,
   GetUserCommand,
+  AdminListGroupsForUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 function computeSecretHash(username: string, clientId: string, clientSecret: string): string {
@@ -95,12 +96,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             (a) => a.Name === 'custom:tenantId',
           )?.Value ?? 'default';
 
+          // Fetch user's Cognito groups for role derivation
+          let groups: string[] = [];
+          try {
+            const groupsResult = await client.send(
+              new AdminListGroupsForUserCommand({
+                UserPoolId: userPoolId,
+                Username: sub,
+              }),
+            );
+            groups = groupsResult.Groups?.map((g) => g.GroupName!).filter(Boolean) ?? [];
+          } catch {
+            // If we can't fetch groups, default to empty
+          }
+
           return {
             id: sub,
             email,
             name: email,
             tenantId,
             userPoolId,
+            groups,
           };
         } catch (error) {
           console.error('[auth] Cognito credentials auth failed:', error);
@@ -116,7 +132,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     jwt({ token, account, profile, user }) {
       if (account?.provider === 'cognito-credentials' && user) {
-        token.groups = [];
+        token.groups = (user as Record<string, unknown>).groups as string[] ?? [];
         token.tenantId =
           (user as Record<string, unknown>).tenantId as string ?? 'default';
         token.sub = user.id ?? undefined;
