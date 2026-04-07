@@ -42,3 +42,20 @@
 
 ## Current Sprint
 See project-status.md
+
+## Important Pattern — useSession in Static Pages
+
+Article pages use generateStaticParams (SSG). Any component using
+useSession MUST be wrapped with dynamic import + ssr:false:
+
+import dynamic from 'next/dynamic'
+const MyComponent = dynamic(() => import('./MyComponent'), { ssr: false })
+
+Direct import of useSession components in SSG pages causes them to
+always return null because there is no session context at build time.
+
+## Role Extraction
+
+Role must be extracted from Cognito ID token JWT claims (cognito:groups),
+NOT from AdminListGroupsForUserCommand. The Admin API requires IAM
+credentials that the Next.js dev server does not have.
