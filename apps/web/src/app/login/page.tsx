@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
-import { cognitoSignIn } from '@/lib/cognito-client';
+import { useSession, signIn } from 'next-auth/react';
+import { cognitoSignIn, getCognitoSession } from '@/lib/cognito-client';
 import { Suspense } from 'react';
 
 export default function LoginPage() {
@@ -28,6 +28,7 @@ export default function LoginPage() {
 function LoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { status } = useSession();
   const error = searchParams.get('error');
   const callbackUrl = searchParams.get('callbackUrl') ?? '/admin/';
   const [email, setEmail] = useState('');
@@ -35,6 +36,19 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Redirect away if already authenticated (prevents hung state on /login)
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/admin/');
+      return;
+    }
+    // Also check client-side Cognito session (static site)
+    const cs = getCognitoSession();
+    if (cs) {
+      router.replace('/admin/');
+    }
+  }, [status, router]);
 
   async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +59,6 @@ function LoginForm() {
       // Try direct Cognito auth first (works on static S3+CloudFront)
       const cognitoResult = await cognitoSignIn(email, password);
       if (cognitoResult.ok) {
-        // Direct Cognito auth succeeded — redirect to admin
         window.location.href = callbackUrl;
         return;
       }
@@ -57,10 +70,12 @@ function LoginForm() {
           password,
           redirect: false,
         });
+
         if (result?.error) {
           setFormError('Invalid email or password.');
         } else if (result?.ok) {
           router.push(callbackUrl);
+          router.refresh();
         }
         return;
       }
@@ -102,7 +117,7 @@ function LoginForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="you@ascendion.com"
           />
         </div>
@@ -118,7 +133,7 @@ function LoginForm() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <button
               type="button"
