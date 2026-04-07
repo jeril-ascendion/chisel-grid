@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto';
 import NextAuth, { type DefaultSession } from 'next-auth';
 import CognitoProvider from 'next-auth/providers/cognito';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -6,6 +7,12 @@ import {
   InitiateAuthCommand,
   GetUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
+
+function computeSecretHash(username: string, clientId: string, clientSecret: string): string {
+  return createHmac('sha256', clientSecret)
+    .update(username + clientId)
+    .digest('base64');
+}
 
 declare module 'next-auth' {
   interface Session {
@@ -52,14 +59,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const client = new CognitoIdentityProviderClient({ region });
 
         try {
+          const clientId = process.env.COGNITO_CLIENT_ID!;
+          const clientSecret = process.env.COGNITO_CLIENT_SECRET;
+          const username = credentials.username as string;
+
+          const authParams: Record<string, string> = {
+            USERNAME: username,
+            PASSWORD: credentials.password as string,
+          };
+          if (clientSecret) {
+            authParams.SECRET_HASH = computeSecretHash(username, clientId, clientSecret);
+          }
+
           const authResult = await client.send(
             new InitiateAuthCommand({
               AuthFlow: 'USER_PASSWORD_AUTH',
-              ClientId: process.env.COGNITO_CLIENT_ID!,
-              AuthParameters: {
-                USERNAME: credentials.username as string,
-                PASSWORD: credentials.password as string,
-              },
+              ClientId: clientId,
+              AuthParameters: authParams,
             }),
           );
 
@@ -86,7 +102,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             tenantId,
             userPoolId,
           };
-        } catch {
+        } catch (error) {
+          console.error('[auth] Cognito credentials auth failed:', error);
           return null;
         }
       },

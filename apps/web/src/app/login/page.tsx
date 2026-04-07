@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { Suspense } from 'react';
 
 export default function LoginPage() {
@@ -25,6 +26,7 @@ export default function LoginPage() {
 
 function LoginForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const error = searchParams.get('error');
   const callbackUrl = searchParams.get('callbackUrl') ?? '/admin/';
   const [email, setEmail] = useState('');
@@ -43,16 +45,16 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/callback/cognito-credentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password }),
+      const result = await signIn('cognito-credentials', {
+        username: email,
+        password,
+        redirect: false,
       });
 
-      if (res.ok) {
-        window.location.href = callbackUrl;
-      } else {
+      if (result?.error) {
         setFormError('Invalid email or password.');
+      } else if (result?.ok) {
+        router.push(callbackUrl);
       }
     } catch {
       setFormError('Sign in failed. Please try again.');
