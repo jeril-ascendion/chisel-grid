@@ -17,13 +17,23 @@ declare module 'next-auth' {
   }
 }
 
+const cognitoIssuer =
+  process.env.COGNITO_ISSUER_URL ?? process.env.COGNITO_ISSUER;
+
+const oauthProviders = cognitoIssuer && process.env.COGNITO_CLIENT_SECRET
+  ? [
+      CognitoProvider({
+        clientId: process.env.COGNITO_CLIENT_ID!,
+        clientSecret: process.env.COGNITO_CLIENT_SECRET,
+        issuer: cognitoIssuer,
+      }),
+    ]
+  : [];
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   providers: [
-    CognitoProvider({
-      clientId: process.env.COGNITO_CLIENT_ID!,
-      clientSecret: process.env.COGNITO_CLIENT_SECRET!,
-      issuer: process.env.COGNITO_ISSUER!,
-    }),
+    ...oauthProviders,
     CredentialsProvider({
       id: 'cognito-credentials',
       name: 'Email & Password',
@@ -34,10 +44,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
 
-        const region = process.env.COGNITO_ISSUER!.match(
+        const issuerUrl = cognitoIssuer ?? '';
+        const region = issuerUrl.match(
           /cognito-idp\.(.+?)\.amazonaws/,
         )?.[1] ?? 'ap-southeast-1';
-        const userPoolId = process.env.COGNITO_ISSUER!.split('/').pop()!;
+        const userPoolId = issuerUrl.split('/').pop()!;
         const client = new CognitoIdentityProviderClient({ region });
 
         try {

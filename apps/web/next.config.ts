@@ -3,10 +3,12 @@
  */
 import type { NextConfig } from 'next';
 
+const isStaticExport = process.env.NEXT_OUTPUT === 'export';
+
 const nextConfig: NextConfig = {
-  // Static export for S3 + CloudFront deployment
-  output: 'export',
-  trailingSlash: true,
+  // Static export only when NEXT_OUTPUT=export (for S3 + CloudFront deployment).
+  // Server mode is required for NextAuth API routes.
+  ...(isStaticExport ? { output: 'export' as const, trailingSlash: true } : {}),
 
   // Image optimization for CWV (LCP < 2.5s)
   images: {
