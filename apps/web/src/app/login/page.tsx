@@ -1,11 +1,10 @@
-import { signIn } from '@/auth';
-import { CredentialsForm } from './credentials-form';
+'use client';
 
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; callbackUrl?: string }>;
-}) {
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+
+export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
@@ -16,20 +15,51 @@ export default function LoginPage({
           </p>
         </div>
 
-        <LoginForm searchParams={searchParams} />
+        <Suspense>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );
 }
 
-async function LoginForm({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; callbackUrl?: string }>;
-}) {
-  const params = await searchParams;
-  const error = params.error;
-  const callbackUrl = params.callbackUrl ?? '/admin';
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/admin/';
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [formError, setFormError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSSOClick() {
+    // Redirect to Cognito SSO via NextAuth endpoint
+    window.location.href = `/api/auth/signin/cognito?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+  }
+
+  async function handleCredentialsSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/callback/cognito-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      if (res.ok) {
+        window.location.href = callbackUrl;
+      } else {
+        setFormError('Invalid email or password.');
+      }
+    } catch {
+      setFormError('Sign in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -43,21 +73,73 @@ async function LoginForm({
         </div>
       )}
 
-      <form
-        action={async () => {
-          'use server';
-          await signIn('cognito', { redirectTo: callbackUrl });
-        }}
+      <button
+        type="button"
+        onClick={handleSSOClick}
+        className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
+        Sign in with Ascendion SSO
+      </button>
+
+      <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-2 text-gray-500">
+              Or sign in with email
+            </span>
+          </div>
+        </div>
+
+        {formError && (
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            {formError}
+          </div>
+        )}
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="you@ascendion.com"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
         <button
           type="submit"
-          className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          disabled={loading}
+          className="w-full rounded-md bg-gray-800 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50"
         >
-          Sign in with Ascendion SSO
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
-      </form>
 
-      <CredentialsForm callbackUrl={callbackUrl} />
+        <p className="text-center text-xs text-gray-500">
+          For Ascendion employees, use Sign in with Ascendion SSO above
+        </p>
+      </form>
     </div>
   );
 }

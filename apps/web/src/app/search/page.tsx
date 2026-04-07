@@ -1,20 +1,30 @@
-import type { Metadata } from 'next';
+'use client';
+
 import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { getArticles } from '@/lib/mock-data';
-import { ArticleCard } from '@/components/common/article-card';
 import { SearchInput } from '@/components/common/search-input';
 
-export const metadata: Metadata = {
-  title: 'Search',
-  description: 'Search engineering articles on Ascendion Engineering',
-};
+export default function SearchPage() {
+  return (
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-3xl font-bold mb-6">Search</h1>
 
-type Props = {
-  searchParams: Promise<{ q?: string; tag?: string }>;
-};
+      <Suspense>
+        <SearchInput />
+      </Suspense>
 
-export default async function SearchPage({ searchParams }: Props) {
-  const { q, tag } = await searchParams;
+      <Suspense>
+        <SearchResults />
+      </Suspense>
+    </div>
+  );
+}
+
+function SearchResults() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get('q') ?? undefined;
+  const tag = searchParams.get('tag') ?? undefined;
 
   const { items: results, total } = getArticles({
     search: q,
@@ -25,13 +35,7 @@ export default async function SearchPage({ searchParams }: Props) {
   const hasQuery = !!(q?.trim() || tag);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold mb-6">Search</h1>
-
-      <Suspense>
-        <SearchInput />
-      </Suspense>
-
+    <>
       {tag && (
         <p className="mt-4 text-sm text-muted-foreground">
           Filtering by tag: <span className="font-medium text-foreground">{tag}</span>
@@ -61,7 +65,7 @@ export default async function SearchPage({ searchParams }: Props) {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -71,7 +75,7 @@ function SearchResult({ article, query }: { article: ReturnType<typeof getArticl
 
   return (
     <a
-      href={`/articles/${article.slug}`}
+      href={`/articles/${article.slug}/`}
       className="block rounded-xl border border-border bg-card p-5 hover:border-primary/20 hover:shadow-md transition-all"
     >
       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">

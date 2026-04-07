@@ -9,8 +9,6 @@ import { ArticleCard } from '@/components/common/article-card';
 import { formatDate, SITE_NAME, SITE_URL } from '@/lib/utils';
 import type { ContentBlock } from '@chiselgrid/types';
 
-export const revalidate = 60;
-
 type Props = {
   params: Promise<{ slug: string }>;
 };

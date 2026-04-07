@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ascendion Engineering</title>
+    <link>https://ascendion.engineering</link>
+    <description>Engineering knowledge portal powered by ChiselGrid</description>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 07 Apr 2026 01:19:32 GMT</lastBuildDate>
+    <atom:link href="https://ascendion.engineering/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title><![CDATA[Building Cloud-Native Applications with AWS]]></title>
+      <link>https://ascendion.engineering/articles/building-cloud-native-applications-aws/</link>
+      <guid isPermaLink="true">https://ascendion.engineering/articles/building-cloud-native-applications-aws/</guid>
+      <description><![CDATA[A deep dive into microservices and observability.]]></description>
+      <pubDate>Sat, 28 Mar 2026 10:00:00 GMT</pubDate>
+      <category>Cloud Architecture</category>
+    </item>
+    <item>
+      <title><![CDATA[Type-Safe Full-Stack Development with TypeScript and Zod]]></title>
+      <link>https://ascendion.engineering/articles/type-safe-fullstack-typescript-zod/</link>
+      <guid isPermaLink="true">https://ascendion.engineering/articles/type-safe-fullstack-typescript-zod/</guid>
+      <description><![CDATA[TypeScript and Zod for type-safe applications.]]></description>
+      <pubDate>Wed, 25 Mar 2026 14:30:00 GMT</pubDate>
+      <category>Full-Stack Development</category>
+    </item>
+    <item>
+      <title><![CDATA[RAG Pipelines with Amazon Bedrock]]></title>
+      <link>https://ascendion.engineering/articles/rag-pipelines-amazon-bedrock/</link>
+      <guid isPermaLink="true">https://ascendion.engineering/articles/rag-pipelines-amazon-bedrock/</guid>
+      <description><![CDATA[Building RAG pipelines.]]></description>
+      <pubDate>Fri, 20 Mar 2026 09:00:00 GMT</pubDate>
+      <category>AI & Machine Learning</category>
+    </item>
+    <item>
+      <title><![CDATA[GitOps with ArgoCD]]></title>
+      <link>https://ascendion.engineering/articles/gitops-argocd-kubernetes/</link>
+      <guid isPermaLink="true">https://ascendion.engineering/articles/gitops-argocd-kubernetes/</guid>
+      <description><![CDATA[Declarative Kubernetes Deployments.]]></description>
+      <pubDate>Sun, 15 Mar 2026 11:00:00 GMT</pubDate>
+      <category>DevOps & SRE</category>
+    </item>
+    <item>
+      <title><![CDATA[Real-Time Data Pipelines]]></title>
+      <link>https://ascendion.engineering/articles/realtime-data-kafka-flink/</link>
+      <guid isPermaLink="true">https://ascendion.engineering/articles/realtime-data-kafka-flink/</guid>
+      <description><![CDATA[Kafka and Flink streaming.]]></description>
+      <pubDate>Tue, 10 Mar 2026 16:00:00 GMT</pubDate>
+      <category>Data Engineering</category>
+    </item>
+    <item>
+      <title><![CDATA[Engineering Team Topologies]]></title>
+      <link>https://ascendion.engineering/articles/engineering-team-topologies/</link>
+      <guid isPermaLink="true">https://ascendion.engineering/articles/engineering-team-topologies/</guid>
+      <description><![CDATA[Stream-aligned teams.]]></description>
+      <pubDate>Thu, 05 Mar 2026 08:00:00 GMT</pubDate>
+      <category>Engineering Culture</category>
+    </item>
+    <item>
+      <title><![CDATA[Serverless Lambda Cold Starts]]></title>
+      <link>https://ascendion.engineering/articles/serverless-lambda-cold-starts/</link>
+      <guid isPermaLink="true">https://ascendion.engineering/articles/serverless-lambda-cold-starts/</guid>
+      <description><![CDATA[Managing cold starts at scale.]]></description>
+      <pubDate>Sat, 28 Feb 2026 13:00:00 GMT</pubDate>
+      <category>Cloud Architecture</category>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://ascendion.engineering/</loc><lastmod>2026-04-07</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://ascendion.engineering/articles/</loc><lastmod>2026-04-07</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ascendion.engineering/search/</loc><lastmod>2026-04-07</lastmod><changefreq>weekly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://ascendion.engineering/category/cloud-architecture/</loc><lastmod>2026-04-07</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://ascendion.engineering/category/ai-ml/</loc><lastmod>2026-04-07</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://ascendion.engineering/category/full-stack/</loc><lastmod>2026-04-07</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://ascendion.engineering/category/devops-sre/</loc><lastmod>2026-04-07</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://ascendion.engineering/category/data-engineering/</loc><lastmod>2026-04-07</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://ascendion.engineering/category/engineering-culture/</loc><lastmod>2026-04-07</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://ascendion.engineering/articles/building-cloud-native-applications-aws/</loc><lastmod>2026-04-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ascendion.engineering/articles/type-safe-fullstack-typescript-zod/</loc><lastmod>2026-04-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ascendion.engineering/articles/rag-pipelines-amazon-bedrock/</loc><lastmod>2026-04-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ascendion.engineering/articles/gitops-argocd-kubernetes/</loc><lastmod>2026-04-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ascendion.engineering/articles/realtime-data-kafka-flink/</loc><lastmod>2026-04-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ascendion.engineering/articles/engineering-team-topologies/</loc><lastmod>2026-04-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ascendion.engineering/articles/serverless-lambda-cold-starts/</loc><lastmod>2026-04-07</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+</urlset>

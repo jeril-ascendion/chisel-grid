@@ -5,11 +5,8 @@ import { getCategoryBySlug, getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
 import { SITE_URL } from '@/lib/utils';
 
-export const revalidate = 60;
-
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ page?: string; tag?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -32,21 +29,15 @@ export async function generateStaticParams() {
 
 const ITEMS_PER_PAGE = 12;
 
-export default async function CategoryPage({ params, searchParams }: Props) {
+export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
-  const { page: pageStr, tag } = await searchParams;
 
   const category = getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const page = Math.max(1, parseInt(pageStr ?? '1', 10));
-  const offset = (page - 1) * ITEMS_PER_PAGE;
-
   const { items: articles, total } = getArticles({
     categorySlug: slug,
-    tag,
     limit: ITEMS_PER_PAGE,
-    offset,
   });
 
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
@@ -101,23 +92,15 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           <div className="flex flex-wrap gap-2 mb-8">
             <Link
               href={`/category/${slug}`}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                !tag
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
-              }`}
+              className="px-3 py-1 text-sm rounded-full transition-colors bg-primary text-primary-foreground"
             >
               All
             </Link>
             {[...allTags.entries()].map(([tagSlug, tagName]) => (
               <Link
                 key={tagSlug}
-                href={`/category/${slug}?tag=${tagSlug}`}
-                className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                  tag === tagSlug
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-accent'
-                }`}
+                href={`/search?tag=${tagSlug}`}
+                className="px-3 py-1 text-sm rounded-full transition-colors bg-muted text-muted-foreground hover:bg-accent"
               >
                 {tagName}
               </Link>
@@ -140,37 +123,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <nav aria-label="Pagination" className="mt-10 flex justify-center gap-2">
-            {page > 1 && (
-              <Link
-                href={`/category/${slug}?page=${page - 1}${tag ? `&tag=${tag}` : ''}`}
-                className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-accent transition-colors"
-              >
-                Previous
-              </Link>
-            )}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Link
-                key={p}
-                href={`/category/${slug}?page=${p}${tag ? `&tag=${tag}` : ''}`}
-                className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                  p === page
-                    ? 'bg-primary text-primary-foreground'
-                    : 'border border-border hover:bg-accent'
-                }`}
-              >
-                {p}
-              </Link>
-            ))}
-            {page < totalPages && (
-              <Link
-                href={`/category/${slug}?page=${page + 1}${tag ? `&tag=${tag}` : ''}`}
-                className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-accent transition-colors"
-              >
-                Next
-              </Link>
-            )}
-          </nav>
+          <p className="mt-10 text-center text-sm text-muted-foreground">
+            Showing {articles.length} of {total} articles
+          </p>
         )}
       </div>
     </>
