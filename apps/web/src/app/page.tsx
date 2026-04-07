@@ -3,6 +3,7 @@ import { getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
 import { NewsletterForm } from '@/components/common/newsletter-form';
 import { HeroCta } from '@/components/common/hero-cta';
+import { TopicAnimation } from '@/components/animations/TopicAnimation';
 import { formatDate } from '@/lib/utils';
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -23,7 +24,8 @@ export default function HomePage() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       {/* Hero: Featured Article */}
       {featured && (
-        <section className="py-8 sm:py-12">
+        <section className="relative py-8 sm:py-12">
+          <TopicAnimation category="default" />
           <Link
             href={`/articles/${featured.slug}`}
             className="group block rounded-2xl border border-border bg-card overflow-hidden hover:shadow-xl hover:border-primary/20 transition-all duration-300"

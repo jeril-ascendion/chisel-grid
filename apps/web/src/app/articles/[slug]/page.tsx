@@ -6,7 +6,7 @@ import { BlockRenderer } from '@/components/content/block-renderer';
 import { TableOfContents } from '@/components/content/table-of-contents';
 import { AudioPlayer } from '@/components/content/audio-player';
 import { ArticleCard } from '@/components/common/article-card';
-import { ArticleAdminBar } from '@/components/article/admin-bar';
+import { TopicAnimation } from '@/components/animations/TopicAnimation';
 import { formatDate, SITE_NAME, SITE_URL } from '@/lib/utils';
 import type { ContentBlock } from '@chiselgrid/types';
 
@@ -105,8 +105,6 @@ export default async function ArticlePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
-      <ArticleAdminBar contentId={article.contentId} />
-
       <article className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-6">
@@ -131,7 +129,9 @@ export default async function ArticlePage({ params }: Props) {
         </nav>
 
         {/* Article Header */}
-        <header className="max-w-3xl mb-8">
+        <header className="relative max-w-3xl mb-8">
+          <TopicAnimation category={article.categorySlug} />
+          <div className="relative z-[1]">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
             <Link
               href={`/category/${article.categorySlug}`}
@@ -159,6 +159,7 @@ export default async function ArticlePage({ params }: Props) {
                 {formatDate(article.publishedAt)}
               </p>
             </div>
+          </div>
           </div>
         </header>
 

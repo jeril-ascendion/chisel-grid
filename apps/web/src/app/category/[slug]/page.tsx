@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getCategoryBySlug, getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
+import { TopicAnimation } from '@/components/animations/TopicAnimation';
 import { SITE_URL } from '@/lib/utils';
 
 type Props = {
@@ -80,11 +81,14 @@ export default async function CategoryPage({ params }: Props) {
         </nav>
 
         {/* Header */}
-        <header className="mb-8">
+        <header className="relative mb-8">
+          <TopicAnimation category={slug} />
+          <div className="relative z-[1]">
           <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
           {category.description && (
             <p className="text-lg text-muted-foreground">{category.description}</p>
           )}
+          </div>
         </header>
 
         {/* Tag filters */}
