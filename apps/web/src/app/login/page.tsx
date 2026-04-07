@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { cognitoSignIn } from '@/lib/cognito-client';
 import { Suspense } from 'react';
 
 export default function LoginPage() {
@@ -35,28 +36,36 @@ function LoginForm() {
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleSSOClick() {
-    // Redirect to Cognito SSO via NextAuth endpoint
-    window.location.href = `/api/auth/signin/cognito?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-  }
-
   async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError('');
     setLoading(true);
 
     try {
-      const result = await signIn('cognito-credentials', {
-        username: email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setFormError('Invalid email or password.');
-      } else if (result?.ok) {
-        router.push(callbackUrl);
+      // Try direct Cognito auth first (works on static S3+CloudFront)
+      const cognitoResult = await cognitoSignIn(email, password);
+      if (cognitoResult.ok) {
+        // Direct Cognito auth succeeded — redirect to admin
+        window.location.href = callbackUrl;
+        return;
       }
+
+      // If direct Cognito fails with a network/CORS error, fall back to NextAuth (dev mode)
+      if (cognitoResult.error.includes('Failed to fetch') || cognitoResult.error.includes('NetworkError')) {
+        const result = await signIn('cognito-credentials', {
+          username: email,
+          password,
+          redirect: false,
+        });
+        if (result?.error) {
+          setFormError('Invalid email or password.');
+        } else if (result?.ok) {
+          router.push(callbackUrl);
+        }
+        return;
+      }
+
+      setFormError(cognitoResult.error);
     } catch {
       setFormError('Sign in failed. Please try again.');
     } finally {
@@ -76,26 +85,7 @@ function LoginForm() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleSSOClick}
-        className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-      >
-        Sign in with Ascendion SSO
-      </button>
-
       <form onSubmit={handleCredentialsSubmit} className="space-y-4">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-2 text-gray-500">
-              Or sign in with email
-            </span>
-          </div>
-        </div>
-
         {formError && (
           <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
             {formError}
@@ -158,10 +148,6 @@ function LoginForm() {
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
-
-        <p className="text-center text-xs text-gray-500">
-          For Ascendion employees, use Sign in with Ascendion SSO above
-        </p>
       </form>
     </div>
   );

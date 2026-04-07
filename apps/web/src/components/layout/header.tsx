@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
+import { getCognitoSession, cognitoSignOut } from '@/lib/cognito-client';
 import { ThemeToggle } from './theme-toggle';
 import { MobileMenu } from './mobile-menu';
 import { getCategories } from '@/lib/mock-data';
@@ -42,6 +43,26 @@ function Wordmark() {
 export function Header() {
   const categories = getCategories();
   const { data: session, status } = useSession();
+  const [cognitoUser, setCognitoUser] = useState<{ email: string; role: string } | null>(null);
+
+  useEffect(() => {
+    // Check client-side Cognito session (for static S3 deployment)
+    const cs = getCognitoSession();
+    if (cs) setCognitoUser({ email: cs.email, role: cs.role });
+  }, []);
+
+  const isAuthenticated = (status === 'authenticated' && session?.user) || cognitoUser;
+  const userDisplay = session?.user?.name ?? session?.user?.email ?? cognitoUser?.email;
+
+  const handleSignOut = () => {
+    cognitoSignOut();
+    setCognitoUser(null);
+    if (status === 'authenticated') {
+      signOut({ callbackUrl: '/' });
+    } else {
+      window.location.href = '/';
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 h-[54px] border-b border-white/[0.08] bg-[#0F0F0F]">
@@ -84,13 +105,13 @@ export function Header() {
             </svg>
           </Link>
           <ThemeToggle />
-          {status === 'authenticated' && session?.user ? (
+          {isAuthenticated ? (
             <div className="hidden sm:flex items-center gap-2 ml-1">
               <span className="text-[0.8rem] text-white/65 max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
-                {session.user.name ?? session.user.email}
+                {userDisplay}
               </span>
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={handleSignOut}
                 className="bg-white text-[#111111] text-[0.8rem] font-medium px-4 py-[0.35rem] rounded-full hover:opacity-80 transition-opacity duration-[0.18s] ease"
               >
                 Sign Out

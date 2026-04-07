@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { getCognitoSession } from '@/lib/cognito-client';
 
 interface ArticleAdminBarProps {
   contentId?: string;
@@ -16,9 +17,14 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Check NextAuth session
     if (status === 'authenticated' && session?.user) {
       setIsAdmin(session.user.role === 'admin');
+      return;
     }
+    // Fallback: check client-side Cognito session (static site)
+    const cs = getCognitoSession();
+    if (cs?.role === 'admin') setIsAdmin(true);
   }, [session, status]);
 
   if (!isAdmin) return null;
