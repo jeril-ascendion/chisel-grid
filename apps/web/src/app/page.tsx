@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
-import { HeroCta } from '@/components/common/hero-cta';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { formatDate } from '@/lib/utils';
 
@@ -55,7 +54,6 @@ export default function HomePage() {
               </div>
             </div>
           </Link>
-          <HeroCta />
         </section>
       )}
 
