@@ -84,10 +84,44 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, description, status: newStatus, categorySlug, tags: tagsInput, readTimeMinutes: readTime, blocks }),
       });
-      if (res.ok) showToast(`Status changed to ${newStatus}`);
-      else showToast('Failed to update status');
+      if (res.ok) {
+        showToast(`Status changed to ${newStatus}`);
+        if (newStatus === 'approved' || newStatus === 'published') {
+          router.push('/admin/queue');
+        }
+      } else {
+        showToast('Failed to update status');
+      }
     } catch {
       showToast('Failed to update status');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResubmit = async () => {
+    setSaving(true);
+    try {
+      // Save edits first
+      await fetch(`/api/content/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, status: 'in_review', categorySlug, tags: tagsInput, readTimeMinutes: readTime, blocks }),
+      });
+      // Change status back to in_review
+      const res = await fetch('/api/admin/queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId: id, action: 'resubmit' }),
+      });
+      if (res.ok) {
+        showToast('Resubmitted for review');
+        router.push('/admin/queue');
+      } else {
+        showToast('Failed to resubmit');
+      }
+    } catch {
+      showToast('Failed to resubmit');
     } finally {
       setSaving(false);
     }
@@ -126,6 +160,13 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
         </div>
       )}
 
+      {status === 'rejected' && (
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 p-4">
+          <strong className="text-red-700 dark:text-red-400">This article was rejected.</strong>
+          <span className="text-red-600 dark:text-red-300 ml-1">Make your edits and click Resubmit for Review.</span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Article</h1>
@@ -145,7 +186,16 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
           >
             {saving ? 'Saving...' : 'Save'}
           </button>
-          {status !== 'approved' && (
+          {status === 'rejected' && (
+            <button
+              onClick={handleResubmit}
+              disabled={saving}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? 'Resubmitting...' : 'Resubmit for Review'}
+            </button>
+          )}
+          {status !== 'approved' && status !== 'rejected' && (
             <button
               onClick={() => handleStatusChange('approved')}
               disabled={saving}
@@ -154,7 +204,7 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
               Approve
             </button>
           )}
-          {status !== 'published' && (
+          {status !== 'published' && status !== 'rejected' && (
             <button
               onClick={() => handleStatusChange('published')}
               disabled={saving}

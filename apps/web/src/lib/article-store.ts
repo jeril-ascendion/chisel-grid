@@ -44,12 +44,15 @@ export function updateArticle(contentId: string, updates: Partial<StoredArticle>
 
 export function getQueueArticles(statusFilter?: string): StoredArticle[] {
   const all = Array.from(articles.values());
-  if (!statusFilter || statusFilter === 'all') {
-    return all
-      .filter((a) => a.status === 'in_review' || a.status === 'submitted' || a.status === 'draft')
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const sorted = all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  if (statusFilter === 'all') return sorted;
+  if (!statusFilter) {
+    return sorted.filter((a) => a.status === 'in_review' || a.status === 'submitted' || a.status === 'draft');
   }
-  return all
-    .filter((a) => a.status === statusFilter)
+  return sorted.filter((a) => a.status === statusFilter);
+}
+
+export function getAllArticles(): StoredArticle[] {
+  return Array.from(articles.values())
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }

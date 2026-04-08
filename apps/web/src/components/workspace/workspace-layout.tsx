@@ -13,7 +13,7 @@ export function WorkspaceLayout() {
   const blocks = useWorkspaceStore((s) => s.blocks);
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-full overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Left pane: Chat + Agent Timeline */}
       <div className="flex w-[480px] shrink-0 flex-col border-r border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">

@@ -40,14 +40,14 @@ export async function POST(request: Request) {
 
   const { contentId, action } = (await request.json()) as {
     contentId: string;
-    action: 'approve' | 'reject';
+    action: 'approve' | 'reject' | 'resubmit';
   };
 
   if (!contentId || !action) {
     return NextResponse.json({ error: 'Missing contentId or action' }, { status: 400 });
   }
 
-  const newStatus = action === 'approve' ? 'published' : 'rejected';
+  const newStatus = action === 'approve' ? 'published' : action === 'resubmit' ? 'in_review' : 'rejected';
   const updated = updateArticleStatus(contentId, newStatus);
 
   if (!updated) {
