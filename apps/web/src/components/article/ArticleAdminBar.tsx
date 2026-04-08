@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { getCognitoSession } from '@/lib/cognito-client';
 
@@ -11,16 +12,23 @@ interface ArticleAdminBarProps {
 
 export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
   const pathname = usePathname();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { data: nextAuthSession, status } = useSession();
+  const [cognitoAdmin, setCognitoAdmin] = useState(false);
 
   useEffect(() => {
-    // Only check client-side Cognito session — no server calls
+    // Check client-side Cognito session (static S3 deployment)
     const cs = getCognitoSession();
-    setIsAdmin(cs?.role === 'admin');
+    setCognitoAdmin(cs?.role === 'admin');
   }, []);
 
-  if (!isAdmin) return null;
+  // Admin if either NextAuth session (dev mode) or Cognito localStorage (static site) confirms it
+  const isAdmin =
+    cognitoAdmin ||
+    (status === 'authenticated' && (nextAuthSession?.user as any)?.role === 'admin');
+
   if (pathname?.startsWith('/admin')) return null;
+  if (status === 'loading' && !cognitoAdmin) return null;
+  if (!isAdmin) return null;
 
   return (
     <div
