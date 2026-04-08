@@ -1,13 +1,20 @@
 'use client';
 
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { getArticles } from '@/lib/mock-data';
 import { SearchInput } from '@/components/common/search-input';
 
+const GlobalAdminBar = dynamic(
+  () => import('@/components/layout/GlobalAdminBar').then((m) => m.GlobalAdminBar),
+  { ssr: false }
+);
+
 export default function SearchPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
+      <GlobalAdminBar />
       <h1 className="text-3xl font-bold mb-6">Search</h1>
 
       <Suspense>

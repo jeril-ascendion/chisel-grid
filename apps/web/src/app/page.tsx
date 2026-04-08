@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
+import { GlobalAdminBar } from '@/components/layout/GlobalAdminBar';
 import { formatDate } from '@/lib/utils';
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -20,6 +21,7 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <GlobalAdminBar />
       {/* Hero: Featured Article */}
       {featured && (
         <section className="py-8 sm:py-12">
