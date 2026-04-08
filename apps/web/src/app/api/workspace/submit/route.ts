@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { z } from 'zod';
 import { ContentBlockSchema } from '@chiselgrid/types';
+import { addArticle } from '@/lib/article-store';
 
 const SubmitRequestSchema = z.object({
   title: z.string().min(1),
@@ -33,14 +34,27 @@ export async function POST(request: Request) {
   }
 
   const { title, slug, action, blocks, tags, categoryId } = parsed.data;
-
-  // TODO: In production, save to database via content repository
-  // and trigger review pipeline if action === 'submit'
   const contentId = crypto.randomUUID();
+  const status = action === 'draft' ? 'draft' : 'in_review';
+
+  // Store in dev-mode in-memory store (production would use Aurora via @chiselgrid/db)
+  addArticle({
+    contentId,
+    title,
+    slug,
+    description: '',
+    status,
+    blocks,
+    category: categoryId ?? '',
+    tags,
+    authorId: session.user.email ?? 'unknown',
+    readTimeMinutes: Math.max(1, Math.ceil(blocks.length * 0.7)),
+    createdAt: new Date().toISOString(),
+  });
 
   return NextResponse.json({
     contentId,
-    status: action === 'draft' ? 'draft' : 'submitted',
+    status,
     message: action === 'draft'
       ? `Draft saved: "${title}"`
       : `Submitted for review: "${title}"`,
