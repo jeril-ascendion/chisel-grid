@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
 import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
+import { ConditionalFooter } from '@/components/layout/ConditionalFooter';
 import { ThemeScript } from '@/components/layout/theme-script';
 import { Providers } from '@/components/providers';
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from '@/lib/utils';
@@ -63,7 +63,7 @@ export default function RootLayout({
           <main id="main-content" className="flex-1">
             {children}
           </main>
-          <Footer />
+          <ConditionalFooter />
         </Providers>
       </body>
     </html>

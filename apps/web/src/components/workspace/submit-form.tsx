@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { cn } from '@/lib/utils';
 
@@ -16,7 +17,9 @@ export function SubmitForm() {
   const setTags = useWorkspaceStore((s) => s.setTags);
   const pipelineStatus = useWorkspaceStore((s) => s.pipelineStatus);
 
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [showForm, setShowForm] = useState(false);
 
@@ -24,6 +27,7 @@ export function SubmitForm() {
 
   const handleSubmit = async (action: 'draft' | 'submit') => {
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await fetch('/api/workspace/submit', {
         method: 'POST',
@@ -38,10 +42,14 @@ export function SubmitForm() {
         }),
       });
 
-      if (!res.ok) throw new Error(`Failed: ${res.status}`);
-    } catch {
-      // Error handling via store
-    } finally {
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server error: ${res.status}`);
+      }
+
+      router.push('/admin/queue');
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to submit');
       setIsSubmitting(false);
     }
   };
@@ -155,16 +163,21 @@ export function SubmitForm() {
               disabled={isSubmitting || !title}
               className="rounded-md border border-gray-300 dark:border-gray-600 px-4 py-1.5 text-sm font-medium disabled:opacity-50"
             >
-              Save Draft
+              {isSubmitting ? 'Saving...' : 'Save Draft'}
             </button>
             <button
               onClick={() => handleSubmit('submit')}
               disabled={isSubmitting || !title || !slug}
               className="rounded-md bg-green-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
             >
-              Submit for Review
+              {isSubmitting ? 'Submitting...' : 'Submit for Review'}
             </button>
           </div>
+          {submitError && (
+            <p className="text-sm text-red-600 dark:text-red-400 mt-2 px-4 pb-2">
+              {submitError}
+            </p>
+          )}
         </div>
       )}
     </div>
