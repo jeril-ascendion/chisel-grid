@@ -1,13 +1,7 @@
-import { auth } from '@/auth';
-import { redirect } from 'next/navigation';
 import { LoginForm } from './login-form';
+import { AuthRedirect } from './auth-redirect';
 
-export default async function LoginPage() {
-  const session = await auth();
-  if (session?.user) {
-    redirect('/admin');
-  }
-
+export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
@@ -18,6 +12,7 @@ export default async function LoginPage() {
           </p>
         </div>
 
+        <AuthRedirect />
         <LoginForm />
       </div>
     </div>
