@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/sidebar';
 import { AdminBreadcrumbs } from '@/components/admin/breadcrumbs';
+import { getCognitoSession } from '@/lib/cognito-client';
+
+function isStaticSite(): boolean {
+  if (typeof window === 'undefined') return false;
+  const h = window.location.hostname;
+  return h === 'www.chiselgrid.com' || h === 'chiselgrid.com' || h.endsWith('.cloudfront.net');
+}
 
 export default function AdminLayout({
   children,
@@ -15,6 +22,19 @@ export default function AdminLayout({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isStaticSite()) {
+      // Static S3 deployment: check Cognito localStorage session
+      const cs = getCognitoSession();
+      if (!cs) {
+        router.replace('/login/');
+      } else {
+        setUser({ email: cs.email, name: cs.name, role: cs.role });
+      }
+      setLoading(false);
+      return;
+    }
+
+    // Dev/server mode: check NextAuth session via API
     fetch('/api/auth/session')
       .then((res) => res.json())
       .then((session) => {
@@ -25,7 +45,13 @@ export default function AdminLayout({
         }
       })
       .catch(() => {
-        router.replace('/login/');
+        // API not available — try Cognito fallback
+        const cs = getCognitoSession();
+        if (!cs) {
+          router.replace('/login/');
+        } else {
+          setUser({ email: cs.email, name: cs.name, role: cs.role });
+        }
       })
       .finally(() => setLoading(false));
   }, [router]);
