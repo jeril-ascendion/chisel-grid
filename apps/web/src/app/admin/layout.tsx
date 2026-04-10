@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/sidebar';
 import { AdminBreadcrumbs } from '@/components/admin/breadcrumbs';
+import { AdminThemeToggle } from '@/components/admin/admin-theme-toggle';
 import { getCognitoSession } from '@/lib/cognito-client';
 
 function isStaticSite(): boolean {
@@ -73,6 +74,7 @@ export default function AdminLayout({
         <header className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-3">
           <AdminBreadcrumbs />
           <div className="flex items-center gap-3">
+            <AdminThemeToggle />
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               user.role === 'admin'
                 ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
