@@ -23,6 +23,13 @@ const nextConfig: NextConfig = {
   // are set via CloudFront response headers policy, not here.
   // headers() config is not applied with output: 'export'.
 
+  // Transpile monorepo packages that use .js extensions in TS imports (NodeNext resolution)
+  transpilePackages: [
+    '@chiselgrid/studio-core',
+    '@chiselgrid/studio-agents',
+    '@chiselgrid/ai',
+  ],
+
   // Compression (Brotli is handled by CloudFront, but enable gzip for direct access)
   compress: true,
 
@@ -35,6 +42,21 @@ const nextConfig: NextConfig = {
   // Experimental optimizations
   experimental: {
     optimizeCss: true,
+  },
+
+  // Turbopack config (Next.js 16 default bundler)
+  turbopack: {
+    resolveAlias: {},
+  },
+
+  // Resolve .js extensions to .ts for monorepo packages using NodeNext module resolution
+  webpack: (config) => {
+    config.resolve = config.resolve ?? {};
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js'],
+      '.mjs': ['.mts', '.mjs'],
+    };
+    return config;
   },
 };
 

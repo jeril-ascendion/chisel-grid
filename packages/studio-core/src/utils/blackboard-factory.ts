@@ -1,14 +1,14 @@
-import { CRITICALITY_GENERATION_GATES } from '../constants/enums.js';
+import { CRITICALITY_GENERATION_GATES } from '../constants/enums';
 import type {
   AgentId,
   CriticalityTier,
-} from '../constants/enums.js';
+} from '../constants/enums';
 import type {
   Amendment,
   AgentResult,
   AuditEvent,
   DesignBlackboard,
-} from '../types/blackboard.js';
+} from '../types/blackboard';
 
 export interface CreateBlackboardParams {
   session_id: string;

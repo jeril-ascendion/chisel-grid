@@ -11,8 +11,8 @@ import {
   createAuditEvent,
   toTOON,
 } from '@chiselgrid/studio-core';
-import { StudioBaseAgent } from '../../base/studio-base-agent.js';
-import { CONTEXT_ANALYZER_SYSTEM_PROMPT } from './prompts/system.js';
+import { StudioBaseAgent } from '../../base/studio-base-agent';
+import { CONTEXT_ANALYZER_SYSTEM_PROMPT } from './prompts/system';
 
 const ClarificationQuestionSchema = z.object({
   id: z.string(),

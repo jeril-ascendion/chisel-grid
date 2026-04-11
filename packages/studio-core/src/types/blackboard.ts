@@ -14,7 +14,7 @@ import type {
   ProjectType,
   SectionStatus,
   Severity,
-} from '../constants/enums.js';
+} from '../constants/enums';
 
 // ─── Intent ────────────────────────────────────────────────────
 export interface IntentSection {

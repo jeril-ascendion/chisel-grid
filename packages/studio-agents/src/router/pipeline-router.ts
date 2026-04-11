@@ -1,8 +1,19 @@
+import { BedrockClient } from '@chiselgrid/ai';
 import {
   type AgentId,
+  type AgentContext,
   type DesignBlackboard,
   AGENT_SECTION_OWNERSHIP,
+  applyPatch,
 } from '@chiselgrid/studio-core';
+import type { StudioBaseAgent } from '../base/studio-base-agent';
+import { ContextAnalyzerAgent } from '../agents/context-analyzer/index';
+import { ArchitectureGeneratorAgent } from '../agents/architecture-generator/index';
+import { TradeoffAnalyzerAgent } from '../agents/tradeoff-analyzer/index';
+import { DiagramGeneratorAgent } from '../agents/diagram-generator/index';
+import { ReviewValidatorAgent } from '../agents/review-validator/index';
+import { EstimatorAgent } from '../agents/estimator/index';
+import { DocumentGeneratorAgent } from '../agents/document-generator/index';
 
 export interface RouterDecision {
   pipeline: AgentId[];
@@ -98,4 +109,50 @@ export function agentsForChangedSections(changedPaths: string[]): AgentId[] {
 
   // Sort by INITIAL_PIPELINE order
   return INITIAL_PIPELINE.filter(id => agentSet.has(id));
+}
+
+export function createAgentRegistry(bedrock?: BedrockClient): Record<AgentId, StudioBaseAgent> {
+  const client = bedrock ?? new BedrockClient({ region: process.env['AWS_REGION'] ?? 'ap-southeast-1' });
+  return {
+    context_analyzer: new ContextAnalyzerAgent(client),
+    architecture_generator: new ArchitectureGeneratorAgent(client),
+    tradeoff_analyzer: new TradeoffAnalyzerAgent(client),
+    diagram_generator: new DiagramGeneratorAgent(client),
+    review_validator: new ReviewValidatorAgent(client),
+    estimator: new EstimatorAgent(client),
+    document_generator: new DocumentGeneratorAgent(client),
+  };
+}
+
+export async function runPipeline(
+  agentIds: AgentId[],
+  ctx: AgentContext,
+  registry: Record<AgentId, StudioBaseAgent>,
+  onProgress?: (agentId: AgentId, status: 'started' | 'completed' | 'failed') => void,
+): Promise<DesignBlackboard> {
+  let bb = ctx.blackboard;
+
+  for (const agentId of agentIds) {
+    const agent = registry[agentId];
+    if (!agent) continue;
+
+    onProgress?.(agentId, 'started');
+
+    const agentCtx: AgentContext = { ...ctx, blackboard: bb };
+    const result = await agent.run(agentCtx);
+
+    if (result.success) {
+      bb = applyPatch(bb, result);
+      onProgress?.(agentId, 'completed');
+    } else {
+      onProgress?.(agentId, 'failed');
+    }
+
+    // If Tarka blocks generation, stop pipeline
+    if (agentId === 'tradeoff_analyzer' && !result.success) {
+      break;
+    }
+  }
+
+  return bb;
 }

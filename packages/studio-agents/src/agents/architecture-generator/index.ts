@@ -9,8 +9,8 @@ import {
   createAuditEvent,
   toTOON,
 } from '@chiselgrid/studio-core';
-import { StudioBaseAgent } from '../../base/studio-base-agent.js';
-import { ARCHITECTURE_GENERATOR_SYSTEM_PROMPT } from './prompts/system.js';
+import { StudioBaseAgent } from '../../base/studio-base-agent';
+import { ARCHITECTURE_GENERATOR_SYSTEM_PROMPT } from './prompts/system';
 
 const ArchGenOutputSchema = z.object({
   architecture_options: z.array(z.object({

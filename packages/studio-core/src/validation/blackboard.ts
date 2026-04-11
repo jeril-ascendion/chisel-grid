@@ -14,7 +14,7 @@ import {
   ASSUMPTION_SOURCES,
   CONFLICT_TYPES,
   PROJECT_TYPES,
-} from '../constants/enums.js';
+} from '../constants/enums';
 
 // ─── Primitives ────────────────────────────────────────────────
 const SectionStatusSchema = z.enum(SECTION_STATUSES);

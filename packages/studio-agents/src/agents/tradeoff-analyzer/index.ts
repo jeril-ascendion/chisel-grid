@@ -10,8 +10,8 @@ import {
   createAuditEvent,
   toTOON,
 } from '@chiselgrid/studio-core';
-import { StudioBaseAgent } from '../../base/studio-base-agent.js';
-import { TRADEOFF_ANALYZER_SYSTEM_PROMPT } from './prompts/system.js';
+import { StudioBaseAgent } from '../../base/studio-base-agent';
+import { TRADEOFF_ANALYZER_SYSTEM_PROMPT } from './prompts/system';
 
 const TarkaOutputSchema = z.object({
   tradeoffs: z.array(z.any()),

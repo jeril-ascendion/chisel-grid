@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ContextAnalyzerAgent } from '../index.js';
+import { ContextAnalyzerAgent } from '../index';
 import { createBlackboard, type AgentContext, type Gap, type Conflict } from '@chiselgrid/studio-core';
 import { BedrockClient } from '@chiselgrid/ai';
 

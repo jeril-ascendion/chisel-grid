@@ -12,6 +12,9 @@ const labelMap: Record<string, string> = {
   categories: 'Categories',
   'ai-usage': 'AI Usage',
   edit: 'Edit',
+  studio: 'Architecture Studio',
+  grid: 'Grid',
+  session: 'Session',
 };
 
 export function AdminBreadcrumbs() {
