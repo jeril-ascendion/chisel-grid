@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const articles = getQueueArticles();
+  const articles = await getQueueArticles();
 
   // Map to the shape ContentQueue component expects
   const items = articles.map((a) => ({
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   }
 
   const newStatus = action === 'approve' ? 'published' : action === 'resubmit' ? 'in_review' : 'rejected';
-  const updated = updateArticleStatus(contentId, newStatus);
+  const updated = await updateArticleStatus(contentId, newStatus);
 
   if (!updated) {
     return NextResponse.json({ error: 'Article not found' }, { status: 404 });

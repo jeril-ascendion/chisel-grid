@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const all = getAllArticles();
+  const all = await getAllArticles();
   const counts: Record<string, number> = { draft: 0, submitted: 0, in_review: 0, approved: 0, published: 0, rejected: 0 };
   for (const a of all) {
     if (a.status in counts) counts[a.status]++;

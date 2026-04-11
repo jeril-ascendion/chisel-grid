@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
 
-  let articles = getAllArticles();
+  let articles = await getAllArticles();
   if (status && status !== 'all') {
     articles = articles.filter((a) => a.status === status);
   }

@@ -37,8 +37,8 @@ export async function POST(request: Request) {
   const contentId = crypto.randomUUID();
   const status = action === 'draft' ? 'draft' : 'in_review';
 
-  // Store in dev-mode in-memory store (production would use Aurora via @chiselgrid/db)
-  addArticle({
+  // Store via persistence layer (Aurora when DATABASE_URL is set, in-memory otherwise)
+  await addArticle({
     contentId,
     title,
     slug,

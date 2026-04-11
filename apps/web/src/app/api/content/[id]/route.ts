@@ -14,8 +14,8 @@ export async function GET(
     return NextResponse.json(mockArticle);
   }
 
-  // Check in-memory store (submitted via workspace)
-  const stored = getArticle(id);
+  // Check persistence store (Aurora or in-memory)
+  const stored = await getArticle(id);
   if (stored) {
     return NextResponse.json({
       contentId: stored.contentId,
@@ -42,10 +42,10 @@ export async function PUT(
   const { id } = await params;
   const body = await request.json();
 
-  // Check in-memory store first (workspace-submitted articles)
-  const stored = getArticle(id);
+  // Check persistence store first (workspace-submitted articles)
+  const stored = await getArticle(id);
   if (stored) {
-    updateArticle(id, {
+    await updateArticle(id, {
       title: body.title ?? stored.title,
       description: body.description ?? stored.description,
       status: body.status ?? stored.status,
@@ -53,7 +53,7 @@ export async function PUT(
       blocks: body.blocks ?? stored.blocks,
       readTimeMinutes: body.readTimeMinutes ?? stored.readTimeMinutes,
     });
-    const updated = getArticle(id)!;
+    const updated = (await getArticle(id))!;
     return NextResponse.json({
       contentId: updated.contentId,
       title: updated.title,
