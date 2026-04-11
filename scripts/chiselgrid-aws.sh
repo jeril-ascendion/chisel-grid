@@ -115,6 +115,18 @@ deploy_latest() {
     mv "apps/web/src/app/admin/content/[id]" "$BACKUP_DIR/admin-content/[id]"
     log "Excluded dynamic admin/content/[id] route from static build"
   fi
+  # Studio dynamic routes (workspace/grid/session all have dynamic params)
+  for STUDIO_DYN in \
+    "apps/web/src/app/admin/studio/workspace" \
+    "apps/web/src/app/admin/studio/grid" \
+    "apps/web/src/app/admin/studio/session"; do
+    if [ -d "$STUDIO_DYN" ]; then
+      BACKUP_NAME=$(echo "$STUDIO_DYN" | sed 's|/|_|g')
+      mkdir -p "$BACKUP_DIR/$BACKUP_NAME"
+      mv "$STUDIO_DYN" "$BACKUP_DIR/$BACKUP_NAME/"
+      log "Excluded $STUDIO_DYN from static build"
+    fi
+  done
   NEXT_OUTPUT=export pnpm build --filter=@chiselgrid/web
   BUILD_RC=$?
   # Restore excluded routes
@@ -124,6 +136,16 @@ deploy_latest() {
   if [ -d "$BACKUP_DIR/admin-content/[id]" ]; then
     mv "$BACKUP_DIR/admin-content/[id]" "apps/web/src/app/admin/content/[id]"
   fi
+  # Restore studio dynamic routes
+  for STUDIO_DYN in \
+    "apps/web/src/app/admin/studio/workspace" \
+    "apps/web/src/app/admin/studio/grid" \
+    "apps/web/src/app/admin/studio/session"; do
+    BACKUP_NAME=$(echo "$STUDIO_DYN" | sed 's|/|_|g')
+    if [ -d "$BACKUP_DIR/$BACKUP_NAME/$(basename $STUDIO_DYN)" ]; then
+      mv "$BACKUP_DIR/$BACKUP_NAME/$(basename $STUDIO_DYN)" "$STUDIO_DYN"
+    fi
+  done
   rm -rf "$BACKUP_DIR"
   if [ $BUILD_RC -ne 0 ]; then
     warn "Build failed — check errors above"
