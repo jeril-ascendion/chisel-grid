@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "analyze": "ANALYZE=true next build",
-    "lighthouse": "lhci autorun"
+    "lighthouse": "lhci autorun",
+    "build:open-next": "open-next build"
   },
   "dependencies": {
     "@chiselgrid/types": "workspace:*",
@@ -25,8 +26,9 @@
     "@auth/core": "^0.34.3",
     "@aws-sdk/client-cognito-identity-provider": "^3.600.0",
     "@chiselgrid/config": "workspace:*",
-    "@chiselgrid/studio-core": "workspace:*",
     "@chiselgrid/studio-agents": "workspace:*",
+    "@chiselgrid/studio-core": "workspace:*",
+    "@opennextjs/aws": "^3.10.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

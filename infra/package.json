@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1025.0",
+    "@opennextjs/aws": "^3.10.1",
     "aws-cdk-lib": "^2.241.0",
     "constructs": "^10.5.0"
   }
