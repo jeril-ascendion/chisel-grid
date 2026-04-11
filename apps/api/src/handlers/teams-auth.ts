@@ -46,7 +46,7 @@ interface ApiEvent {
 function decodeJwtPayload(token: string): AzureAdClaims {
   const parts = token.split('.');
   if (parts.length !== 3) throw new Error('Invalid JWT format');
-  const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
+  const payload = Buffer.from(parts[1]!, 'base64url').toString('utf-8');
   return JSON.parse(payload);
 }
 

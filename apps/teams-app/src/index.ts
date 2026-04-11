@@ -13,16 +13,16 @@ import {
   MemoryStorage,
 } from 'botbuilder';
 import { Application, ActionPlanner, OpenAIModel, PromptManager } from '@microsoft/teams-ai';
-import { loadConfig } from './config';
-import { BedrockChatCompletionClient } from './bedrock-client';
-import { registerKnowledgeActions } from './actions/knowledge';
-import { registerCreatorActions } from './actions/creator';
-import { registerAdminActions } from './actions/admin';
+import { loadConfig } from './config.js';
+import { BedrockChatCompletionClient } from './bedrock-client.js';
+import { registerKnowledgeActions } from './actions/knowledge.js';
+import { registerCreatorActions } from './actions/creator.js';
+import { registerAdminActions } from './actions/admin.js';
 
 const config = loadConfig();
 
 // Bot Framework adapter
-const botAuth = new ConfigurationBotFrameworkAuthentication({}, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+const botAuth = new ConfigurationBotFrameworkAuthentication({});
 const adapter = new CloudAdapter(botAuth);
 
 adapter.onTurnError = async (context, error) => {
@@ -41,7 +41,7 @@ const app = new Application({
   ai: {
     planner: new ActionPlanner({
       model: {
-        async completePrompt(context, memory, functions, tokenizer, template) {
+        async completePrompt(context: any, memory: any, functions: any, tokenizer: any, template: any) {
           // Bridge to Bedrock client
           const messages = template.prompt.sections.map((s: any) => ({
             role: s.role ?? 'user',
@@ -60,12 +60,13 @@ const app = new Application({
         },
       } as any,
       defaultPrompt: 'chat',
-    }),
+    } as any),
   },
 });
 
 // System prompt
-app.ai.prompt('chat', async () => ({
+// System prompt registered via action planner default prompt
+(app.ai as any).prompt?.('chat', async () => ({
   role: 'system',
   content: `You are a senior engineer with access to the Ascendion engineering knowledge base. Answer questions by searching the knowledge base first. Always cite the article title and author when referencing content. If no article exists on a topic, suggest creating one.`,
 }));

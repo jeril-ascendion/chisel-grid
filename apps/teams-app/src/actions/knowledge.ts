@@ -10,7 +10,7 @@
  */
 
 import type { Application, TurnState } from '@microsoft/teams-ai';
-import type { AppConfig } from '../config';
+import type { AppConfig } from '../config.js';
 
 interface KnowledgeSearchResult {
   articleId: string;

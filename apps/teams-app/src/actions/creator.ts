@@ -8,7 +8,7 @@
  */
 
 import type { Application, TurnState } from '@microsoft/teams-ai';
-import type { AppConfig } from '../config';
+import type { AppConfig } from '../config.js';
 import { SFNClient, StartExecutionCommand, DescribeExecutionCommand } from '@aws-sdk/client-sfn';
 
 const sfnClient = new SFNClient({
