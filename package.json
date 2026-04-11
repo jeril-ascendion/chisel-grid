@@ -10,6 +10,8 @@
     "db:generate": "turbo --filter=@chiselgrid/db db:generate",
     "db:migrate": "turbo --filter=@chiselgrid/db db:migrate",
     "db:seed": "turbo --filter=@chiselgrid/db db:seed",
+    "studio:db:generate": "turbo --filter=@chiselgrid/studio-core db:generate",
+    "studio:db:migrate": "turbo --filter=@chiselgrid/studio-core db:migrate",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "cdk:diff": "cd infra && cdk diff",

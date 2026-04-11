@@ -25,6 +25,8 @@
     "@auth/core": "^0.34.3",
     "@aws-sdk/client-cognito-identity-provider": "^3.600.0",
     "@chiselgrid/config": "workspace:*",
+    "@chiselgrid/studio-core": "workspace:*",
+    "@chiselgrid/studio-agents": "workspace:*",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
