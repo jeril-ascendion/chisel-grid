@@ -30,7 +30,7 @@ const audioStack = new AudioStack(app, `${prefix}-Audio`, config, {
 }, envProps);
 
 const webStack = new WebStack(app, `${prefix}-Web`, config,
-  { networkStack, dataStack, storageStack }, envProps);
+  { networkStack, dataStack, storageStack, authStack }, envProps);
 
 // Suppress unused variable warnings for stacks not yet fully wired
 void apiStack; void aiStack; void audioStack; void webStack;

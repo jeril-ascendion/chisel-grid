@@ -15,11 +15,13 @@ import type { EnvConfig } from '../config';
 import type { NetworkStack } from './network.stack';
 import type { DataStack } from './data.stack';
 import type { StorageStack } from './storage.stack';
+import type { AuthStack } from './auth.stack';
 
 export interface WebStackDeps {
   networkStack: NetworkStack;
   dataStack: DataStack;
   storageStack: StorageStack;
+  authStack: AuthStack;
 }
 
 export class WebStack extends Stack {
@@ -38,14 +40,14 @@ export class WebStack extends Stack {
     Tags.of(this).add('ManagedBy', 'CDK');
 
     const envPrefix = id.split('-')[1] ?? 'dev';
-    const { networkStack, dataStack } = deps;
+    const { networkStack, dataStack, authStack } = deps;
 
     // --- Next.js Server Lambda ---
     this.serverFunction = new lambda.Function(this, 'NextjsServer', {
       functionName: `chiselgrid-${envPrefix}-nextjs-server`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'index.handler',
-      code: lambda.Code.fromInline('// Bundled at deploy time by open-next build'),
+      code: lambda.Code.fromAsset('../apps/web/.open-next/server-functions/default'),
       memorySize: 1024,
       timeout: Duration.seconds(30),
       vpc: networkStack.outputs.vpc,
@@ -54,8 +56,8 @@ export class WebStack extends Stack {
       environment: {
         NEXTAUTH_URL: `https://${config.domain}`,
         NEXTAUTH_SECRET: 'placeholder-replaced-at-deploy',
-        COGNITO_USER_POOL_ID: 'placeholder-replaced-at-deploy',
-        COGNITO_CLIENT_ID: 'placeholder-replaced-at-deploy',
+        COGNITO_USER_POOL_ID: authStack.outputs.userPoolId,
+        COGNITO_CLIENT_ID: authStack.outputs.userPoolClientId,
         AWS_BEDROCK_MODEL_ID: 'anthropic.claude-3-sonnet-20240229-v1:0',
         DB_SECRET_ARN: dataStack.outputs.dbSecretArn,
         DB_HOST: dataStack.outputs.clusterEndpoint,
