@@ -273,6 +273,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@chiselgrid/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@chiselgrid/types':
         specifier: workspace:*
         version: link:../../packages/types

@@ -13,6 +13,7 @@
     "build:open-next": "open-next build"
   },
   "dependencies": {
+    "@chiselgrid/ai": "workspace:*",
     "@chiselgrid/types": "workspace:*",
     "@chiselgrid/ui": "workspace:*",
     "next": "16.2.2",
