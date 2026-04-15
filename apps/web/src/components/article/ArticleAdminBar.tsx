@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { getCognitoSession } from '@/lib/cognito-client';
 
@@ -10,24 +9,41 @@ interface ArticleAdminBarProps {
   contentId?: string;
 }
 
+// Does NOT use next-auth's useSession() — that hook polls /api/auth/session
+// on every render/focus, which caused an infinite login/session loop in prod.
+// One-shot: Cognito localStorage (static site) + /api/auth/session (dev).
 export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
   const pathname = usePathname();
-  const { data: nextAuthSession, status } = useSession();
-  const [cognitoAdmin, setCognitoAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Check client-side Cognito session (static S3 deployment)
+    setMounted(true);
+
     const cs = getCognitoSession();
-    setCognitoAdmin(cs?.role === 'admin');
+    if (cs?.role === 'admin') {
+      setIsAdmin(true);
+      return;
+    }
+
+    let cancelled = false;
+    fetch('/api/auth/session')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((session) => {
+        if (cancelled) return;
+        if (session?.user && (session.user as { role?: string }).role === 'admin') {
+          setIsAdmin(true);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Admin if either NextAuth session (dev mode) or Cognito localStorage (static site) confirms it
-  const isAdmin =
-    cognitoAdmin ||
-    (status === 'authenticated' && (nextAuthSession?.user as any)?.role === 'admin');
-
+  if (!mounted) return null;
   if (pathname?.startsWith('/admin')) return null;
-  if (status === 'loading' && !cognitoAdmin) return null;
   if (!isAdmin) return null;
 
   return (
