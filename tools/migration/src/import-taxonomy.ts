@@ -1,24 +1,31 @@
 #!/usr/bin/env tsx
 /**
- * Import 156 ascendion.engineering taxonomy articles into ChiselGrid Aurora.
+ * Import 156 ascendion.engineering taxonomy articles into ChiselGrid Aurora
+ * via RDS Data API (no direct pg connection required).
  * Each article is AI-enhanced via Bedrock and lands as status='in_review'.
  *
- * Usage: DATABASE_URL=... tsx src/import-taxonomy.ts [--dry-run] [--skip-ai] [--batch-size=5]
+ * Usage: AWS_PROFILE=... AWS_REGION=... tsx src/import-taxonomy.ts [--dry-run] [--skip-ai] [--batch-size=5]
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cheerio from 'cheerio';
-import { Pool } from 'pg';
 import { randomUUID } from 'crypto';
-import { urlPathToSlug, urlPathToCategory, getAllCategories } from './taxonomy-categories.js';
+import { query, rdsTyped } from './rds-client.js';
+import {
+  urlPathToSlug,
+  urlPathToCategory,
+  getAllCategories,
+} from './taxonomy-categories.js';
 import { generateHeroSvg } from './svg-generator.js';
 
 // ── Config ──────────────────────────────────────────────────
 const SOURCE_DIR = process.env['SOURCE_DIR'] ?? '/tmp/taxonomy-source/dist';
 const DRY_RUN = process.argv.includes('--dry-run');
 const SKIP_AI = process.argv.includes('--skip-ai');
-const BATCH_SIZE = parseInt(process.argv.find(a => a.startsWith('--batch-size='))?.split('=')[1] ?? '5');
+const BATCH_SIZE = parseInt(
+  process.argv.find((a) => a.startsWith('--batch-size='))?.split('=')[1] ?? '5',
+);
 const PROGRESS_FILE = '/tmp/import-progress.json';
 const TENANT_NAME = 'ascendion';
 
@@ -46,12 +53,17 @@ function parseHtml(filePath: string, urlPath: string): ParsedArticle {
   const html = fs.readFileSync(filePath, 'utf-8');
   const $ = cheerio.load(html);
 
-  const title = $('h1').first().text().trim()
-    || $('title').text().replace(/\s*[—·|].*$/, '').trim()
-    || urlPath;
-  const description = $('.hero-desc').text().trim()
-    || $('meta[name="description"]').attr('content')
-    || '';
+  const title =
+    $('h1').first().text().trim() ||
+    $('title')
+      .text()
+      .replace(/\s*[—·|].*$/, '')
+      .trim() ||
+    urlPath;
+  const description =
+    $('.hero-desc').text().trim() ||
+    $('meta[name="description"]').attr('content') ||
+    '';
 
   const sections: { heading: string; level: number; content: string }[] = [];
   const mainContent = $('main, .content, article, body');
@@ -64,7 +76,14 @@ function parseHtml(filePath: string, urlPath: string): ParsedArticle {
     let next = $el.next();
     while (next.length && !next.is('h2, h3')) {
       const tag = next.get(0)?.tagName;
-      if (tag === 'p' || tag === 'li' || tag === 'ul' || tag === 'ol' || tag === 'pre' || tag === 'table') {
+      if (
+        tag === 'p' ||
+        tag === 'li' ||
+        tag === 'ul' ||
+        tag === 'ol' ||
+        tag === 'pre' ||
+        tag === 'table'
+      ) {
         contentParts.push(next.text().trim());
       }
       next = next.next();
@@ -74,7 +93,6 @@ function parseHtml(filePath: string, urlPath: string): ParsedArticle {
     }
   });
 
-  // If no sections found, extract all paragraphs as a single section
   if (sections.length === 0) {
     const allText: string[] = [];
     mainContent.find('p').each((_, el) => {
@@ -82,7 +100,11 @@ function parseHtml(filePath: string, urlPath: string): ParsedArticle {
       if (t) allText.push(t);
     });
     if (allText.length > 0) {
-      sections.push({ heading: 'Overview', level: 2, content: allText.join('\n\n') });
+      sections.push({
+        heading: 'Overview',
+        level: 2,
+        content: allText.join('\n\n'),
+      });
     }
   }
 
@@ -98,10 +120,16 @@ function parseHtml(filePath: string, urlPath: string): ParsedArticle {
 
 // ── Bedrock AI Enhancement ──────────────────────────────────
 async function enhanceWithAI(parsed: ParsedArticle): Promise<EnhancedArticle> {
-  const { BedrockRuntimeClient, InvokeModelCommand } = await import('@aws-sdk/client-bedrock-runtime');
-  const client = new BedrockRuntimeClient({ region: 'ap-southeast-1' });
+  const { BedrockRuntimeClient, InvokeModelCommand } = await import(
+    '@aws-sdk/client-bedrock-runtime'
+  );
+  const client = new BedrockRuntimeClient({
+    region: process.env['AWS_REGION'] ?? 'ap-southeast-1',
+  });
 
-  const currentContent = parsed.sections.map(s => `## ${s.heading}\n${s.content}`).join('\n\n');
+  const currentContent = parsed.sections
+    .map((s) => `## ${s.heading}\n${s.content}`)
+    .join('\n\n');
 
   const systemPrompt = `You are a senior solutions architect at a top-tier technology consultancy. You write practitioner-grade engineering articles that are cited by engineers at Google, AWS, Netflix, and Stripe. Your writing is precise, opinionated, and immediately actionable.`;
 
@@ -148,20 +176,19 @@ Return ONLY valid JSON in this exact format (no markdown fences):
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const response = await client.send(new InvokeModelCommand({
-        modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-        contentType: 'application/json',
-        accept: 'application/json',
-        body,
-      }));
+      const response = await client.send(
+        new InvokeModelCommand({
+          modelId: 'anthropic.claude-sonnet-4-5',
+          contentType: 'application/json',
+          accept: 'application/json',
+          body,
+        }),
+      );
 
       const result = JSON.parse(new TextDecoder().decode(response.body));
       const text = result.content?.[0]?.text ?? '';
-
-      // Extract JSON from response (handle markdown fences)
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('No JSON in response');
-
       const enhanced = JSON.parse(jsonMatch[0]) as EnhancedArticle;
       enhanced.mermaidDiagram = parsed.mermaidCode;
       return enhanced;
@@ -169,7 +196,7 @@ Return ONLY valid JSON in this exact format (no markdown fences):
       if (attempt === 2) throw err;
       const delay = 1000 * Math.pow(2, attempt) + Math.random() * 500;
       console.log(`  Retry ${attempt + 1}/3 after ${Math.round(delay)}ms...`);
-      await new Promise(r => setTimeout(r, delay));
+      await new Promise((r) => setTimeout(r, delay));
     }
   }
 
@@ -179,13 +206,31 @@ Return ONLY valid JSON in this exact format (no markdown fences):
 function fallbackEnhancement(parsed: ParsedArticle): EnhancedArticle {
   return {
     title: parsed.title,
-    description: parsed.description || `A comprehensive guide to ${parsed.title} for enterprise engineering teams.`,
-    sections: parsed.sections.length > 0
-      ? parsed.sections
-      : [{ heading: 'Overview', level: 2, content: parsed.description || parsed.title }],
+    description:
+      parsed.description ||
+      `A comprehensive guide to ${parsed.title} for enterprise engineering teams.`,
+    sections:
+      parsed.sections.length > 0
+        ? parsed.sections
+        : [
+            {
+              heading: 'Overview',
+              level: 2,
+              content: parsed.description || parsed.title,
+            },
+          ],
     mermaidDiagram: parsed.mermaidCode,
-    keyTakeaways: [`Understand the fundamentals of ${parsed.title}`, 'Apply patterns in practice', 'Avoid common anti-patterns'],
-    readTimeMinutes: Math.max(5, Math.ceil((parsed.sections.reduce((a, s) => a + s.content.length, 0)) / 1500)),
+    keyTakeaways: [
+      `Understand the fundamentals of ${parsed.title}`,
+      'Apply patterns in practice',
+      'Avoid common anti-patterns',
+    ],
+    readTimeMinutes: Math.max(
+      5,
+      Math.ceil(
+        parsed.sections.reduce((a, s) => a + s.content.length, 0) / 1500,
+      ),
+    ),
     tags: parsed.urlPath.split('/').filter(Boolean),
   };
 }
@@ -201,24 +246,33 @@ interface ContentBlock {
   variant?: string;
 }
 
-function buildContentBlocks(enhanced: EnhancedArticle, categorySlug: string): ContentBlock[] {
+function buildContentBlocks(
+  enhanced: EnhancedArticle,
+  categorySlug: string,
+): ContentBlock[] {
   const blocks: ContentBlock[] = [];
 
-  // SVG animation block
   const svg = generateHeroSvg(categorySlug);
-  blocks.push({ type: 'diagram', diagramType: 'svg', content: svg, caption: `${enhanced.title} — animated illustration` });
+  blocks.push({
+    type: 'diagram',
+    diagramType: 'svg',
+    content: svg,
+    caption: `${enhanced.title} — animated illustration`,
+  });
 
   for (const section of enhanced.sections) {
     blocks.push({ type: 'heading', level: section.level, content: section.heading });
 
-    // Split content into paragraphs
-    const paragraphs = section.content.split('\n\n').filter(p => p.trim());
+    const paragraphs = section.content.split('\n\n').filter((p) => p.trim());
     for (const p of paragraphs) {
-      // Detect code blocks
       if (p.includes('```')) {
         const match = p.match(/```(\w*)\n?([\s\S]*?)```/);
         if (match) {
-          blocks.push({ type: 'code', language: match[1] || 'text', content: match[2]!.trim() });
+          blocks.push({
+            type: 'code',
+            language: match[1] || 'text',
+            content: match[2]!.trim(),
+          });
           continue;
         }
       }
@@ -226,19 +280,23 @@ function buildContentBlocks(enhanced: EnhancedArticle, categorySlug: string): Co
     }
   }
 
-  // Mermaid diagram
   if (enhanced.mermaidDiagram) {
     blocks.push({ type: 'heading', level: 2, content: 'Architecture Diagram' });
-    blocks.push({ type: 'diagram', diagramType: 'mermaid', content: enhanced.mermaidDiagram });
+    blocks.push({
+      type: 'diagram',
+      diagramType: 'mermaid',
+      content: enhanced.mermaidDiagram,
+    });
   }
 
-  // Key takeaways callout
   if (enhanced.keyTakeaways?.length) {
     blocks.push({ type: 'heading', level: 2, content: 'Key Takeaways' });
     blocks.push({
       type: 'callout',
       variant: 'success',
-      content: enhanced.keyTakeaways.map((t, i) => `${i + 1}. ${t}`).join('\n'),
+      content: enhanced.keyTakeaways
+        .map((t, i) => `${i + 1}. ${t}`)
+        .join('\n'),
     });
   }
 
@@ -246,7 +304,9 @@ function buildContentBlocks(enhanced: EnhancedArticle, categorySlug: string): Co
 }
 
 // ── File Discovery ──────────────────────────────────────────
-function discoverArticles(sourceDir: string): { filePath: string; urlPath: string }[] {
+function discoverArticles(
+  sourceDir: string,
+): { filePath: string; urlPath: string }[] {
   const articles: { filePath: string; urlPath: string }[] = [];
 
   function walk(dir: string) {
@@ -278,64 +338,91 @@ function loadProgress(): Set<string> {
 }
 
 function saveProgress(completed: Set<string>) {
-  fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ completed: [...completed], updatedAt: new Date().toISOString() }));
+  fs.writeFileSync(
+    PROGRESS_FILE,
+    JSON.stringify({
+      completed: [...completed],
+      updatedAt: new Date().toISOString(),
+    }),
+  );
 }
 
 // ── Database Operations ─────────────────────────────────────
-async function ensureTenant(pool: Pool): Promise<string> {
-  const existing = await pool.query(`SELECT tenant_id FROM tenants WHERE subdomain = $1`, [TENANT_NAME]);
-  if (existing.rows.length > 0) return existing.rows[0].tenant_id;
+async function ensureTenant(): Promise<string> {
+  const existing = await query(
+    `SELECT tenant_id FROM tenants WHERE subdomain = $1`,
+    [TENANT_NAME],
+  );
+  if (existing.rows.length > 0) return existing.rows[0]!['tenant_id'];
 
   const id = randomUUID();
-  await pool.query(
+  await query(
     `INSERT INTO tenants (tenant_id, name, subdomain, plan) VALUES ($1, $2, $3, $4)`,
-    [id, 'Ascendion Engineering', TENANT_NAME, 'internal'],
+    [rdsTyped(id, 'UUID'), 'Ascendion Engineering', TENANT_NAME, 'internal'],
   );
   console.log(`Created tenant: ${TENANT_NAME} (${id})`);
   return id;
 }
 
-async function ensureUser(pool: Pool, tenantId: string): Promise<string> {
-  const existing = await pool.query(`SELECT user_id FROM users WHERE email = $1`, ['migration@ascendion.engineering']);
-  if (existing.rows.length > 0) return existing.rows[0].user_id;
+async function ensureUser(tenantId: string): Promise<string> {
+  const existing = await query(`SELECT user_id FROM users WHERE email = $1`, [
+    'migration@ascendion.engineering',
+  ]);
+  if (existing.rows.length > 0) return existing.rows[0]!['user_id'];
 
   const id = randomUUID();
-  await pool.query(
+  await query(
     `INSERT INTO users (user_id, tenant_id, email, name, role, cognito_sub, enabled) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [id, tenantId, 'migration@ascendion.engineering', 'Taxonomy Migration', 'admin', randomUUID(), true],
+    [
+      rdsTyped(id, 'UUID'),
+      rdsTyped(tenantId, 'UUID'),
+      'migration@ascendion.engineering',
+      'Taxonomy Migration',
+      'admin',
+      randomUUID(),
+      true,
+    ],
   );
   console.log(`Created migration user: ${id}`);
   return id;
 }
 
-async function seedCategories(pool: Pool, tenantId: string): Promise<Map<string, string>> {
+async function seedCategories(tenantId: string): Promise<Map<string, string>> {
   const cats = getAllCategories();
   const slugToId = new Map<string, string>();
 
-  // First pass: create all categories without parents
   for (const cat of cats) {
-    const existing = await pool.query(
+    const existing = await query(
       `SELECT category_id FROM categories WHERE tenant_id = $1 AND slug = $2`,
-      [tenantId, cat.slug],
+      [rdsTyped(tenantId, 'UUID'), cat.slug],
     );
     if (existing.rows.length > 0) {
-      slugToId.set(cat.slug, existing.rows[0].category_id);
+      slugToId.set(cat.slug, existing.rows[0]!['category_id']);
     } else {
       const id = randomUUID();
-      await pool.query(
+      await query(
         `INSERT INTO categories (category_id, tenant_id, name, slug, description) VALUES ($1, $2, $3, $4, $5)`,
-        [id, tenantId, cat.name, cat.slug, cat.description ?? null],
+        [
+          rdsTyped(id, 'UUID'),
+          rdsTyped(tenantId, 'UUID'),
+          cat.name,
+          cat.slug,
+          cat.description ?? null,
+        ],
       );
       slugToId.set(cat.slug, id);
     }
   }
 
-  // Second pass: set parent_id
   for (const cat of cats) {
     if (cat.parentSlug && slugToId.has(cat.parentSlug)) {
-      const catId = slugToId.get(cat.slug)!;
-      const parentId = slugToId.get(cat.parentSlug)!;
-      await pool.query(`UPDATE categories SET parent_id = $1 WHERE category_id = $2`, [parentId, catId]);
+      await query(
+        `UPDATE categories SET parent_id = $1 WHERE category_id = $2`,
+        [
+          rdsTyped(slugToId.get(cat.parentSlug)!, 'UUID'),
+          rdsTyped(slugToId.get(cat.slug)!, 'UUID'),
+        ],
+      );
     }
   }
 
@@ -344,7 +431,6 @@ async function seedCategories(pool: Pool, tenantId: string): Promise<Map<string,
 }
 
 async function insertArticle(
-  pool: Pool,
   tenantId: string,
   authorId: string,
   slug: string,
@@ -354,39 +440,27 @@ async function insertArticle(
   urlPath: string,
   wasEnhanced: boolean,
 ): Promise<boolean> {
-  // Check if already exists
-  const existing = await pool.query(
+  const existing = await query(
     `SELECT content_id FROM content WHERE tenant_id = $1 AND slug = $2`,
-    [tenantId, slug],
+    [rdsTyped(tenantId, 'UUID'), slug],
   );
-  if (existing.rows.length > 0) return false; // skip
+  if (existing.rows.length > 0) return false;
 
-  const metadata = {
-    description: enhanced.description,
-    readTimeMinutes: enhanced.readTimeMinutes,
-    tags: enhanced.tags,
-    keyTakeaways: enhanced.keyTakeaways,
-    sourceUrl: `https://www.ascendion.engineering/${urlPath}`,
-    importedAt: new Date().toISOString(),
-    importSource: 'taxonomy-migration-v2',
-    enhanced: wasEnhanced,
-  };
-
-  await pool.query(
+  await query(
     `INSERT INTO content (content_id, tenant_id, author_id, title, slug, description, content_type, status, blocks, read_time_minutes, category_id, seo_meta_title, seo_meta_description)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
     [
-      randomUUID(),
-      tenantId,
-      authorId,
+      rdsTyped(randomUUID(), 'UUID'),
+      rdsTyped(tenantId, 'UUID'),
+      rdsTyped(authorId, 'UUID'),
       enhanced.title.slice(0, 500),
       slug.slice(0, 500),
       enhanced.description,
       'standard_doc',
       'in_review',
-      JSON.stringify(blocks),
+      rdsTyped(blocks, 'JSON'),
       enhanced.readTimeMinutes,
-      categoryId,
+      categoryId ? rdsTyped(categoryId, 'UUID') : null,
       enhanced.title.slice(0, 200),
       (enhanced.description || '').slice(0, 500),
     ],
@@ -397,14 +471,13 @@ async function insertArticle(
 
 // ── Main ────────────────────────────────────────────────────
 async function main() {
-  console.log('═══ ChiselGrid Taxonomy Import ═══');
+  console.log('═══ ChiselGrid Taxonomy Import (Data API) ═══');
   console.log(`Source: ${SOURCE_DIR}`);
   console.log(`Dry run: ${DRY_RUN}`);
   console.log(`Skip AI: ${SKIP_AI}`);
   console.log(`Batch size: ${BATCH_SIZE}`);
   console.log('');
 
-  // Discover articles
   const articles = discoverArticles(SOURCE_DIR);
   console.log(`Found ${articles.length} articles`);
 
@@ -413,39 +486,21 @@ async function main() {
     process.exit(1);
   }
 
-  // Load progress for resume
   const completed = loadProgress();
   console.log(`Previously completed: ${completed.size}`);
 
-  let pool: Pool | null = null;
   let tenantId = '';
   let authorId = '';
   let categoryMap = new Map<string, string>();
 
   if (!DRY_RUN) {
-    const dbUrl = process.env['DATABASE_URL'];
-    if (!dbUrl) {
-      console.error('DATABASE_URL required (not in dry-run mode)');
-      console.error('Set: export DATABASE_URL=postgresql://user:pass@host:5432/chiselgrid');
-      process.exit(1);
-    }
-    pool = new Pool({ connectionString: dbUrl, ssl: { rejectUnauthorized: false }, max: 5 });
-
-    // Test connection
-    try {
-      const r = await pool.query('SELECT current_database()');
-      console.log(`Connected to: ${r.rows[0].current_database}`);
-    } catch (err) {
-      console.error('DB connection failed:', (err as Error).message);
-      process.exit(1);
-    }
-
-    tenantId = await ensureTenant(pool);
-    authorId = await ensureUser(pool, tenantId);
-    categoryMap = await seedCategories(pool, tenantId);
+    const db = await query('SELECT current_database() as db');
+    console.log(`Connected to: ${db.rows[0]?.['db']}`);
+    tenantId = await ensureTenant();
+    authorId = await ensureUser(tenantId);
+    categoryMap = await seedCategories(tenantId);
   }
 
-  // Process articles
   let imported = 0;
   let skipped = 0;
   let failed = 0;
@@ -455,10 +510,9 @@ async function main() {
     const batch = articles.slice(i, Math.min(i + BATCH_SIZE, articles.length));
 
     for (const { filePath, urlPath } of batch) {
-      const idx = i + batch.indexOf(batch.find(b => b.urlPath === urlPath)!) + 1;
+      const idx = articles.findIndex((a) => a.urlPath === urlPath) + 1;
       const slug = urlPathToSlug(urlPath);
 
-      // Skip if already done
       if (completed.has(slug)) {
         skipped++;
         console.log(`[${idx}/${articles.length}] SKIP (done): ${urlPath}`);
@@ -466,10 +520,8 @@ async function main() {
       }
 
       try {
-        // Parse HTML
         const parsed = parseHtml(filePath, urlPath);
 
-        // AI Enhancement
         let enhanced: EnhancedArticle;
         let wasEnhanced = false;
         if (!SKIP_AI) {
@@ -477,24 +529,38 @@ async function main() {
             enhanced = await enhanceWithAI(parsed);
             wasEnhanced = true;
           } catch (aiErr) {
-            console.log(`  AI enhancement failed: ${(aiErr as Error).message}. Using fallback.`);
+            console.log(
+              `  AI enhancement failed: ${(aiErr as Error).message}. Using fallback.`,
+            );
             enhanced = fallbackEnhancement(parsed);
           }
         } else {
           enhanced = fallbackEnhancement(parsed);
         }
 
-        // Build content blocks
         const categorySlug = urlPathToCategory(urlPath);
         const blocks = buildContentBlocks(enhanced, categorySlug);
 
         if (DRY_RUN) {
-          console.log(`[${idx}/${articles.length}] DRY: ${urlPath} — "${enhanced.title}" (${blocks.length} blocks, ${enhanced.readTimeMinutes}min)`);
+          console.log(
+            `[${idx}/${articles.length}] DRY: ${urlPath} — "${enhanced.title}" (${blocks.length} blocks, ${enhanced.readTimeMinutes}min)`,
+          );
         } else {
           const categoryId = categoryMap.get(categorySlug) ?? null;
-          const wasInserted = await insertArticle(pool!, tenantId, authorId, slug, enhanced, blocks, categoryId, urlPath, wasEnhanced);
+          const wasInserted = await insertArticle(
+            tenantId,
+            authorId,
+            slug,
+            enhanced,
+            blocks,
+            categoryId,
+            urlPath,
+            wasEnhanced,
+          );
           if (wasInserted) {
-            console.log(`[${idx}/${articles.length}] IMPORTED: ${urlPath} — "${enhanced.title}" (${blocks.length} blocks)`);
+            console.log(
+              `[${idx}/${articles.length}] IMPORTED: ${urlPath} — "${enhanced.title}" (${blocks.length} blocks)`,
+            );
           } else {
             console.log(`[${idx}/${articles.length}] SKIP (exists): ${urlPath}`);
             skipped++;
@@ -508,8 +574,7 @@ async function main() {
         completed.add(slug);
         saveProgress(completed);
 
-        // Rate limit between articles
-        if (!SKIP_AI) await new Promise(r => setTimeout(r, 200));
+        if (!SKIP_AI) await new Promise((r) => setTimeout(r, 200));
       } catch (err) {
         failed++;
         const msg = (err as Error).message;
@@ -518,14 +583,12 @@ async function main() {
       }
     }
 
-    // Pause between batches for rate limits
     if (!SKIP_AI && i + BATCH_SIZE < articles.length) {
       console.log(`  Batch pause (500ms)...`);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
     }
   }
 
-  // Summary
   console.log('\n═══ Import Summary ═══');
   console.log(`Total:    ${articles.length}`);
   console.log(`Imported: ${imported}`);
@@ -538,11 +601,9 @@ async function main() {
       console.error(`  ${e.urlPath}: ${e.error}`);
     }
   }
-
-  if (pool) await pool.end();
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Fatal error:', err);
   process.exit(1);
 });
