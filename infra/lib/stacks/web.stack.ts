@@ -8,8 +8,11 @@ import {
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import type { Construct } from 'constructs';
@@ -113,6 +116,13 @@ export class WebStack extends Stack {
 
     const apiDomain = `${httpApi.httpApiId}.execute-api.${this.region}.amazonaws.com`;
 
+    // --- ACM Certificate (existing, in us-east-1 as required by CloudFront) ---
+    const certificate = acm.Certificate.fromCertificateArn(
+      this,
+      'Certificate',
+      'arn:aws:acm:us-east-1:852973339602:certificate/0677b964-22bc-4db1-93c5-cb7e63ca7c4e',
+    );
+
     // --- CloudFront Distribution ---
     this.distribution = new cloudfront.Distribution(this, 'WebDistribution', {
       defaultBehavior: {
@@ -122,7 +132,34 @@ export class WebStack extends Stack {
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
       },
+      domainNames: ['www.chiselgrid.com', 'chiselgrid.com'],
+      certificate,
       comment: `ChiselGrid ${envPrefix} Web Distribution`,
+    });
+
+    // --- Route 53 DNS Records ---
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
+      this,
+      'HostedZone',
+      {
+        hostedZoneId: 'Z10085931HEF9AR5WQGUV',
+        zoneName: 'chiselgrid.com',
+      },
+    );
+
+    new route53.ARecord(this, 'WwwAliasRecord', {
+      zone: hostedZone,
+      recordName: 'www',
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(this.distribution),
+      ),
+    });
+
+    new route53.ARecord(this, 'ApexAliasRecord', {
+      zone: hostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(this.distribution),
+      ),
     });
 
     // --- Outputs ---

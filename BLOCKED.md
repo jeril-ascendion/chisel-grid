@@ -22,6 +22,7 @@
 | Parallel stream merge conflicts | pnpm-lock.yaml conflicts from two simultaneous streams | Accepted theirs version then ran pnpm install to regenerate lockfile | April 2026 |
 | Next.js Lambda cold start crash | OpenNext NFT tracer couldn't follow pnpm symlinks + stale `apps/web/pnpm-lock.yaml` prevented monorepo detection | Added `node-linker=hoisted` to `.npmrc`, deleted stale lockfile, fixed JSX namespace for React 19 | April 2026 |
 | CloudFront /api/* returns 403 | AWS Org SCP blocks Lambda Function URL invocations + Function URL auth drift | Replaced Function URL with HTTP API Gateway as CloudFront origin, switched OpenNext wrapper to `aws-lambda` (non-streaming) | April 2026 |
+| Route 53 cutover to Lambda distribution | Old S3 CloudFront dist (`EWLP3KOX3KKTV`) had domain aliases, needed removal before reassignment | Removed aliases from old dist, added ACM cert + domainNames to new dist, created Route 53 A records via CDK, disabled old dist | April 2026 |
 
 ## How to Report a New Blocker
 
