@@ -6,6 +6,8 @@ import {
   CfnOutput,
 } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
+import * as apigwv2Integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -86,16 +88,35 @@ export class WebStack extends Stack {
       }),
     );
 
-    // --- Lambda Function URL ---
-    const functionUrl = this.serverFunction.addFunctionUrl({
-      authType: lambda.FunctionUrlAuthType.AWS_IAM,
-      invokeMode: lambda.InvokeMode.RESPONSE_STREAM,
+    // --- HTTP API Gateway (bypass SCP blocking Lambda Function URLs) ---
+    const httpApi = new apigwv2.HttpApi(this, 'NextjsHttpApi', {
+      apiName: `chiselgrid-${envPrefix}-nextjs-api`,
     });
+
+    httpApi.addRoutes({
+      path: '/{proxy+}',
+      methods: [apigwv2.HttpMethod.ANY],
+      integration: new apigwv2Integrations.HttpLambdaIntegration(
+        'NextjsIntegration',
+        this.serverFunction,
+      ),
+    });
+
+    httpApi.addRoutes({
+      path: '/',
+      methods: [apigwv2.HttpMethod.ANY],
+      integration: new apigwv2Integrations.HttpLambdaIntegration(
+        'NextjsRootIntegration',
+        this.serverFunction,
+      ),
+    });
+
+    const apiDomain = `${httpApi.httpApiId}.execute-api.${this.region}.amazonaws.com`;
 
     // --- CloudFront Distribution ---
     this.distribution = new cloudfront.Distribution(this, 'WebDistribution', {
       defaultBehavior: {
-        origin: new origins.FunctionUrlOrigin(functionUrl),
+        origin: new origins.HttpOrigin(apiDomain),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
@@ -110,9 +131,9 @@ export class WebStack extends Stack {
       exportName: `ChiselGrid-${envPrefix}-NextjsFunctionArn`,
     });
 
-    new CfnOutput(this, 'FunctionUrl', {
-      value: functionUrl.url,
-      exportName: `ChiselGrid-${envPrefix}-NextjsFunctionUrl`,
+    new CfnOutput(this, 'HttpApiUrl', {
+      value: httpApi.url!,
+      exportName: `ChiselGrid-${envPrefix}-HttpApiUrl`,
     });
 
     new CfnOutput(this, 'DistributionDomain', {

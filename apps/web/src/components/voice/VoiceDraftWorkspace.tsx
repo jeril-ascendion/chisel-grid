@@ -326,7 +326,7 @@ function ArticleBlockPreview({
 
   switch (block.type) {
     case 'heading':
-      const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
+      const Tag = `h${block.level}` as keyof React.JSX.IntrinsicElements;
       return <Tag>{block.content}</Tag>;
 
     case 'text':
