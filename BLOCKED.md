@@ -11,6 +11,15 @@
 
 ## Recently Unblocked
 
+## chiselgrid.com DNS_PROBE_FINISHED_NXDOMAIN (April 2026)
+Root cause: CloudFront distribution EWLP3KOX3KKTV (S3 static)
+was Enabled: false. A disabled distribution has no public IPs,
+so d1f3r42tp7znsx.cloudfront.net returned empty A records.
+Route53 ALIAS → NODATA cascaded to browsers as NXDOMAIN.
+Aliases, ACM cert, and Route53 were all correct.
+Fix: aws cloudfront update-distribution toggle Enabled=true.
+Time lost: ~3 hours.
+
 | Item | Was Blocked By | Resolution | Date |
 |------|---------------|------------|------|
 | AWS CDK deployment | Expired AWS SSO token | Configured PowerUserAccess profile and set AWS_PROFILE env var | April 2026 |

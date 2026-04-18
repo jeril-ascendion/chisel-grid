@@ -16,6 +16,14 @@
 - `packages/config` — Shared ESLint, TypeScript, Prettier configs (@chiselgrid/config)
 - `infra/` — AWS CDK infrastructure code
 
+## CRITICAL PERMANENT RULES
+
+NEVER disable CloudFront distributions that are active Route53
+ALIAS targets. A disabled CF distribution returns no A records,
+causing DNS_PROBE_FINISHED_NXDOMAIN even if Route53 is correct.
+Always verify distribution is Enabled: true before diagnosing
+DNS issues.
+
 ## Architecture Decisions (Follow These Always)
 - Content stored as `ContentBlock[]` JSON in Aurora JSONB column — see packages/types/src/content.ts
 - AI agent workflows run in Step Functions — never block synchronous API responses
