@@ -59,8 +59,9 @@ export class WebStack extends Stack {
       securityGroups: [networkStack.outputs.lambdaSecurityGroup],
       vpcSubnets: { subnets: networkStack.outputs.privateSubnets },
       environment: {
-        NEXTAUTH_URL: `https://${config.domain}`,
+        NEXTAUTH_URL: 'https://www.chiselgrid.com',
         NEXTAUTH_SECRET: 'placeholder-replaced-at-deploy',
+        AUTH_TRUST_HOST: 'true',
         COGNITO_USER_POOL_ID: authStack.outputs.userPoolId,
         COGNITO_CLIENT_ID: authStack.outputs.userPoolClientId,
         AWS_BEDROCK_MODEL_ID: 'anthropic.claude-sonnet-4-5',

@@ -187,6 +187,10 @@ export async function updateArticle(
   return !!mem;
 }
 
+// Default queue view: everything except rejected — admins want to see
+// both items awaiting review and already-published content in one list.
+const QUEUE_DEFAULT_STATUSES = ['in_review', 'submitted', 'draft', 'approved', 'published'] as const;
+
 export async function getQueueArticles(statusFilter?: string): Promise<StoredArticle[]> {
   if (auroraConfigured()) {
     try {
@@ -196,7 +200,9 @@ export async function getQueueArticles(statusFilter?: string): Promise<StoredArt
         sql += ` AND c.status = $2`;
         params.push(statusFilter);
       } else if (!statusFilter) {
-        sql += ` AND c.status IN ('in_review', 'submitted', 'draft')`;
+        const placeholders = QUEUE_DEFAULT_STATUSES.map((_, i) => `$${params.length + i + 1}`).join(', ');
+        sql += ` AND c.status IN (${placeholders})`;
+        params.push(...QUEUE_DEFAULT_STATUSES);
       }
       sql += ` ORDER BY c.created_at DESC LIMIT 500`;
       const { rows } = await query<Row>(sql, params);
@@ -211,9 +217,7 @@ export async function getQueueArticles(statusFilter?: string): Promise<StoredArt
   );
   if (statusFilter === 'all') return all;
   if (!statusFilter)
-    return all.filter(
-      (a) => a.status === 'in_review' || a.status === 'submitted' || a.status === 'draft',
-    );
+    return all.filter((a) => (QUEUE_DEFAULT_STATUSES as readonly string[]).includes(a.status));
   return all.filter((a) => a.status === statusFilter);
 }
 
