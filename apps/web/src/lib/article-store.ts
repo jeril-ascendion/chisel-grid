@@ -1,8 +1,10 @@
 /**
  * Article persistence layer.
- * Uses Aurora (Drizzle ORM) when DATABASE_URL is set (production).
+ * Uses Aurora via RDS Data API when AURORA_CLUSTER_ARN is set (production).
  * Falls back to in-memory Map when Aurora is unavailable (dev mode).
  */
+
+import { query, auroraConfigured, asUuid, asJson, DEFAULT_TENANT_ID } from './db/aurora';
 
 export interface StoredArticle {
   contentId: string;
@@ -19,44 +21,59 @@ export interface StoredArticle {
 }
 
 // ---------------------------------------------------------------------------
-// In-memory store (always available)
+// In-memory fallback store
 // ---------------------------------------------------------------------------
 const memoryStore = new Map<string, StoredArticle>();
 
-// ---------------------------------------------------------------------------
-// Aurora helpers — fully dynamic, only run when DATABASE_URL is set
-// ---------------------------------------------------------------------------
-function hasAurora(): boolean {
-  return !!process.env['DATABASE_URL'];
-}
+const DEFAULT_AUTHOR_ID =
+  process.env['DEFAULT_AUTHOR_ID'] ?? '00000000-0000-0000-0000-000000000001';
 
-async function withAurora<T>(fn: (db: any, schema: any, orm: any) => Promise<T>): Promise<T | null> {
-  if (!hasAurora()) return null;
-  try {
-    // Dynamic require avoids build-time resolution of @chiselgrid/db
-    const dbMod = require('@chiselgrid/db');
-    const orm = require('drizzle-orm');
-    const db = dbMod.getDb();
-    return await fn(db, dbMod, orm);
-  } catch (e) {
-    console.warn('[article-store] Aurora operation failed:', (e as Error).message);
-    return null;
+// Lightweight columns for list queries — avoids the 1MB Data API cap
+// that the large `blocks` JSONB hits when many rows are returned.
+const LIST_COLS = `
+  c.content_id, c.title, c.slug, c.description, c.status,
+  c.category_id, c.author_id, c.read_time_minutes, c.created_at
+`;
+const FULL_COLS = `${LIST_COLS}, c.blocks`;
+
+type Row = {
+  content_id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  status: StoredArticle['status'];
+  blocks?: unknown;
+  category_id: string | null;
+  author_id: string | null;
+  read_time_minutes: number | null;
+  created_at: string;
+};
+
+function rowToArticle(row: Row): StoredArticle {
+  let blocks: unknown[] = [];
+  if (Array.isArray(row.blocks)) blocks = row.blocks;
+  else if (typeof row.blocks === 'string') {
+    try {
+      blocks = JSON.parse(row.blocks);
+    } catch {
+      blocks = [];
+    }
   }
-}
-
-function dbRowToArticle(row: any): StoredArticle {
+  const created = row.created_at
+    ? new Date(row.created_at.replace(' ', 'T') + 'Z').toISOString()
+    : new Date().toISOString();
   return {
-    contentId: row.contentId,
+    contentId: row.content_id,
     title: row.title,
     slug: row.slug,
     description: row.description ?? '',
     status: row.status,
-    blocks: row.blocks ?? [],
-    category: row.categoryId ?? '',
+    blocks,
+    category: row.category_id ?? '',
     tags: [],
-    authorId: row.authorId ?? '',
-    readTimeMinutes: row.readTimeMinutes ?? 5,
-    createdAt: row.createdAt?.toISOString?.() ?? new Date().toISOString(),
+    authorId: row.author_id ?? '',
+    readTimeMinutes: row.read_time_minutes ?? 5,
+    createdAt: created,
   };
 }
 
@@ -66,78 +83,137 @@ function dbRowToArticle(row: any): StoredArticle {
 
 export async function addArticle(article: StoredArticle): Promise<void> {
   memoryStore.set(article.contentId, article);
-  await withAurora(async (db, schema) => {
-    await db.insert(schema.content).values({
-      contentId: article.contentId,
-      tenantId: process.env['DEFAULT_TENANT_ID'] ?? '00000000-0000-0000-0000-000000000001',
-      authorId: process.env['DEFAULT_AUTHOR_ID'] ?? '00000000-0000-0000-0000-000000000001',
-      title: article.title,
-      slug: article.slug,
-      description: article.description,
-      status: article.status,
-      blocks: article.blocks,
-      readTimeMinutes: article.readTimeMinutes,
-      createdAt: new Date(article.createdAt),
-      updatedAt: new Date(),
-    });
-  });
+  if (!auroraConfigured()) return;
+  try {
+    await query(
+      `INSERT INTO content (
+        content_id, tenant_id, author_id, title, slug, description, status,
+        blocks, read_time_minutes, created_at, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+       ON CONFLICT (content_id) DO NOTHING`,
+      [
+        asUuid(article.contentId),
+        asUuid(DEFAULT_TENANT_ID),
+        asUuid(article.authorId || DEFAULT_AUTHOR_ID),
+        article.title,
+        article.slug,
+        article.description,
+        article.status,
+        asJson(article.blocks),
+        article.readTimeMinutes,
+      ],
+    );
+  } catch (e) {
+    console.warn('[article-store] addArticle Aurora failed:', (e as Error).message);
+  }
 }
 
 export async function getArticle(contentId: string): Promise<StoredArticle | undefined> {
+  if (auroraConfigured()) {
+    try {
+      const { rows } = await query<Row>(
+        `SELECT ${FULL_COLS} FROM content c
+         WHERE c.tenant_id = $1 AND c.content_id = $2 LIMIT 1`,
+        [asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
+      );
+      if (rows[0]) return rowToArticle(rows[0]);
+    } catch (e) {
+      console.warn('[article-store] getArticle Aurora failed:', (e as Error).message);
+    }
+  }
+  return memoryStore.get(contentId);
+}
+
+export async function updateArticleStatus(
+  contentId: string,
+  status: StoredArticle['status'],
+): Promise<boolean> {
   const mem = memoryStore.get(contentId);
-  if (mem) return mem;
-  const row = await withAurora(async (db, schema, orm) => {
-    const rows = await db.select().from(schema.content).where(orm.eq(schema.content.contentId, contentId)).limit(1);
-    return rows[0] ?? null;
-  });
-  return row ? dbRowToArticle(row) : undefined;
+  if (mem) mem.status = status;
+  if (auroraConfigured()) {
+    try {
+      const { rowsAffected } = await query(
+        `UPDATE content SET status = $1, updated_at = NOW()
+         WHERE tenant_id = $2 AND content_id = $3`,
+        [status, asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
+      );
+      if (status === 'published') {
+        await query(
+          `UPDATE content SET published_at = COALESCE(published_at, NOW())
+           WHERE tenant_id = $1 AND content_id = $2`,
+          [asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
+        );
+      }
+      return rowsAffected > 0 || !!mem;
+    } catch (e) {
+      console.warn('[article-store] updateArticleStatus Aurora failed:', (e as Error).message);
+    }
+  }
+  return !!mem;
 }
 
-export async function updateArticleStatus(contentId: string, status: StoredArticle['status']): Promise<boolean> {
-  const article = memoryStore.get(contentId);
-  if (article) article.status = status;
-  await withAurora(async (db, schema, orm) => {
-    await db.update(schema.content).set({ status, updatedAt: new Date() }).where(orm.eq(schema.content.contentId, contentId));
-  });
-  return !!article;
-}
-
-export async function updateArticle(contentId: string, updates: Partial<StoredArticle>): Promise<boolean> {
-  const article = memoryStore.get(contentId);
-  if (article) Object.assign(article, updates);
-  await withAurora(async (db, schema, orm) => {
-    const data: Record<string, unknown> = { updatedAt: new Date() };
-    if (updates.title) data.title = updates.title;
-    if (updates.description) data.description = updates.description;
-    if (updates.status) data.status = updates.status;
-    if (updates.blocks) data.blocks = updates.blocks;
-    if (updates.readTimeMinutes) data.readTimeMinutes = updates.readTimeMinutes;
-    await db.update(schema.content).set(data).where(orm.eq(schema.content.contentId, contentId));
-  });
-  return !!article;
+export async function updateArticle(
+  contentId: string,
+  updates: Partial<StoredArticle>,
+): Promise<boolean> {
+  const mem = memoryStore.get(contentId);
+  if (mem) Object.assign(mem, updates);
+  if (auroraConfigured()) {
+    try {
+      const sets: string[] = ['updated_at = NOW()'];
+      const params: unknown[] = [];
+      const push = (col: string, val: unknown) => {
+        params.push(val);
+        sets.push(`${col} = $${params.length}`);
+      };
+      if (updates.title !== undefined) push('title', updates.title);
+      if (updates.description !== undefined) push('description', updates.description);
+      if (updates.status !== undefined) push('status', updates.status);
+      if (updates.blocks !== undefined) push('blocks', asJson(updates.blocks));
+      if (updates.readTimeMinutes !== undefined) push('read_time_minutes', updates.readTimeMinutes);
+      params.push(asUuid(DEFAULT_TENANT_ID));
+      params.push(asUuid(contentId));
+      const tenantPos = params.length - 1;
+      const idPos = params.length;
+      const { rowsAffected } = await query(
+        `UPDATE content SET ${sets.join(', ')} WHERE tenant_id = $${tenantPos} AND content_id = $${idPos}`,
+        params,
+      );
+      return rowsAffected > 0 || !!mem;
+    } catch (e) {
+      console.warn('[article-store] updateArticle Aurora failed:', (e as Error).message);
+    }
+  }
+  return !!mem;
 }
 
 export async function getQueueArticles(statusFilter?: string): Promise<StoredArticle[]> {
-  const auroraResult = await withAurora(async (db, schema, orm) => {
-    let query = db.select().from(schema.content).orderBy(orm.desc(schema.content.createdAt)).limit(100);
-    if (statusFilter && statusFilter !== 'all') {
-      query = query.where(orm.eq(schema.content.status, statusFilter));
-    } else if (!statusFilter) {
-      query = query.where(orm.or(
-        orm.eq(schema.content.status, 'in_review'),
-        orm.eq(schema.content.status, 'submitted'),
-        orm.eq(schema.content.status, 'draft'),
-      ));
+  if (auroraConfigured()) {
+    try {
+      let sql = `SELECT ${LIST_COLS} FROM content c WHERE c.tenant_id = $1`;
+      const params: unknown[] = [asUuid(DEFAULT_TENANT_ID)];
+      if (statusFilter && statusFilter !== 'all') {
+        sql += ` AND c.status = $2`;
+        params.push(statusFilter);
+      } else if (!statusFilter) {
+        sql += ` AND c.status IN ('in_review', 'submitted', 'draft')`;
+      }
+      sql += ` ORDER BY c.created_at DESC LIMIT 500`;
+      const { rows } = await query<Row>(sql, params);
+      return rows.map(rowToArticle);
+    } catch (e) {
+      console.warn('[article-store] getQueueArticles Aurora failed:', (e as Error).message);
     }
-    return (await query).map(dbRowToArticle);
-  });
-  if (auroraResult) return auroraResult;
+  }
 
-  // Fallback to memory
-  const all = Array.from(memoryStore.values())
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const all = Array.from(memoryStore.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
   if (statusFilter === 'all') return all;
-  if (!statusFilter) return all.filter((a) => a.status === 'in_review' || a.status === 'submitted' || a.status === 'draft');
+  if (!statusFilter)
+    return all.filter(
+      (a) => a.status === 'in_review' || a.status === 'submitted' || a.status === 'draft',
+    );
   return all.filter((a) => a.status === statusFilter);
 }
 

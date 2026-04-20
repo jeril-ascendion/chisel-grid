@@ -63,11 +63,15 @@ export class WebStack extends Stack {
         NEXTAUTH_SECRET: 'placeholder-replaced-at-deploy',
         COGNITO_USER_POOL_ID: authStack.outputs.userPoolId,
         COGNITO_CLIENT_ID: authStack.outputs.userPoolClientId,
-        AWS_BEDROCK_MODEL_ID: 'anthropic.claude-3-sonnet-20240229-v1:0',
+        AWS_BEDROCK_MODEL_ID: 'anthropic.claude-sonnet-4-5',
         DB_SECRET_ARN: dataStack.outputs.dbSecretArn,
         DB_HOST: dataStack.outputs.clusterEndpoint,
         DB_PORT: String(dataStack.outputs.dbPort),
         DB_NAME: 'chiselgrid',
+        AURORA_CLUSTER_ARN: dataStack.outputs.clusterArn,
+        AURORA_SECRET_ARN: dataStack.outputs.dbSecretArn,
+        AURORA_DATABASE: 'chiselgrid',
+        DEFAULT_TENANT_ID: '7d4e7c4f-4ded-4859-8db2-c7b5e2438f8c',
       },
       logGroup: new logs.LogGroup(this, 'NextjsServerLogs', {
         logGroupName: `/aws/lambda/chiselgrid-${envPrefix}-nextjs-server`,
@@ -88,6 +92,20 @@ export class WebStack extends Stack {
       new iam.PolicyStatement({
         actions: ['secretsmanager:GetSecretValue'],
         resources: [dataStack.outputs.dbSecretArn],
+      }),
+    );
+
+    // Aurora RDS Data API — IAM-authed SQL calls from Lambda
+    this.serverFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'rds-data:ExecuteStatement',
+          'rds-data:BatchExecuteStatement',
+          'rds-data:BeginTransaction',
+          'rds-data:CommitTransaction',
+          'rds-data:RollbackTransaction',
+        ],
+        resources: [dataStack.outputs.clusterArn],
       }),
     );
 

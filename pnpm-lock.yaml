@@ -273,6 +273,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@aws-sdk/client-rds-data':
+        specifier: ^3.1030.0
+        version: 3.1030.0
       '@chiselgrid/ai':
         specifier: workspace:*
         version: link:../../packages/ai
@@ -2727,7 +2730,7 @@ packages:
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {'0': node >=0.10.0}
+    engines: {node: '>=0.10.0'}
 
   '@expo/cli@0.22.28':
     resolution: {integrity: sha512-lvt72KNitGuixYD2l3SZmRKVu2G4zJpmg5V7WfUBNpmUU5oODBw/6qmiJ6kSLAlfDozscUk+BBGknBBzxUrwrA==}
@@ -10891,13 +10894,13 @@ snapshots:
   '@aws-crypto/crc32@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/types': 3.973.7
       tslib: 2.8.1
 
   '@aws-crypto/crc32c@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/types': 3.973.7
       tslib: 2.8.1
 
   '@aws-crypto/sha1-browser@5.2.0':
@@ -10914,7 +10917,7 @@ snapshots:
       '@aws-crypto/sha256-js': 5.2.0
       '@aws-crypto/supports-web-crypto': 5.2.0
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/types': 3.973.7
       '@aws-sdk/util-locate-window': 3.965.5
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
@@ -10922,7 +10925,7 @@ snapshots:
   '@aws-crypto/sha256-js@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/types': 3.973.7
       tslib: 2.8.1
 
   '@aws-crypto/supports-web-crypto@5.2.0':
@@ -10931,7 +10934,7 @@ snapshots:
 
   '@aws-crypto/util@5.2.0':
     dependencies:
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/types': 3.973.7
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
@@ -12051,15 +12054,15 @@ snapshots:
 
   '@aws-sdk/crc64-nvme@3.972.5':
     dependencies:
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
 
   '@aws-sdk/credential-provider-env@3.972.24':
     dependencies:
-      '@aws-sdk/core': 3.973.26
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/core': 3.973.27
+      '@aws-sdk/types': 3.973.7
       '@smithy/property-provider': 4.2.12
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
 
   '@aws-sdk/credential-provider-env@3.972.25':
@@ -12072,14 +12075,14 @@ snapshots:
 
   '@aws-sdk/credential-provider-http@3.972.26':
     dependencies:
-      '@aws-sdk/core': 3.973.26
-      '@aws-sdk/types': 3.973.6
-      '@smithy/fetch-http-handler': 5.3.15
-      '@smithy/node-http-handler': 4.5.1
+      '@aws-sdk/core': 3.973.27
+      '@aws-sdk/types': 3.973.7
+      '@smithy/fetch-http-handler': 5.3.16
+      '@smithy/node-http-handler': 4.5.2
       '@smithy/property-provider': 4.2.12
-      '@smithy/protocol-http': 5.3.12
-      '@smithy/smithy-client': 4.12.8
-      '@smithy/types': 4.13.1
+      '@smithy/protocol-http': 5.3.13
+      '@smithy/smithy-client': 4.12.9
+      '@smithy/types': 4.14.0
       '@smithy/util-stream': 4.5.21
       tslib: 2.8.1
 
@@ -12098,7 +12101,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-ini@3.972.28':
     dependencies:
-      '@aws-sdk/core': 3.973.26
+      '@aws-sdk/core': 3.973.27
       '@aws-sdk/credential-provider-env': 3.972.24
       '@aws-sdk/credential-provider-http': 3.972.26
       '@aws-sdk/credential-provider-login': 3.972.28
@@ -12106,11 +12109,11 @@ snapshots:
       '@aws-sdk/credential-provider-sso': 3.972.28
       '@aws-sdk/credential-provider-web-identity': 3.972.28
       '@aws-sdk/nested-clients': 3.996.18
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/types': 3.973.7
       '@smithy/credential-provider-imds': 4.2.12
       '@smithy/property-provider': 4.2.12
       '@smithy/shared-ini-file-loader': 4.4.7
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
@@ -12136,13 +12139,13 @@ snapshots:
 
   '@aws-sdk/credential-provider-login@3.972.28':
     dependencies:
-      '@aws-sdk/core': 3.973.26
+      '@aws-sdk/core': 3.973.27
       '@aws-sdk/nested-clients': 3.996.18
-      '@aws-sdk/types': 3.973.6
-      '@smithy/property-provider': 4.2.12
-      '@smithy/protocol-http': 5.3.12
-      '@smithy/shared-ini-file-loader': 4.4.7
-      '@smithy/types': 4.13.1
+      '@aws-sdk/types': 3.973.7
+      '@smithy/property-provider': 4.2.13
+      '@smithy/protocol-http': 5.3.13
+      '@smithy/shared-ini-file-loader': 4.4.8
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
@@ -12196,11 +12199,11 @@ snapshots:
 
   '@aws-sdk/credential-provider-process@3.972.24':
     dependencies:
-      '@aws-sdk/core': 3.973.26
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/core': 3.973.27
+      '@aws-sdk/types': 3.973.7
       '@smithy/property-provider': 4.2.12
       '@smithy/shared-ini-file-loader': 4.4.7
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
 
   '@aws-sdk/credential-provider-process@3.972.25':
@@ -12214,13 +12217,13 @@ snapshots:
 
   '@aws-sdk/credential-provider-sso@3.972.28':
     dependencies:
-      '@aws-sdk/core': 3.973.26
+      '@aws-sdk/core': 3.973.27
       '@aws-sdk/nested-clients': 3.996.18
       '@aws-sdk/token-providers': 3.1021.0
-      '@aws-sdk/types': 3.973.6
-      '@smithy/property-provider': 4.2.12
-      '@smithy/shared-ini-file-loader': 4.4.7
-      '@smithy/types': 4.13.1
+      '@aws-sdk/types': 3.973.7
+      '@smithy/property-provider': 4.2.13
+      '@smithy/shared-ini-file-loader': 4.4.8
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
@@ -12240,12 +12243,12 @@ snapshots:
 
   '@aws-sdk/credential-provider-web-identity@3.972.28':
     dependencies:
-      '@aws-sdk/core': 3.973.26
+      '@aws-sdk/core': 3.973.27
       '@aws-sdk/nested-clients': 3.996.18
-      '@aws-sdk/types': 3.973.6
-      '@smithy/property-provider': 4.2.12
-      '@smithy/shared-ini-file-loader': 4.4.7
-      '@smithy/types': 4.13.1
+      '@aws-sdk/types': 3.973.7
+      '@smithy/property-provider': 4.2.13
+      '@smithy/shared-ini-file-loader': 4.4.8
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
@@ -12437,14 +12440,14 @@ snapshots:
 
   '@aws-sdk/middleware-websocket@3.972.14':
     dependencies:
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/types': 3.973.7
       '@aws-sdk/util-format-url': 3.972.8
       '@smithy/eventstream-codec': 4.2.12
       '@smithy/eventstream-serde-browser': 4.2.12
-      '@smithy/fetch-http-handler': 5.3.15
-      '@smithy/protocol-http': 5.3.12
+      '@smithy/fetch-http-handler': 5.3.16
+      '@smithy/protocol-http': 5.3.13
       '@smithy/signature-v4': 5.3.12
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       '@smithy/util-base64': 4.3.2
       '@smithy/util-hex-encoding': 4.2.2
       '@smithy/util-utf8': 4.2.2
@@ -12454,40 +12457,40 @@ snapshots:
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
-      '@aws-sdk/core': 3.973.26
-      '@aws-sdk/middleware-host-header': 3.972.8
-      '@aws-sdk/middleware-logger': 3.972.8
-      '@aws-sdk/middleware-recursion-detection': 3.972.9
-      '@aws-sdk/middleware-user-agent': 3.972.28
-      '@aws-sdk/region-config-resolver': 3.972.10
-      '@aws-sdk/types': 3.973.6
-      '@aws-sdk/util-endpoints': 3.996.5
-      '@aws-sdk/util-user-agent-browser': 3.972.8
-      '@aws-sdk/util-user-agent-node': 3.973.14
-      '@smithy/config-resolver': 4.4.13
-      '@smithy/core': 3.23.13
-      '@smithy/fetch-http-handler': 5.3.15
-      '@smithy/hash-node': 4.2.12
-      '@smithy/invalid-dependency': 4.2.12
-      '@smithy/middleware-content-length': 4.2.12
-      '@smithy/middleware-endpoint': 4.4.28
-      '@smithy/middleware-retry': 4.4.46
-      '@smithy/middleware-serde': 4.2.16
-      '@smithy/middleware-stack': 4.2.12
-      '@smithy/node-config-provider': 4.3.12
-      '@smithy/node-http-handler': 4.5.1
-      '@smithy/protocol-http': 5.3.12
-      '@smithy/smithy-client': 4.12.8
-      '@smithy/types': 4.13.1
-      '@smithy/url-parser': 4.2.12
+      '@aws-sdk/core': 3.973.27
+      '@aws-sdk/middleware-host-header': 3.972.9
+      '@aws-sdk/middleware-logger': 3.972.9
+      '@aws-sdk/middleware-recursion-detection': 3.972.10
+      '@aws-sdk/middleware-user-agent': 3.972.29
+      '@aws-sdk/region-config-resolver': 3.972.11
+      '@aws-sdk/types': 3.973.7
+      '@aws-sdk/util-endpoints': 3.996.6
+      '@aws-sdk/util-user-agent-browser': 3.972.9
+      '@aws-sdk/util-user-agent-node': 3.973.15
+      '@smithy/config-resolver': 4.4.15
+      '@smithy/core': 3.23.14
+      '@smithy/fetch-http-handler': 5.3.16
+      '@smithy/hash-node': 4.2.13
+      '@smithy/invalid-dependency': 4.2.13
+      '@smithy/middleware-content-length': 4.2.13
+      '@smithy/middleware-endpoint': 4.4.29
+      '@smithy/middleware-retry': 4.5.1
+      '@smithy/middleware-serde': 4.2.17
+      '@smithy/middleware-stack': 4.2.13
+      '@smithy/node-config-provider': 4.3.13
+      '@smithy/node-http-handler': 4.5.2
+      '@smithy/protocol-http': 5.3.13
+      '@smithy/smithy-client': 4.12.9
+      '@smithy/types': 4.14.0
+      '@smithy/url-parser': 4.2.13
       '@smithy/util-base64': 4.3.2
       '@smithy/util-body-length-browser': 4.2.2
       '@smithy/util-body-length-node': 4.2.3
-      '@smithy/util-defaults-mode-browser': 4.3.44
-      '@smithy/util-defaults-mode-node': 4.2.48
-      '@smithy/util-endpoints': 3.3.3
-      '@smithy/util-middleware': 4.2.12
-      '@smithy/util-retry': 4.2.13
+      '@smithy/util-defaults-mode-browser': 4.3.45
+      '@smithy/util-defaults-mode-node': 4.2.50
+      '@smithy/util-endpoints': 3.4.0
+      '@smithy/util-middleware': 4.2.13
+      '@smithy/util-retry': 4.3.1
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -12566,10 +12569,10 @@ snapshots:
   '@aws-sdk/signature-v4-multi-region@3.984.0':
     dependencies:
       '@aws-sdk/middleware-sdk-s3': 3.972.27
-      '@aws-sdk/types': 3.973.6
-      '@smithy/protocol-http': 5.3.12
+      '@aws-sdk/types': 3.973.7
+      '@smithy/protocol-http': 5.3.13
       '@smithy/signature-v4': 5.3.12
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
 
   '@aws-sdk/signature-v4-multi-region@3.996.15':
@@ -12583,24 +12586,24 @@ snapshots:
 
   '@aws-sdk/token-providers@3.1021.0':
     dependencies:
-      '@aws-sdk/core': 3.973.26
-      '@aws-sdk/nested-clients': 3.996.18
-      '@aws-sdk/types': 3.973.6
-      '@smithy/property-provider': 4.2.12
-      '@smithy/shared-ini-file-loader': 4.4.7
-      '@smithy/types': 4.13.1
+      '@aws-sdk/core': 3.973.27
+      '@aws-sdk/nested-clients': 3.996.19
+      '@aws-sdk/types': 3.973.7
+      '@smithy/property-provider': 4.2.13
+      '@smithy/shared-ini-file-loader': 4.4.8
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
 
   '@aws-sdk/token-providers@3.1024.0':
     dependencies:
-      '@aws-sdk/core': 3.973.26
+      '@aws-sdk/core': 3.973.27
       '@aws-sdk/nested-clients': 3.996.18
-      '@aws-sdk/types': 3.973.6
+      '@aws-sdk/types': 3.973.7
       '@smithy/property-provider': 4.2.12
       '@smithy/shared-ini-file-loader': 4.4.7
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
@@ -12638,10 +12641,10 @@ snapshots:
 
   '@aws-sdk/util-endpoints@3.984.0':
     dependencies:
-      '@aws-sdk/types': 3.973.6
-      '@smithy/types': 4.13.1
-      '@smithy/url-parser': 4.2.12
-      '@smithy/util-endpoints': 3.3.3
+      '@aws-sdk/types': 3.973.7
+      '@smithy/types': 4.14.0
+      '@smithy/url-parser': 4.2.13
+      '@smithy/util-endpoints': 3.4.0
       tslib: 2.8.1
 
   '@aws-sdk/util-endpoints@3.996.5':
@@ -12705,7 +12708,7 @@ snapshots:
 
   '@aws-sdk/xml-builder@3.972.16':
     dependencies:
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       fast-xml-parser: 5.5.8
       tslib: 2.8.1
 
@@ -17181,10 +17184,10 @@ snapshots:
 
   '@smithy/credential-provider-imds@4.2.12':
     dependencies:
-      '@smithy/node-config-provider': 4.3.12
+      '@smithy/node-config-provider': 4.3.13
       '@smithy/property-provider': 4.2.12
-      '@smithy/types': 4.13.1
-      '@smithy/url-parser': 4.2.12
+      '@smithy/types': 4.14.0
+      '@smithy/url-parser': 4.2.13
       tslib: 2.8.1
 
   '@smithy/credential-provider-imds@4.2.13':
@@ -17198,7 +17201,7 @@ snapshots:
   '@smithy/eventstream-codec@4.2.12':
     dependencies:
       '@aws-crypto/crc32': 5.2.0
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       '@smithy/util-hex-encoding': 4.2.2
       tslib: 2.8.1
 
@@ -17222,7 +17225,7 @@ snapshots:
   '@smithy/eventstream-serde-universal@4.2.12':
     dependencies:
       '@smithy/eventstream-codec': 4.2.12
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
 
   '@smithy/fetch-http-handler@5.3.15':
@@ -17405,7 +17408,7 @@ snapshots:
 
   '@smithy/property-provider@4.2.12':
     dependencies:
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
 
   '@smithy/property-provider@4.2.13':
@@ -17425,7 +17428,7 @@ snapshots:
 
   '@smithy/querystring-builder@4.2.12':
     dependencies:
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       '@smithy/util-uri-escape': 4.2.2
       tslib: 2.8.1
 
@@ -17437,7 +17440,7 @@ snapshots:
 
   '@smithy/querystring-parser@4.2.12':
     dependencies:
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
 
   '@smithy/querystring-parser@4.2.13':
@@ -17447,7 +17450,7 @@ snapshots:
 
   '@smithy/service-error-classification@4.2.12':
     dependencies:
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
 
   '@smithy/service-error-classification@4.2.13':
     dependencies:
@@ -17455,7 +17458,7 @@ snapshots:
 
   '@smithy/shared-ini-file-loader@4.4.7':
     dependencies:
-      '@smithy/types': 4.13.1
+      '@smithy/types': 4.14.0
       tslib: 2.8.1
 
   '@smithy/shared-ini-file-loader@4.4.8':
@@ -17466,10 +17469,10 @@ snapshots:
   '@smithy/signature-v4@5.3.12':
     dependencies:
       '@smithy/is-array-buffer': 4.2.2
-      '@smithy/protocol-http': 5.3.12
-      '@smithy/types': 4.13.1
+      '@smithy/protocol-http': 5.3.13
+      '@smithy/types': 4.14.0
       '@smithy/util-hex-encoding': 4.2.2
-      '@smithy/util-middleware': 4.2.12
+      '@smithy/util-middleware': 4.2.13
       '@smithy/util-uri-escape': 4.2.2
       '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1

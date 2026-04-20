@@ -178,7 +178,7 @@ Return ONLY valid JSON in this exact format (no markdown fences):
     try {
       const response = await client.send(
         new InvokeModelCommand({
-          modelId: 'anthropic.claude-sonnet-4-5',
+          modelId: 'global.anthropic.claude-sonnet-4-5-20250929-v1:0',
           contentType: 'application/json',
           accept: 'application/json',
           body,
