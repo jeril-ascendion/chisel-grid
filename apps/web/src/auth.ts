@@ -51,7 +51,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) return null;
+        console.log('[auth] authorize called username=%s hasPassword=%s',
+          credentials?.username ?? 'none',
+          !!credentials?.password);
+        if (!credentials?.username || !credentials?.password) {
+          console.log('[auth] authorize: missing credentials');
+          return null;
+        }
 
         const issuerUrl = cognitoIssuer ?? '';
         const region = issuerUrl.match(
@@ -122,6 +128,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
           }
 
+          console.log('[auth] authorize SUCCESS email=%s groups=%j tenantId=%s',
+            email, groups, tenantId);
           return {
             id: sub,
             email,

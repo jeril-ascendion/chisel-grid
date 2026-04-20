@@ -5,12 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Suspense } from 'react';
 
-function isStaticSite(): boolean {
-  if (typeof window === 'undefined') return false;
-  const h = window.location.hostname;
-  return h === 'www.chiselgrid.com' || h === 'chiselgrid.com' || h.endsWith('.cloudfront.net');
-}
-
 export function LoginForm() {
   return (
     <Suspense>
@@ -35,20 +29,6 @@ function LoginFormInner() {
     setLoading(true);
 
     try {
-      if (isStaticSite()) {
-        // Static S3+CloudFront: use direct Cognito auth (localStorage-based)
-        const { cognitoSignIn } = await import('@/lib/cognito-client');
-        const cognitoResult = await cognitoSignIn(email, password);
-        if (cognitoResult.ok) {
-          window.location.href = '/admin';
-          return;
-        }
-        setFormError(cognitoResult.error);
-        setLoading(false);
-        return;
-      }
-
-      // Dev/server mode: use NextAuth credentials provider
       const result = await signIn('cognito-credentials', {
         username: email,
         password,

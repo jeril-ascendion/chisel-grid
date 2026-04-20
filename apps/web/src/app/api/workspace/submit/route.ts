@@ -46,6 +46,8 @@ export async function POST(request: Request) {
     status,
     blocks,
     category: categoryId ?? '',
+    categoryName: '',
+    categorySlug: '',
     tags,
     authorId: session.user.email ?? 'unknown',
     readTimeMinutes: Math.max(1, Math.ceil(blocks.length * 0.7)),

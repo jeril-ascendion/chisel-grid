@@ -64,6 +64,8 @@ export class WebStack extends Stack {
         AUTH_TRUST_HOST: 'true',
         COGNITO_USER_POOL_ID: authStack.outputs.userPoolId,
         COGNITO_CLIENT_ID: authStack.outputs.userPoolClientId,
+        COGNITO_CLIENT_SECRET: authStack.outputs.userPoolClientSecret.unsafeUnwrap(),
+        COGNITO_ISSUER_URL: `https://cognito-idp.${config.region}.amazonaws.com/${authStack.outputs.userPoolId}`,
         AWS_BEDROCK_MODEL_ID: 'anthropic.claude-sonnet-4-5',
         DB_SECRET_ARN: dataStack.outputs.dbSecretArn,
         DB_HOST: dataStack.outputs.clusterEndpoint,

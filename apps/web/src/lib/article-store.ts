@@ -14,6 +14,8 @@ export interface StoredArticle {
   status: 'draft' | 'submitted' | 'in_review' | 'approved' | 'published' | 'rejected';
   blocks: unknown[];
   category: string;
+  categoryName: string;
+  categorySlug: string;
   tags: string[];
   authorId: string;
   readTimeMinutes: number;
@@ -32,9 +34,11 @@ const DEFAULT_AUTHOR_ID =
 // that the large `blocks` JSONB hits when many rows are returned.
 const LIST_COLS = `
   c.content_id, c.title, c.slug, c.description, c.status,
-  c.category_id, c.author_id, c.read_time_minutes, c.created_at
+  c.category_id, c.author_id, c.read_time_minutes, c.created_at,
+  cat.name AS category_name, cat.slug AS category_slug
 `;
 const FULL_COLS = `${LIST_COLS}, c.blocks`;
+const CATEGORY_JOIN = ` LEFT JOIN categories cat ON cat.category_id = c.category_id`;
 
 type Row = {
   content_id: string;
@@ -44,6 +48,8 @@ type Row = {
   status: StoredArticle['status'];
   blocks?: unknown;
   category_id: string | null;
+  category_name: string | null;
+  category_slug: string | null;
   author_id: string | null;
   read_time_minutes: number | null;
   created_at: string;
@@ -70,6 +76,8 @@ function rowToArticle(row: Row): StoredArticle {
     status: row.status,
     blocks,
     category: row.category_id ?? '',
+    categoryName: row.category_name ?? '',
+    categorySlug: row.category_slug ?? '',
     tags: [],
     authorId: row.author_id ?? '',
     readTimeMinutes: row.read_time_minutes ?? 5,
@@ -112,7 +120,7 @@ export async function getArticle(contentId: string): Promise<StoredArticle | und
   if (auroraConfigured()) {
     try {
       const { rows } = await query<Row>(
-        `SELECT ${FULL_COLS} FROM content c
+        `SELECT ${FULL_COLS} FROM content c${CATEGORY_JOIN}
          WHERE c.tenant_id = $1 AND c.content_id = $2 LIMIT 1`,
         [asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
       );
@@ -133,7 +141,7 @@ export async function updateArticleStatus(
   if (auroraConfigured()) {
     try {
       const { rowsAffected } = await query(
-        `UPDATE content SET status = $1, updated_at = NOW()
+        `UPDATE content SET status = $1::content_status, updated_at = NOW()
          WHERE tenant_id = $2 AND content_id = $3`,
         [status, asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
       );
@@ -168,7 +176,10 @@ export async function updateArticle(
       };
       if (updates.title !== undefined) push('title', updates.title);
       if (updates.description !== undefined) push('description', updates.description);
-      if (updates.status !== undefined) push('status', updates.status);
+      if (updates.status !== undefined) {
+        params.push(updates.status);
+        sets.push(`status = $${params.length}::content_status`);
+      }
       if (updates.blocks !== undefined) push('blocks', asJson(updates.blocks));
       if (updates.readTimeMinutes !== undefined) push('read_time_minutes', updates.readTimeMinutes);
       params.push(asUuid(DEFAULT_TENANT_ID));
@@ -194,13 +205,15 @@ const QUEUE_DEFAULT_STATUSES = ['in_review', 'submitted', 'draft', 'approved', '
 export async function getQueueArticles(statusFilter?: string): Promise<StoredArticle[]> {
   if (auroraConfigured()) {
     try {
-      let sql = `SELECT ${LIST_COLS} FROM content c WHERE c.tenant_id = $1`;
+      let sql = `SELECT ${LIST_COLS} FROM content c${CATEGORY_JOIN} WHERE c.tenant_id = $1`;
       const params: unknown[] = [asUuid(DEFAULT_TENANT_ID)];
       if (statusFilter && statusFilter !== 'all') {
-        sql += ` AND c.status = $2`;
+        sql += ` AND c.status = $2::content_status`;
         params.push(statusFilter);
       } else if (!statusFilter) {
-        const placeholders = QUEUE_DEFAULT_STATUSES.map((_, i) => `$${params.length + i + 1}`).join(', ');
+        const placeholders = QUEUE_DEFAULT_STATUSES
+          .map((_, i) => `$${params.length + i + 1}::content_status`)
+          .join(', ');
         sql += ` AND c.status IN (${placeholders})`;
         params.push(...QUEUE_DEFAULT_STATUSES);
       }

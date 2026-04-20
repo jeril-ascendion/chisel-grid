@@ -21,7 +21,9 @@ export async function GET(req: NextRequest) {
     title: a.title,
     status: a.status,
     author: a.authorId,
-    category: a.category,
+    category: a.categoryName || 'Uncategorised',
+    categorySlug: a.categorySlug,
+    categoryId: a.category,
     updatedAt: a.createdAt,
     publishedAt: a.status === 'published' ? a.createdAt : null,
   }));

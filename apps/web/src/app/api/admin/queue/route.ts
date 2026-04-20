@@ -7,12 +7,25 @@ import { getQueueArticles, updateArticleStatus } from '@/lib/article-store';
  */
 export async function GET(req: NextRequest) {
   const session = await auth();
+  const cookieHeader = req.headers.get('cookie') ?? '';
+  const cookieNames = cookieHeader
+    .split(';')
+    .map((c) => c.trim().split('=')[0])
+    .filter(Boolean);
+  console.log(
+    '[queue] GET host=%s cookies=%j hasSession=%s userEmail=%s',
+    req.headers.get('host'),
+    cookieNames,
+    !!session?.user,
+    session?.user?.email ?? 'none',
+  );
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const statusFilter = new URL(req.url).searchParams.get('status') ?? undefined;
   const articles = await getQueueArticles(statusFilter);
+  console.log('[queue] returning items=%d filter=%s', articles.length, statusFilter ?? '(default)');
 
   // Map to the shape ContentQueue component expects
   const items = articles.map((a) => ({
@@ -23,7 +36,9 @@ export async function GET(req: NextRequest) {
     submittedAt: a.createdAt,
     readTimeMinutes: a.readTimeMinutes,
     status: a.status === 'submitted' ? 'in_review' : a.status,
-    category: a.category,
+    category: a.categoryName || 'Uncategorised',
+    categorySlug: a.categorySlug,
+    categoryId: a.category,
     description: a.description,
   }));
 
