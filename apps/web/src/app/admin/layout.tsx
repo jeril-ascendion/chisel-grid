@@ -16,19 +16,51 @@ export default function AdminLayout({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/auth/session')
-      .then((res) => res.json())
-      .then((session) => {
-        if (!session?.user) {
-          router.replace('/login/');
-        } else {
-          setUser(session.user);
+    let cancelled = false;
+
+    // Try Cognito client session first (static S3 deployment path).
+    try {
+      const raw = typeof window !== 'undefined'
+        ? window.localStorage.getItem('chiselgrid_session')
+        : null;
+      if (raw) {
+        const cs = JSON.parse(raw) as {
+          email?: string;
+          role?: string;
+          name?: string;
+          groups?: string[];
+          expiresAt?: number;
+        };
+        if (cs.expiresAt && cs.expiresAt > Date.now() && cs.role === 'admin') {
+          setUser({ email: cs.email, role: cs.role, name: cs.name });
+          setLoading(false);
+          return;
         }
+      }
+    } catch {
+      // ignore and fall through to NextAuth
+    }
+
+    fetch('/api/auth/session')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((session) => {
+        if (cancelled) return;
+        if (!session?.user || session.user.role !== 'admin') {
+          router.replace('/login/');
+          return;
+        }
+        setUser(session.user);
       })
       .catch(() => {
-        router.replace('/login/');
+        if (!cancelled) router.replace('/login/');
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   if (loading) {

@@ -16,13 +16,20 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
     const cs = getCognitoSession();
-    if (cs?.role === 'admin') {
+    if (cs && cs.role === 'admin' && cs.groups?.includes('admins')) {
       setIsAdmin(true);
+      setSessionChecked(true);
+      return;
+    }
+    if (cs) {
+      // Signed in but not admin — done.
+      setSessionChecked(true);
       return;
     }
 
@@ -31,11 +38,19 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
       .then((r) => (r.ok ? r.json() : null))
       .then((session) => {
         if (cancelled) return;
-        if (session?.user && (session.user as { role?: string }).role === 'admin') {
+        const user = session?.user as
+          | { role?: string; groups?: string[] }
+          | undefined;
+        const adminByRole = user?.role === 'admin';
+        const adminByGroups = user?.groups?.includes('admins') ?? false;
+        if (user && (adminByRole || adminByGroups)) {
           setIsAdmin(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSessionChecked(true);
+      });
 
     return () => {
       cancelled = true;
@@ -43,6 +58,7 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
   }, []);
 
   if (!mounted) return null;
+  if (!sessionChecked) return null;
   if (pathname?.startsWith('/admin')) return null;
   if (!isAdmin) return null;
 
