@@ -44,8 +44,10 @@ export function Header() {
   const categories = getCategories();
   const { data: session, status } = useSession();
   const [cognitoUser, setCognitoUser] = useState<{ email: string; role: string } | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Check client-side Cognito session (for static S3 deployment)
     const cs = getCognitoSession();
     if (cs) setCognitoUser({ email: cs.email, role: cs.role });
@@ -105,7 +107,12 @@ export function Header() {
             </svg>
           </Link>
           <ThemeToggle />
-          {isAuthenticated ? (
+          {/* Auth UI is gated on `mounted` so first client render matches the
+              static HTML (which has no session at build time). Without this,
+              next-auth's SessionProvider on chiselgrid.com synchronously
+              resolves to `unauthenticated` and renders a Sign In link that
+              wasn't in the pre-rendered HTML → React hydration error #418. */}
+          {mounted && isAuthenticated ? (
             <div className="hidden sm:flex items-center gap-2 ml-1">
               <span className="text-[0.8rem] text-white/65 max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
                 {userDisplay}
@@ -117,7 +124,7 @@ export function Header() {
                 Sign Out
               </button>
             </div>
-          ) : status !== 'loading' ? (
+          ) : mounted && status !== 'loading' ? (
             <Link
               href="/login"
               className="hidden sm:inline-flex ml-1 items-center bg-white text-[#111111] text-[0.8rem] font-medium px-4 py-[0.35rem] rounded-full hover:opacity-80 transition-opacity duration-[0.18s] ease"
