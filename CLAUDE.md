@@ -152,3 +152,19 @@ Key routing rules:
 - Review what gstack has learned → invoke /learn
 - Tune question sensitivity → invoke /plan-tune
 - Code quality dashboard → invoke /health
+
+## Bedrock Model IDs (ap-southeast-1)
+
+CORRECT inference profile ID (works in ap-southeast-1):
+  global.anthropic.claude-sonnet-4-5-20250929-v1:0
+
+Used in:
+  - packages/grid-agents/src/bedrock.ts
+  - tools/migration/src/enhance-existing.ts
+  - tools/migration/src/import-taxonomy.ts
+
+WRONG IDs that cause 'model identifier is invalid':
+  - anthropic.claude-sonnet-4-5 (direct model, not inference profile)
+  - anthropic.claude-3-5-sonnet-20241022-v2:0 (old format)
+  - us.anthropic.claude-sonnet-4-5-20251101-v1:0 (wrong region prefix)
+
