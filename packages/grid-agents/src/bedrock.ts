@@ -7,7 +7,7 @@ export const bedrockClient = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || 'ap-southeast-1',
 });
 
-export const MODEL_ID = 'anthropic.claude-sonnet-4-5';
+export const MODEL_ID = 'global.anthropic.claude-sonnet-4-5-20250929-v1:0';
 
 interface BedrockTextBlock {
   type: 'text';
