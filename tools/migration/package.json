@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.600.0",
+    "@aws-sdk/client-rds-data": "^3.1030.0",
     "@chiselgrid/types": "workspace:*",
     "cheerio": "^1.2.0",
     "glob": "^10.3.0",

@@ -7,7 +7,7 @@ const ZONE_BG: Record<string, string> = {
   data: '#FFF7ED',
   database: '#FFF7ED',
   dmz: '#FEF3C7',
-  compliance: '#FDF2F8',
+  compliance: '#FEF2F2',
   internal: '#F1F5F9',
   external: '#F5F3FF',
 };
@@ -18,7 +18,7 @@ const ZONE_BORDER: Record<string, string> = {
   data: '#f97316',
   database: '#f97316',
   dmz: '#f59e0b',
-  compliance: '#ec4899',
+  compliance: '#ef4444',
   internal: '#64748b',
   external: '#8b5cf6',
 };

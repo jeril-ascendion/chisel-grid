@@ -1,9 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { permissions, type Permission } from '@/lib/auth/roles';
+import { readRecentSessions, type RecentSession } from '@/lib/recent-sessions';
+
+const SESSION_AWARE_PREFIXES = ['/admin/chamber', '/admin/grid', '/admin/studio'];
 
 type Role = 'admin' | 'creator' | 'reader';
 
@@ -56,6 +60,28 @@ export function AdminSidebar({
   onToggle: () => void;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentSessionId = searchParams.get('session');
+  const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
+
+  useEffect(() => {
+    const load = () => setRecentSessions(readRecentSessions());
+    load();
+    window.addEventListener('chiselgrid:recent-sessions-changed', load);
+    window.addEventListener('storage', load);
+    return () => {
+      window.removeEventListener('chiselgrid:recent-sessions-changed', load);
+      window.removeEventListener('storage', load);
+    };
+  }, []);
+
+  const hrefFor = (item: NavItem): string => {
+    if (!currentSessionId) return item.href;
+    if (!SESSION_AWARE_PREFIXES.some((p) => item.href === p || item.href.startsWith(p + '/'))) {
+      return item.href;
+    }
+    return `${item.href}?session=${currentSessionId}`;
+  };
 
   const visibleSections = navSections
     .map((section) => ({
@@ -155,7 +181,7 @@ export function AdminSidebar({
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={hrefFor(item)}
                     className={cn(
                       'relative group flex h-10 w-10 items-center justify-center rounded-lg mx-auto transition-colors',
                       isActive
@@ -177,7 +203,7 @@ export function AdminSidebar({
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={hrefFor(item)}
                   className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     isActive
@@ -194,6 +220,42 @@ export function AdminSidebar({
             })}
           </div>
         ))}
+
+        {!collapsed && recentSessions.length > 0 && (
+          <div className="space-y-1">
+            <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              Recent Sessions
+            </div>
+            {recentSessions.slice(0, 3).map((s) => (
+              <Link
+                key={s.id}
+                href={`${s.lastPage}?session=${s.id}`}
+                className={cn(
+                  'flex flex-col gap-0.5 rounded-lg px-3 py-2 text-sm transition-colors',
+                  currentSessionId === s.id
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700',
+                )}
+              >
+                <span className="truncate font-medium">
+                  {s.title ||
+                    `Session ${new Date(s.updatedAt).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                    })}`}
+                </span>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                  {new Date(s.updatedAt).toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
       </nav>
 
       {!collapsed && (

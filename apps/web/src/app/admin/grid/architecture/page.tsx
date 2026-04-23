@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GridIR } from '@chiselgrid/grid-ir';
+import { useSessionId } from '@/hooks/use-session-id';
+import { upsertRecentSession } from '@/lib/recent-sessions';
 
 const DiagramCanvas = dynamic(
   () => import('@chiselgrid/grid-renderer').then((m) => m.DiagramCanvas),
@@ -50,6 +52,7 @@ function formatDiagramType(t: string): string {
 }
 
 export default function ArchitecturePage() {
+  const sessionId = useSessionId();
   const [gridIR, setGridIR] = useState<GridIR | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -57,6 +60,7 @@ export default function ArchitecturePage() {
   const [diagramType, setDiagramType] = useState<string>('aws_architecture');
   const [isRecording, setIsRecording] = useState(false);
   const [attachment, setAttachment] = useState<{ name: string; type: string } | null>(null);
+  const [restored, setRestored] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -66,6 +70,39 @@ export default function ArchitecturePage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
+
+  useEffect(() => {
+    if (!sessionId || restored) return;
+    try {
+      const raw = sessionStorage.getItem('grid_session_' + sessionId);
+      if (raw) {
+        const data = JSON.parse(raw) as { messages?: ChatMessage[]; gridIR?: GridIR | null };
+        if (Array.isArray(data.messages)) setMessages(data.messages);
+        if (data.gridIR) setGridIR(data.gridIR);
+      }
+    } catch {
+      // ignore corrupt payloads
+    }
+    setRestored(true);
+  }, [sessionId, restored]);
+
+  useEffect(() => {
+    if (!sessionId || !restored) return;
+    try {
+      sessionStorage.setItem(
+        'grid_session_' + sessionId,
+        JSON.stringify({ messages, gridIR }),
+      );
+    } catch {
+      // ignore quota errors
+    }
+    upsertRecentSession({
+      id: sessionId,
+      title: gridIR?.title || messages.find((m) => m.role === 'user')?.content?.slice(0, 40),
+      lastPage: '/admin/grid/architecture',
+      updatedAt: Date.now(),
+    });
+  }, [sessionId, restored, messages, gridIR]);
 
   useEffect(() => {
     const ta = textareaRef.current;
@@ -184,25 +221,38 @@ export default function ArchitecturePage() {
     [handleGenerate],
   );
 
-  const handleExportPNG = useCallback(() => {
+  const handleExportPNG = useCallback(async () => {
     if (!gridIR) {
       alert('Generate a diagram first.');
       return;
     }
-    const svg = document.querySelector('.react-flow svg') as SVGSVGElement | null;
-    if (!svg) {
+    const container = document.querySelector('.react-flow') as HTMLElement | null;
+    if (!container) {
       alert('Diagram canvas not ready.');
       return;
     }
-    const serializer = new XMLSerializer();
-    const svgStr = serializer.serializeToString(svg);
-    const blob = new Blob([svgStr], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${(gridIR.title || 'diagram').toLowerCase().replace(/\s+/g, '-')}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const { toPng } = await import('html-to-image');
+      await new Promise((r) => setTimeout(r, 100));
+      const dataUrl = await toPng(container, {
+        backgroundColor: '#ffffff',
+        width: container.scrollWidth,
+        height: container.scrollHeight,
+        filter: (node) => {
+          if (!(node instanceof Element)) return true;
+          return !(
+            node.classList?.contains('react-flow__minimap') ||
+            node.classList?.contains('react-flow__controls')
+          );
+        },
+      });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `${(gridIR.title || 'diagram').toLowerCase().replace(/\s+/g, '-')}.png`;
+      a.click();
+    } catch (err) {
+      alert('PNG export failed: ' + (err instanceof Error ? err.message : String(err)));
+    }
   }, [gridIR]);
 
   return (

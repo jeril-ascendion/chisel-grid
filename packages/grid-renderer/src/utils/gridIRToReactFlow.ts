@@ -1,39 +1,22 @@
 import type { Node, Edge } from '@xyflow/react';
-import type { GridIR, GridNode, GridEdge, GridZone } from '@chiselgrid/grid-ir';
+import dagre from 'dagre';
+import type { GridIR, GridNode, GridEdge } from '@chiselgrid/grid-ir';
 
 const AWS_TYPE_PREFIX = 'aws.';
+const NODE_WIDTH = 180;
+const NODE_HEIGHT = 72;
 
 function mapNodeType(irType: string): string {
   if (irType.startsWith(AWS_TYPE_PREFIX)) return 'awsNode';
   return 'default';
 }
 
-function zoneToGroupNode(zone: GridZone, index: number): Node {
-  return {
-    id: `zone-${zone.id}`,
-    type: 'group',
-    position: { x: 40 + index * 360, y: 40 },
-    data: { label: zone.label },
-    style: {
-      width: 320,
-      height: 400,
-      backgroundColor: zone.color ?? 'rgba(148, 163, 184, 0.08)',
-      border: '1px dashed rgb(148, 163, 184)',
-      borderRadius: 12,
-    },
-  };
-}
-
-function irNodeToRFNode(node: GridNode, fallbackIndex: number): Node {
-  const position = node.position ?? {
-    x: 80 + (fallbackIndex % 4) * 220,
-    y: 80 + Math.floor(fallbackIndex / 4) * 160,
-  };
+function irNodeToRFNode(node: GridNode): Node {
   const rfType = mapNodeType(String(node.type));
   const base: Node = {
     id: node.id,
     type: rfType,
-    position,
+    position: node.position ?? { x: 0, y: 0 },
     data: {
       label: node.label,
       nodeType: node.type,
@@ -41,9 +24,6 @@ function irNodeToRFNode(node: GridNode, fallbackIndex: number): Node {
       properties: node.properties ?? {},
     },
   };
-  if (node.parent) base.parentId = node.parent;
-  else if (node.zone) base.parentId = `zone-${node.zone}`;
-  if (base.parentId) base.extent = 'parent';
   return base;
 }
 
@@ -65,9 +45,44 @@ function irEdgeToRFEdge(edge: GridEdge): Edge {
   return rfEdge;
 }
 
+function hasAuthoredPositions(irNodes: readonly GridNode[]): boolean {
+  return irNodes.every(
+    (n) =>
+      n.position &&
+      typeof n.position.x === 'number' &&
+      typeof n.position.y === 'number' &&
+      !(n.position.x === 0 && n.position.y === 0),
+  );
+}
+
+function applyDagreLayout(nodes: Node[], edges: Edge[]): Node[] {
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({ rankdir: 'LR', nodesep: 80, ranksep: 120 });
+  g.setDefaultEdgeLabel(() => ({}));
+
+  nodes.forEach((node) => {
+    g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  });
+  edges.forEach((edge) => {
+    g.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(g);
+
+  return nodes.map((node) => {
+    const pos = g.node(node.id);
+    return {
+      ...node,
+      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
+    };
+  });
+}
+
 export function gridIRToReactFlow(ir: GridIR): { nodes: Node[]; edges: Edge[] } {
-  const zoneNodes: Node[] = (ir.zones ?? []).map((zone, idx) => zoneToGroupNode(zone, idx));
-  const irNodes: Node[] = ir.nodes.map((n, idx) => irNodeToRFNode(n, idx));
+  const rfNodes: Node[] = ir.nodes.map((n) => irNodeToRFNode(n));
   const edges: Edge[] = ir.edges.map((e) => irEdgeToRFEdge(e));
-  return { nodes: [...zoneNodes, ...irNodes], edges };
+  const nodes = hasAuthoredPositions(ir.nodes)
+    ? rfNodes
+    : applyDagreLayout(rfNodes, edges);
+  return { nodes, edges };
 }
