@@ -172,3 +172,34 @@ Invalidate CloudFront cache:
 ---
 
 Last updated: April 2026
+
+---
+
+## Updating Lambda Environment Variables
+
+ALWAYS fetch existing vars first and merge. Never use --environment directly
+as it wipes all existing vars (Cognito, NextAuth, Aurora ARNs etc).
+
+Safe pattern:
+```bash
+EXISTING=$(aws lambda get-function-configuration \
+  --function-name chiselgrid-Dev-nextjs-server \
+  --query "Environment.Variables" \
+  --profile PowerUserAccess-852973339602 \
+  --region ap-southeast-1 \
+  --output json)
+
+MERGED=$(echo "$EXISTING" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+d['NEW_VAR']='new_value'
+print(json.dumps(d))
+")
+
+aws lambda update-function-configuration \
+  --function-name chiselgrid-Dev-nextjs-server \
+  --environment "Variables=$MERGED" \
+  --profile PowerUserAccess-852973339602 \
+  --region ap-southeast-1 \
+  --output json | python3 -c "import sys,json; print('State:', json.load(sys.stdin)['State'])"
+```
