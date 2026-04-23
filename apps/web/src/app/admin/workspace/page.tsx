@@ -1,11 +1,5 @@
-import { WorkspaceLayout } from '@/components/workspace/workspace-layout';
+import { redirect } from 'next/navigation';
 
-export const metadata = { title: 'Content Workspace' };
-
-export default function WorkspacePage() {
-  return (
-    <div className="-m-6 h-[calc(100vh-57px)]">
-      <WorkspaceLayout />
-    </div>
-  );
+export default function WorkspaceRedirectPage() {
+  redirect('/admin/chamber');
 }

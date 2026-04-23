@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { getCategoryBySlug, getArticles, getCategories } from '@/lib/mock-data';
 import { ArticleCard } from '@/components/common/article-card';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
-import { GlobalAdminBar } from '@/components/layout/GlobalAdminBar';
 import { SITE_URL } from '@/lib/utils';
 
 type Props = {
@@ -69,7 +68,6 @@ export default async function CategoryPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
-      <GlobalAdminBar />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-6">

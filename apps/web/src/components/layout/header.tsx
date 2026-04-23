@@ -2,11 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
 import { getCognitoSession, cognitoSignOut } from '@/lib/cognito-client';
 import { ThemeToggle } from './theme-toggle';
 import { MobileMenu } from './mobile-menu';
 import { getCategories } from '@/lib/mock-data';
+
+const ContentStudioButton = dynamic(
+  () => import('./ContentStudioButton'),
+  { ssr: false },
+);
 
 const NAV_LABELS: Record<string, string> = {
   'cloud-architecture': 'Cloud',
@@ -106,6 +112,7 @@ export function Header() {
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </Link>
+          <ContentStudioButton />
           <ThemeToggle />
           {/* Auth UI is gated on `mounted` so first client render matches the
               static HTML (which has no session at build time). Without this,

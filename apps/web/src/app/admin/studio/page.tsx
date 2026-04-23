@@ -76,9 +76,9 @@ export default function StudioPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Architecture Studio</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Studio</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            AI-powered architecture design and review
+            Combine Chamber content and Grid visuals into polished documents using templates
           </p>
         </div>
         <button
@@ -88,6 +88,26 @@ export default function StudioPage() {
         >
           New Engagement
         </button>
+      </div>
+
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { title: 'Document Templates', desc: 'Apply professional templates to Chamber-generated content', icon: '▤' },
+          { title: 'Visual Integration', desc: 'Embed Grid diagrams and charts into documents', icon: '◧' },
+          { title: 'Export Formats', desc: 'Export to Word, PDF, Confluence, SharePoint', icon: '⇪' },
+          { title: 'Brand Guidelines', desc: 'Enforce Ascendion brand standards automatically', icon: '✦' },
+        ].map((item) => (
+          <div key={item.title} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex flex-col gap-2">
+            <div className="text-2xl">{item.icon}</div>
+            <div>
+              <h3 className="font-semibold text-sm text-gray-900 dark:text-white">{item.title}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.desc}</p>
+            </div>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 w-fit mt-auto">
+              Coming Soon
+            </span>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
