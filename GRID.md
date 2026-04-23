@@ -786,3 +786,203 @@ Score Card rules:
 
 *Last updated: April 2026*
 *Owner: Jeril Panicker, Solutions Architect, Ascendion Digital Services Philippines*
+
+---
+
+## Diagram Format Library
+
+### Structural Diagrams (what exists and how it connects)
+| Format | Grid-IR Type Key | Description |
+|--------|-----------------|-------------|
+| C4 Context | c4_context | System and its users at highest level |
+| C4 Container | c4_container | Major components and their APIs |
+| C4 Component | c4_component | Internal structure of a container |
+| C4 Code | c4_code | Class or module level detail |
+| AWS Architecture | aws_architecture | AWS services and connections |
+| Azure Architecture | azure_architecture | Azure services and connections |
+| GCP Architecture | gcp_architecture | GCP services and connections |
+| Network Topology | network_topology | Physical network and zones |
+| Deployment Diagram | deployment | Where components run |
+| System Map | system_map | Physical regions, AZs, datacentres |
+
+### Behavioural Diagrams (how it works)
+| Format | Grid-IR Type Key | Description |
+|--------|-----------------|-------------|
+| Sequence Diagram | sequence | Step-by-step message flow |
+| Swimlane Sequence | swimlane_sequence | Flow across multiple actors |
+| Activity Diagram | activity | Process flow with decisions |
+| State Machine | state_machine | States and transitions |
+| Event Storming Map | event_storming | Domain events and commands |
+| Data Flow Diagram | dfd | How data moves and transforms |
+| BPMN Process Flow | bpmn | Business process steps |
+
+### Decision Diagrams (why it is this way)
+| Format | Grid-IR Type Key | Description |
+|--------|-----------------|-------------|
+| Trade-off Matrix | tradeoff_matrix | Compare N options on M dimensions |
+| Decision Tree | decision_tree | Branching decision paths |
+| ADR Diagram | adr_diagram | Visualise architectural decisions |
+| Risk Heat Map | risk_heatmap | Plot likelihood vs impact |
+| Cost Model | cost_model | Cost at different scale points |
+
+### Data Diagrams (what the data looks like)
+| Format | Grid-IR Type Key | Description |
+|--------|-----------------|-------------|
+| Entity Relationship | er_diagram | Database schema |
+| Domain Model | domain_model | DDD entities and aggregates |
+| Data Lineage | data_lineage | Data origins and transforms |
+| Event Schema | event_schema | Event payload structures |
+
+### Strategic Diagrams (where it is going)
+| Format | Grid-IR Type Key | Description |
+|--------|-----------------|-------------|
+| Technology Radar | tech_radar | Technology adoption status |
+| Migration Roadmap | migration_roadmap | Phased architecture change |
+| Maturity Model | maturity_model | Capability levels |
+| Capability Map | capability_map | Business capabilities vs tech |
+
+---
+
+## Agent Roster
+
+Grid uses specialist AI agents. Each agent reads Grid-IR and annotates it with findings. Agents run in parallel after the Architecture Agent produces the initial Grid-IR.
+
+### Architecture Agents (always available)
+
+**Architecture Agent (Core)**
+- Role: Generates and refines Grid-IR from requirements
+- Knows: All diagram formats, C4, AWS/Azure/GCP, DDD, integration patterns
+- Produces: Grid-IR JSON
+- Always active — primary generation agent
+
+**Domain Architect Agent**
+- Role: Ensures domain boundaries are correct
+- Knows: DDD bounded contexts, aggregate design, CQRS, event sourcing, saga patterns
+- Produces: Annotations on domain boundary violations, context map suggestions
+- Trigger: User mentions domain, microservice, or bounded context
+
+**Integration Architect Agent**
+- Role: Reviews API and messaging design
+- Knows: REST, GraphQL, gRPC, AsyncAPI, MuleSoft API-led connectivity, Kafka topic design, idempotency, saga orchestration
+- Produces: Integration pattern recommendations, schema suggestions, anti-pattern warnings
+- Trigger: Any edge with protocol=async or type=api
+
+### Engineering Pillar Agents (user selectable)
+
+**Security Agent**
+- Role: Reviews design for security vulnerabilities
+- Knows: OWASP Top 10, STRIDE threat model, Zero Trust, NIST CSF, IAM least privilege, secrets management
+- Produces: Threat annotations on nodes and edges, STRIDE matrix, missing controls
+- Scores: Authentication, authorisation, encryption, secrets management, network isolation
+- Red lines: Public database endpoints, unencrypted cross-zone traffic, overly permissive IAM
+
+**Performance Agent**
+- Role: Reviews design for performance characteristics
+- Knows: CAP theorem, CQRS for read scaling, connection pooling, Lambda cold starts, CDN caching, async decoupling patterns
+- Produces: Latency estimates per edge, bottleneck annotations, scaling ceiling warnings
+- Scores: P50/P99 latency estimate, throughput ceiling, horizontal scalability rating
+- Red lines: Synchronous calls in critical paths, shared mutable state across services, no connection pooling
+
+**Reliability Agent**
+- Role: Reviews design for failure modes
+- Knows: Circuit breakers, retry with backoff, bulkheads, chaos engineering principles, RTO/RPO, multi-region patterns
+- Produces: Failure mode annotations, blast radius analysis, missing resilience patterns
+- Scores: Availability estimate, MTTR, single points of failure count
+- Red lines: No retry on external calls, no circuit breaker on dependencies, single AZ for critical services
+
+**Cost Agent**
+- Role: Reviews design for cost implications
+- Knows: AWS/Azure/GCP pricing models, data transfer costs, Lambda pricing tiers, Aurora Serverless scaling behaviour, reserved vs on-demand trade-offs
+- Produces: Cost estimate per component, monthly projection, cost at 10x scale
+- Scores: Monthly cost estimate, cost efficiency rating, waste indicators
+- Red lines: NAT Gateway for all traffic, Lambda calling Lambda synchronously, oversized always-on compute for sporadic workloads
+
+**Sustainability Agent**
+- Role: Reviews design for environmental impact
+- Knows: AWS Sustainability Pillar, carbon-aware computing, region carbon intensity scores, right-sizing for energy efficiency
+- Produces: Carbon footprint estimate per million requests, efficiency recommendations
+- Scores: Estimated CO2 per million requests, energy efficiency rating
+- Red lines: Always-on servers for sporadic workloads, data transfer across high-carbon regions when avoidable
+
+**Operability Agent**
+- Role: Reviews design for operational readiness
+- Knows: OpenTelemetry, SLI/SLO design, golden signals (latency/traffic/errors/saturation), distributed tracing, alerting patterns
+- Produces: Missing observability annotations, SLI recommendations, runbook gaps
+- Scores: Observability coverage percentage, alert coverage, runbook completeness
+- Red lines: Services with no health endpoint, async queues with no dead letter queue, no distributed tracing
+
+### Compliance and Standards Agents (user selectable by framework)
+
+**Cloud Native Agent**
+- Role: Reviews design against 12-Factor and CNCF principles
+- Knows: 12-factor app methodology, CNCF landscape, Kubernetes patterns, service mesh, immutable infrastructure
+- Produces: 12-factor compliance checklist, per-factor score 0-3, violation annotations
+- Checks all 12 factors: Codebase, Dependencies, Config, Backing Services, Build/Release/Run, Processes, Port Binding, Concurrency, Disposability, Dev/Prod Parity, Logs, Admin Processes
+
+**Regulatory Compliance Agent**
+- Role: Reviews design against selected regulatory frameworks
+- Knows: PCI-DSS v4.0, BSP AFASA, GDPR data residency, ISO 27001 controls, SOC 2 Type II
+- Configurable: User selects which frameworks apply
+- Produces: Compliance gap annotations, required controls checklist, compliance percentage per framework
+- Red lines vary by selected framework — e.g. cardholder data outside PCI boundary, personal data outside GDPR jurisdiction, Philippine customer data outside Philippine borders for BSP
+
+**TOGAF Agent**
+- Role: Reviews design against enterprise architecture governance
+- Knows: TOGAF 10 ADM phases, Zachman Framework, SABSA security architecture, architecture building blocks
+- Produces: Architecture building block mapping, ADM phase alignment, reuse opportunities
+
+### Technology-Specific Agents (user selectable by stack)
+
+**AWS Solutions Architect Agent**
+- Knows: AWS Well-Architected Framework all 6 pillars, service limits, Landing Zone, Control Tower, reference architectures
+- Produces: Well-Architected review findings per pillar with actionable recommendations
+
+**MuleSoft Integration Agent**
+- Knows: API-led connectivity (experience/process/system layers), Anypoint Platform, DataWeave patterns, error handling, connector catalogue
+- Produces: API-led connectivity layer annotations, connector recommendations, DataWeave suggestions
+
+**Kafka Architecture Agent**
+- Knows: Topic partitioning strategy, consumer group design, exactly-once semantics, schema registry, log compaction, Kafka Streams vs consumer API, DLQ patterns
+- Produces: Topic design recommendations, partition count estimates, consumer lag warnings
+
+**Java/Spring Agent**
+- Knows: Spring Boot patterns, Spring Cloud Gateway, resilience4j circuit breaker, JVM memory model, GC tuning, container sizing for JVM workloads
+- Produces: Spring-specific implementation annotations, JVM sizing recommendations
+
+**React/Node Frontend Agent**
+- Knows: React component architecture, state management patterns, Next.js App Router, BFF pattern, CDN caching for SPAs, bundle optimisation
+- Produces: Frontend architecture annotations, BFF design recommendations
+
+**Python/ML Agent**
+- Knows: MLOps patterns, feature stores, model serving, SageMaker architecture, data versioning, A/B testing infrastructure
+- Produces: ML pipeline architecture recommendations, model serving pattern suggestions
+
+---
+
+## Annotation Layer System
+
+Agent findings are not separate reports. They are visual annotations directly on the Grid-IR diagram. Each agent produces a layer the user can toggle on and off.
+
+### Visual Language
+
+| Symbol | Meaning |
+|--------|---------|
+| 🔴 Red badge | Critical finding — must fix before production |
+| 🟡 Amber badge | Warning — architectural risk, should fix |
+| 🟢 Green badge | Compliant — best practice followed |
+| ⚪ Grey badge | Not applicable or not evaluated |
+| Ghost node (dashed) | Missing required component — agent recommends adding this |
+| Zone overlay | Dashed boundary showing compliance or security zone |
+| Annotated edge | Warning icon on a connection with tooltip explanation |
+
+### Annotation Types
+
+- **Node annotation**: Badge on a component node showing finding severity
+- **Edge annotation**: Warning icon on a connection with tooltip
+- **Zone annotation**: Dashed boundary grouping components into a compliance or security zone
+- **Gap annotation**: Ghost component showing what is architecturally missing
+- **Score annotation**: Numeric score per pillar shown in the Score Card panel
+
+### Layer Toggle
+
+Each agent's findings form a named layer. User toggles layers on/off in the toolbar:
