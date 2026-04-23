@@ -57,13 +57,13 @@ export function Header() {
   const userDisplay = session?.user?.name ?? session?.user?.email ?? cognitoUser?.email;
 
   const handleSignOut = () => {
+    // Must call NextAuth signOut unconditionally. Gating on
+    // `status === 'authenticated'` skipped cookie clearing when useSession
+    // hadn't resolved (common on static-exported pages), leaving a stale
+    // NextAuth cookie that let the next "Sign In" auto-redirect to /admin.
     cognitoSignOut();
     setCognitoUser(null);
-    if (status === 'authenticated') {
-      signOut({ callbackUrl: '/' });
-    } else {
-      window.location.href = '/';
-    }
+    signOut({ callbackUrl: '/' });
   };
 
   return (

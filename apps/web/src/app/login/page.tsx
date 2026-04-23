@@ -1,5 +1,4 @@
 import { LoginForm } from './login-form';
-import { AuthRedirect } from './auth-redirect';
 
 export default function LoginPage() {
   return (
@@ -12,7 +11,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <AuthRedirect />
         <LoginForm />
       </div>
     </div>
