@@ -179,6 +179,18 @@ deploy_latest() {
 
   ok "Deployed! chiselgrid.com updates in 2-3 minutes."
   echo "  URL: https://www.chiselgrid.com"
+
+  # Regression guard — /admin must redirect. If it ever returns 200 the auth
+  # layer is broken (see CLAUDE.md CRITICAL PERMANENT RULE #2).
+  log "Verifying /admin auth redirect…"
+  sleep 10
+  ADMIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/admin || echo "000")
+  if [ "$ADMIN_STATUS" = "307" ] || [ "$ADMIN_STATUS" = "302" ] || [ "$ADMIN_STATUS" = "308" ]; then
+    ok "/admin returns $ADMIN_STATUS redirect — auth guard intact"
+  else
+    warn "/admin returned $ADMIN_STATUS — auth guard may have regressed! See CLAUDE.md rule #2."
+    warn "  Do not ship until /admin returns 307 or 302."
+  fi
 }
 
 case "${1:-status}" in

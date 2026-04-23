@@ -18,11 +18,31 @@
 
 ## CRITICAL PERMANENT RULES
 
-NEVER disable CloudFront distributions that are active Route53
-ALIAS targets. A disabled CF distribution returns no A records,
-causing DNS_PROBE_FINISHED_NXDOMAIN even if Route53 is correct.
-Always verify distribution is Enabled: true before diagnosing
-DNS issues.
+1. NEVER disable CloudFront distributions that are active Route53
+   ALIAS targets. A disabled CF distribution returns no A records,
+   causing DNS_PROBE_FINISHED_NXDOMAIN even if Route53 is correct.
+   Always verify distribution is Enabled: true before diagnosing
+   DNS issues.
+
+2. ADMIN LAYOUT AUTH GUARD — The auth() check and redirect('/login') in
+   apps/web/src/app/admin/layout.tsx must NEVER be removed. It has regressed
+   multiple times. Any change to admin/layout.tsx must preserve:
+
+       const session = await auth()
+       if (!session || !session.user) { redirect('/login') }
+
+   The file must remain a server component (NO 'use client' directive).
+   A client layout renders the HTML shell before redirecting, which returns
+   200 to curl and leaks the admin chrome to unauthenticated users.
+
+   Middleware at apps/web/src/middleware.ts is the second layer and must
+   use the NextAuth v5 wrapper form `auth((req) => ...)` so `req.auth`
+   is populated — `await auth()` alone does NOT see session cookies in
+   middleware. Both the layout guard and middleware must exist simultaneously.
+
+   Regression test (run in CI or before every deploy):
+       curl -s -o /dev/null -w "%{http_code}\n" https://www.chiselgrid.com/admin
+   MUST print 307 or 302. If it prints 200, the guard has regressed.
 
 ## Architecture Decisions (Follow These Always)
 - Content stored as `ContentBlock[]` JSON in Aurora JSONB column — see packages/types/src/content.ts

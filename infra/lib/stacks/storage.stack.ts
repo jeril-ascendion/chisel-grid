@@ -52,7 +52,19 @@ export class StorageStack extends Stack {
       autoDeleteObjects: config.enableDeletion,
     });
 
-    // CloudFront distribution with OAC for both buckets
+    // CloudFront distribution with OAC for both buckets.
+    //
+    // WARNING — DO NOT REDEPLOY THIS STACK WITHOUT SYNCING BEHAVIORS.
+    // The live distribution (EWLP3KOX3KKTV) has three additional cache
+    // behaviors that are managed OUTSIDE CDK and are not reflected here:
+    //   /admin    → API Gateway origin (Lambda), CACHING_DISABLED
+    //   /admin/*  → API Gateway origin (Lambda), CACHING_DISABLED
+    //   /api/*    → API Gateway origin (Lambda), CACHING_DISABLED
+    // The /admin and /admin/* behaviors enforce the server-side auth redirect
+    // (CLAUDE.md CRITICAL PERMANENT RULE #2). Re-deploying this CDK stack as-is
+    // will remove those behaviors and regress auth protection. Before deploy:
+    //   1. Add the missing behaviors to `additionalBehaviors` here, OR
+    //   2. Reapply them via AWS CLI immediately after deploy.
     const distribution = new cf.Distribution(this, 'WebDistribution', {
       comment: `ChiselGrid Web Distribution — ${id}`,
       defaultRootObject: 'index.html',
