@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSessionId } from '@/hooks/use-session-id';
 import { useWorkspaceStore, type ChatMessage } from '@/stores/workspace-store';
 import { upsertRecentSession } from '@/lib/recent-sessions';
@@ -10,32 +10,31 @@ export function ChamberSessionSync() {
   const sessionId = useSessionId();
   const messages = useWorkspaceStore((s) => s.messages);
   const blocks = useWorkspaceStore((s) => s.blocks);
-  const [restored, setRestored] = useState(false);
+  const restoredRef = useRef(false);
 
   useEffect(() => {
-    if (!sessionId || restored) return;
+    if (!sessionId || restoredRef.current) return;
+    restoredRef.current = true;
     try {
       const raw = sessionStorage.getItem('chamber_session_' + sessionId);
-      if (raw) {
-        const data = JSON.parse(raw) as {
-          messages?: ChatMessage[];
-          blocks?: ContentBlock[];
-        };
-        const patch: Partial<{ messages: ChatMessage[]; blocks: ContentBlock[] }> = {};
-        if (Array.isArray(data.messages)) patch.messages = data.messages;
-        if (Array.isArray(data.blocks)) patch.blocks = data.blocks;
-        if (Object.keys(patch).length > 0) {
-          useWorkspaceStore.setState(patch);
-        }
+      if (!raw) return;
+      const data = JSON.parse(raw) as {
+        messages?: ChatMessage[];
+        blocks?: ContentBlock[];
+      };
+      const patch: Partial<{ messages: ChatMessage[]; blocks: ContentBlock[] }> = {};
+      if (Array.isArray(data.messages)) patch.messages = data.messages;
+      if (Array.isArray(data.blocks)) patch.blocks = data.blocks;
+      if (Object.keys(patch).length > 0) {
+        useWorkspaceStore.setState(patch);
       }
     } catch {
       // ignore corrupt payloads
     }
-    setRestored(true);
-  }, [sessionId, restored]);
+  }, [sessionId]);
 
   useEffect(() => {
-    if (!sessionId || !restored) return;
+    if (!sessionId || !restoredRef.current) return;
     try {
       sessionStorage.setItem(
         'chamber_session_' + sessionId,
@@ -50,7 +49,7 @@ export function ChamberSessionSync() {
       lastPage: '/admin/chamber',
       updatedAt: Date.now(),
     });
-  }, [sessionId, restored, messages, blocks]);
+  }, [sessionId, messages, blocks]);
 
   return null;
 }
