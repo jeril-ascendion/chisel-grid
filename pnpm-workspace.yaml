@@ -3,3 +3,4 @@ packages:
   - 'packages/*'
   - 'tools/*'
   - 'infra'
+  - 'packages/grid-ir'
