@@ -112,6 +112,28 @@ export class WebStack extends Stack {
       }),
     );
 
+    // Cognito admin — user management APIs in /api/admin/users
+    const userPoolArn = `arn:aws:cognito-idp:${config.region}:${this.account}:userpool/${authStack.outputs.userPoolId}`;
+    this.serverFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'cognito-idp:ListUsers',
+          'cognito-idp:ListUsersInGroup',
+          'cognito-idp:AdminGetUser',
+          'cognito-idp:AdminCreateUser',
+          'cognito-idp:AdminDeleteUser',
+          'cognito-idp:AdminEnableUser',
+          'cognito-idp:AdminDisableUser',
+          'cognito-idp:AdminSetUserPassword',
+          'cognito-idp:AdminResetUserPassword',
+          'cognito-idp:AdminListGroupsForUser',
+          'cognito-idp:AdminAddUserToGroup',
+          'cognito-idp:AdminRemoveUserFromGroup',
+        ],
+        resources: [userPoolArn],
+      }),
+    );
+
     // --- HTTP API Gateway (bypass SCP blocking Lambda Function URLs) ---
     const httpApi = new apigwv2.HttpApi(this, 'NextjsHttpApi', {
       apiName: `chiselgrid-${envPrefix}-nextjs-api`,
