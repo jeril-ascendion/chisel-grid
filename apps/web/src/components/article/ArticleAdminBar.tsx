@@ -9,9 +9,9 @@ interface ArticleAdminBarProps {
   contentId?: string;
 }
 
-// Does NOT use next-auth's useSession() — that hook polls /api/auth/session
-// on every render/focus, which caused an infinite login/session loop in prod.
-// One-shot: Cognito localStorage (static site) + /api/auth/session (dev).
+// Single source of truth: localStorage Cognito session, same as header.tsx.
+// Must not fall back to /api/auth/session — a stale NextAuth cookie there
+// leaked the Admin button to users whose header showed "Sign In".
 export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -20,41 +20,11 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
 
   useEffect(() => {
     setMounted(true);
-
     const cs = getCognitoSession();
     if (cs && cs.role === 'admin' && (cs.groups?.includes('admin') || cs.groups?.includes('admins'))) {
       setIsAdmin(true);
-      setSessionChecked(true);
-      return;
     }
-    if (cs) {
-      // Signed in but not admin — done.
-      setSessionChecked(true);
-      return;
-    }
-
-    let cancelled = false;
-    fetch('/api/auth/session')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((session) => {
-        if (cancelled) return;
-        const user = session?.user as
-          | { role?: string; groups?: string[] }
-          | undefined;
-        const adminByRole = user?.role === 'admin';
-        const adminByGroups = (user?.groups?.includes('admin') || user?.groups?.includes('admins')) ?? false;
-        if (user && (adminByRole || adminByGroups)) {
-          setIsAdmin(true);
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setSessionChecked(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    setSessionChecked(true);
   }, []);
 
   if (!mounted) return null;

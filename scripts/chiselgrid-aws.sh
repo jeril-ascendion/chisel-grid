@@ -101,51 +101,30 @@ deploy_latest() {
   cd ~/projects/chisel-grid
 
   log "Building Next.js (static export)..."
-  # Routes incompatible with output:export — temporarily move them outside src
+  # Routes incompatible with output:export — temporarily move them outside src.
+  # /admin and /api are served by Lambda via CloudFront (default S3, /admin/*
+  # and /api/* → API Gateway), so S3 does not need their HTML. Move the
+  # entire /admin and /api dirs to avoid prerender failures on new admin
+  # pages that use headers()/cookies()/dynamic APIs.
   BACKUP_DIR="/tmp/_chiselgrid_export_backup"
   rm -rf "$BACKUP_DIR" && mkdir -p "$BACKUP_DIR"
-  # API routes (server-only)
   if [ -d "apps/web/src/app/api" ]; then
     mv "apps/web/src/app/api" "$BACKUP_DIR/api"
     log "Excluded API routes from static build"
   fi
-  # Dynamic admin routes with [id] params (no generateStaticParams possible)
-  if [ -d "apps/web/src/app/admin/content/[id]" ]; then
-    mkdir -p "$BACKUP_DIR/admin-content"
-    mv "apps/web/src/app/admin/content/[id]" "$BACKUP_DIR/admin-content/[id]"
-    log "Excluded dynamic admin/content/[id] route from static build"
+  if [ -d "apps/web/src/app/admin" ]; then
+    mv "apps/web/src/app/admin" "$BACKUP_DIR/admin"
+    log "Excluded /admin/* from static build (Lambda-served)"
   fi
-  # Studio dynamic routes (workspace/grid/session all have dynamic params)
-  for STUDIO_DYN in \
-    "apps/web/src/app/admin/studio/workspace" \
-    "apps/web/src/app/admin/studio/grid" \
-    "apps/web/src/app/admin/studio/session"; do
-    if [ -d "$STUDIO_DYN" ]; then
-      BACKUP_NAME=$(echo "$STUDIO_DYN" | sed 's|/|_|g')
-      mkdir -p "$BACKUP_DIR/$BACKUP_NAME"
-      mv "$STUDIO_DYN" "$BACKUP_DIR/$BACKUP_NAME/"
-      log "Excluded $STUDIO_DYN from static build"
-    fi
-  done
   NEXT_OUTPUT=export pnpm build --filter=@chiselgrid/web
   BUILD_RC=$?
   # Restore excluded routes
   if [ -d "$BACKUP_DIR/api" ]; then
     mv "$BACKUP_DIR/api" "apps/web/src/app/api"
   fi
-  if [ -d "$BACKUP_DIR/admin-content/[id]" ]; then
-    mv "$BACKUP_DIR/admin-content/[id]" "apps/web/src/app/admin/content/[id]"
+  if [ -d "$BACKUP_DIR/admin" ]; then
+    mv "$BACKUP_DIR/admin" "apps/web/src/app/admin"
   fi
-  # Restore studio dynamic routes
-  for STUDIO_DYN in \
-    "apps/web/src/app/admin/studio/workspace" \
-    "apps/web/src/app/admin/studio/grid" \
-    "apps/web/src/app/admin/studio/session"; do
-    BACKUP_NAME=$(echo "$STUDIO_DYN" | sed 's|/|_|g')
-    if [ -d "$BACKUP_DIR/$BACKUP_NAME/$(basename $STUDIO_DYN)" ]; then
-      mv "$BACKUP_DIR/$BACKUP_NAME/$(basename $STUDIO_DYN)" "$STUDIO_DYN"
-    fi
-  done
   rm -rf "$BACKUP_DIR"
   if [ $BUILD_RC -ne 0 ]; then
     warn "Build failed — check errors above"

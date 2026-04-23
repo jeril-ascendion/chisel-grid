@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Suspense } from 'react';
+import { cognitoSignIn } from '@/lib/cognito-client';
 
 export function LoginForm() {
   return (
@@ -36,6 +37,9 @@ function LoginFormInner() {
       });
 
       if (result?.ok && !result?.error) {
+        // Also populate localStorage so public pages (header, admin-button)
+        // see the session without depending on /api/auth/session.
+        await cognitoSignIn(email, password).catch(() => {});
         router.push('/admin');
       } else {
         setFormError('Invalid email or password.');
