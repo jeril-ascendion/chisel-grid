@@ -44,6 +44,30 @@
        curl -s -o /dev/null -w "%{http_code}\n" https://www.chiselgrid.com/admin
    MUST print 307 or 302. If it prints 200, the guard has regressed.
 
+3. BOTH BUILD_IDs MUST COEXIST IN S3 — The static-export build and the
+   OpenNext Lambda build produce different BUILD_IDs and different chunk
+   filenames. CloudFront's default origin is S3, so every /_next/static/*
+   request (including those referenced by Lambda-SSR'd /admin pages) hits
+   S3 first. If the OpenNext BUILD_ID's chunks aren't in S3, /admin loads
+   without CSS/JS and appears as plain unstyled HTML with blue links.
+
+   After any Lambda deploy (npx open-next build + cdk deploy), the script
+   scripts/chiselgrid-aws.sh deploy MUST be run, OR equivalently:
+
+       aws s3 sync apps/web/.open-next/assets/_next/static/ \
+         s3://chiselgrid-frontend-dev-storage/_next/static/ \
+         --cache-control "public,max-age=31536000,immutable" \
+         --profile PowerUserAccess-852973339602 --region ap-southeast-1
+
+   Note: CloudFront /admin* and /api/* behaviors already target the API
+   Gateway origin and do NOT need changing. /admin returning 307 to curl
+   proves routing is correct — an unstyled /admin after login is always
+   a missing-chunks problem, never a routing problem.
+
+   Regression test:
+       ls apps/web/.open-next/assets/_next/static/ | grep -E '^[A-Za-z0-9_-]{20,}$'
+   The listed BUILD_ID dir must exist under _next/static/ in S3.
+
 ## Architecture Decisions (Follow These Always)
 - Content stored as `ContentBlock[]` JSON in Aurora JSONB column — see packages/types/src/content.ts
 - AI agent workflows run in Step Functions — never block synchronous API responses

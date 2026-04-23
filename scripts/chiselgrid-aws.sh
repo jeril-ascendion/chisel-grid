@@ -149,6 +149,23 @@ deploy_latest() {
       --profile $AWS_PROFILE --region $AWS_REGION
   fi
 
+  # CRITICAL: Lambda SSR'd /admin renders HTML referencing a DIFFERENT BUILD_ID
+  # than the static export. The OpenNext build's chunks MUST also live in S3
+  # or /admin loads with broken CSS/JS (default origin = S3 → 404 on missing
+  # chunks). See CLAUDE.md permanent rule: "Both BUILD_IDs must coexist in S3".
+  # The --delete flag is NOT used here because the static-export assets above
+  # share /chunks/ and /css/ dirs with OpenNext.
+  if [ -d "apps/web/.open-next/assets/_next/static" ]; then
+    log "Syncing OpenNext (Lambda) BUILD_ID static assets..."
+    aws s3 sync apps/web/.open-next/assets/_next/static/ \
+      s3://$S3_BUCKET/_next/static/ \
+      --cache-control "public,max-age=31536000,immutable" \
+      --profile $AWS_PROFILE --region $AWS_REGION
+  else
+    warn "No .open-next/assets found — run 'npx open-next@latest build' before deploying,"
+    warn "or /admin will be unstyled. See CLAUDE.md."
+  fi
+
   log "Invalidating CloudFront cache..."
   aws cloudfront create-invalidation \
     --distribution-id $CF_DIST_ID \
