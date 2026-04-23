@@ -4,8 +4,8 @@ import {
   validateGridIR,
   type GridIR,
 } from '@chiselgrid/grid-ir';
-import { invokeModel } from '../bedrock.js';
-import { ARCHITECTURE_SYSTEM_PROMPT } from '../prompts/architecture.prompt.js';
+import { invokeModel } from '../bedrock';
+import { ARCHITECTURE_SYSTEM_PROMPT } from '../prompts/architecture.prompt';
 
 export interface ArchitectureAgentInput {
   prompt: string;

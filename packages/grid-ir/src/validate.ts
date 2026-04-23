@@ -1,4 +1,4 @@
-import { GridIRSchema } from './schema.js';
+import { GridIRSchema } from './schema';
 
 export interface ValidationResult {
   valid: boolean;

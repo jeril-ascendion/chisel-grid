@@ -1,5 +1,5 @@
-export { DiagramCanvas } from './components/DiagramCanvas.js';
-export type { DiagramCanvasProps } from './components/DiagramCanvas.js';
-export { DiagramToolbar, DIAGRAM_TYPES } from './components/DiagramToolbar.js';
-export type { DiagramToolbarProps, DiagramTypeOption } from './components/DiagramToolbar.js';
-export { gridIRToReactFlow } from './utils/gridIRToReactFlow.js';
+export { DiagramCanvas } from './components/DiagramCanvas';
+export type { DiagramCanvasProps } from './components/DiagramCanvas';
+export { DiagramToolbar, DIAGRAM_TYPES } from './components/DiagramToolbar';
+export type { DiagramToolbarProps, DiagramTypeOption } from './components/DiagramToolbar';
+export { gridIRToReactFlow } from './utils/gridIRToReactFlow';

@@ -1,5 +1,5 @@
-import { DiagramType } from './types.js';
-import type { GridIR } from './types.js';
+import { DiagramType } from './types';
+import type { GridIR } from './types';
 
 export function gridIRToMermaid(ir: GridIR): string {
   if (ir.diagram_type === DiagramType.Sequence) {

@@ -1,5 +1,5 @@
-import { DiagramType, NodeType, EdgeType, ZoneType } from './types.js';
-import type { GridIR } from './types.js';
+import { DiagramType, NodeType, EdgeType, ZoneType } from './types';
+import type { GridIR } from './types';
 
 const awsArchitecture: GridIR = {
   version: '1.0',

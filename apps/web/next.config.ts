@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
     '@chiselgrid/studio-core',
     '@chiselgrid/studio-agents',
     '@chiselgrid/ai',
+    '@chiselgrid/grid-ir',
+    '@chiselgrid/grid-agents',
+    '@chiselgrid/grid-renderer',
   ],
 
   // Compression (Brotli is handled by CloudFront, but enable gzip for direct access)

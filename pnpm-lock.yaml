@@ -288,6 +288,9 @@ importers:
       '@chiselgrid/grid-ir':
         specifier: workspace:*
         version: link:../../packages/grid-ir
+      '@chiselgrid/grid-renderer':
+        specifier: workspace:*
+        version: link:../../packages/grid-renderer
       '@chiselgrid/types':
         specifier: workspace:*
         version: link:../../packages/types

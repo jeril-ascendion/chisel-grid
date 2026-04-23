@@ -52,7 +52,7 @@ export default function GridPage() {
               </div>
               {item.active ? (
                 <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-600 text-white w-fit">
-                  Launch →
+                  Open →
                 </span>
               ) : (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground w-fit">

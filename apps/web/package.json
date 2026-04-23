@@ -18,6 +18,7 @@
     "@chiselgrid/ai": "workspace:*",
     "@chiselgrid/grid-agents": "workspace:*",
     "@chiselgrid/grid-ir": "workspace:*",
+    "@chiselgrid/grid-renderer": "workspace:*",
     "@chiselgrid/types": "workspace:*",
     "@chiselgrid/ui": "workspace:*",
     "mermaid": "^11.14.0",

@@ -12,9 +12,9 @@ import {
 import '@xyflow/react/dist/style.css';
 import type { GridIR } from '@chiselgrid/grid-ir';
 
-import { DefaultNode } from './nodes/DefaultNode.js';
-import { AWSNode } from './nodes/AWSNode.js';
-import { gridIRToReactFlow } from '../utils/gridIRToReactFlow.js';
+import { DefaultNode } from './nodes/DefaultNode';
+import { AWSNode } from './nodes/AWSNode';
+import { gridIRToReactFlow } from '../utils/gridIRToReactFlow';
 
 export interface DiagramCanvasProps {
   gridIR: GridIR;

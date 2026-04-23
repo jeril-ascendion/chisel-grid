@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
   let body: {
     prompt?: string;
     diagramType?: string;
+    existingIR?: unknown;
     currentDiagramIR?: unknown;
   };
   try {
@@ -55,15 +56,16 @@ export async function POST(req: NextRequest) {
   }
 
   let existingIR: GridIR | undefined;
-  if (body.currentDiagramIR !== undefined && body.currentDiagramIR !== null) {
-    const existingValidation = validateGridIR(body.currentDiagramIR);
+  const existingInput = body.existingIR ?? body.currentDiagramIR;
+  if (existingInput !== undefined && existingInput !== null) {
+    const existingValidation = validateGridIR(existingInput);
     if (!existingValidation.valid) {
       return NextResponse.json(
-        { error: 'currentDiagramIR is not valid Grid-IR', details: existingValidation.errors },
+        { error: 'existingIR is not valid Grid-IR', details: existingValidation.errors },
         { status: 400 },
       );
     }
-    existingIR = body.currentDiagramIR as GridIR;
+    existingIR = existingInput as GridIR;
   }
 
   let gridIR: GridIR;

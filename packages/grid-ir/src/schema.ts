@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DiagramType } from './types.js';
+import { DiagramType } from './types';
 
 const GridNodePositionSchema = z.object({
   x: z.number(),
