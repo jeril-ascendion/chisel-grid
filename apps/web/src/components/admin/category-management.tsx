@@ -17,27 +17,12 @@ interface CategoryNode {
   children: CategoryNode[];
 }
 
-const LEVEL_LABEL: Record<number, string> = {
-  1: 'Category',
-  2: 'Sub-category',
-  3: 'Section',
-  4: 'Sub-section',
-  5: 'Aspect',
-};
-
-const ADD_CHILD_LABEL: Record<number, string> = {
-  1: 'Add Sub-category',
-  2: 'Add Section',
-  3: 'Add Sub-section',
-  4: 'Add Aspect',
-};
-
-const LEVEL_COLOR: Record<number, string> = {
-  1: '#C96330',
-  2: '#3B82F6',
-  3: '#10B981',
-  4: '#8B5CF6',
-  5: '#6B7280',
+const LEVEL_META: Record<number, { short: string; full: string; color: string; addLabel: string }> = {
+  1: { short: 'Cat', full: 'Category', color: '#C96330', addLabel: 'Add Sub-category' },
+  2: { short: 'Sub', full: 'Sub-category', color: '#3B82F6', addLabel: 'Add Section' },
+  3: { short: 'Sec', full: 'Section', color: '#10B981', addLabel: 'Add Sub-section' },
+  4: { short: 'Sub-sec', full: 'Sub-section', color: '#8B5CF6', addLabel: 'Add Aspect' },
+  5: { short: 'Aspect', full: 'Aspect', color: '#6B7280', addLabel: '' },
 };
 
 type RightPanelState =
@@ -104,7 +89,6 @@ export function CategoryManagement() {
     for (const n of flat) {
       if (n.name.toLowerCase().includes(q) || n.full_path.toLowerCase().includes(q)) {
         ids.add(n.id);
-        // include ancestors
         let parentId = n.parent_id;
         while (parentId) {
           ids.add(parentId);
@@ -203,7 +187,6 @@ export function CategoryManagement() {
       }
       return;
     }
-    // Has children — probe for counts
     try {
       const res = await fetch(`/api/admin/categories/${node.id}`, { method: 'DELETE' });
       if (res.status === 409) {
@@ -239,100 +222,117 @@ export function CategoryManagement() {
     }
   };
 
+  const panelOpen = rightPanel.kind !== 'empty';
+
   return (
-    <div className="grid grid-cols-5 gap-6">
-      {/* Left panel (40%) — tree */}
-      <div className="col-span-2 space-y-3">
-        <div className="flex items-center gap-2">
+    <div className="space-y-4">
+      {/* Header row: search + expand controls + add-category button, all in one line */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-1 min-w-[260px]">
           <input
             type="text"
             placeholder="Search categories…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 bg-white dark:bg-gray-800"
+            className="flex-1 max-w-sm text-sm border border-gray-200 dark:border-gray-700 rounded-md px-3 py-1.5 bg-white dark:bg-gray-800"
           />
           <button
             onClick={expandAll}
-            className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+            className="text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-100"
           >
             Expand all
           </button>
           <span className="text-gray-300">·</span>
           <button
             onClick={collapseAll}
-            className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+            className="text-xs text-gray-500 hover:text-gray-900 dark:hover:text-gray-100"
           >
             Collapse all
           </button>
         </div>
         <button
           onClick={() => openAddChild(null)}
-          className="w-full rounded-md border border-dashed border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 py-2 hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="shrink-0 rounded-md bg-[#C96330] hover:bg-[#b3582b] text-white px-3 py-1.5 text-sm font-medium"
         >
           + Add Category
         </button>
-
-        {error && (
-          <div className="rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-2 text-xs text-red-700 dark:text-red-300">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="py-10 text-center text-sm text-gray-400">Loading categories…</div>
-        ) : tree.length === 0 ? (
-          <div className="py-10 text-center">
-            <p className="text-sm text-gray-500 mb-3">No categories yet. Add your first category to get started.</p>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
-            <TreeList
-              nodes={tree}
-              expanded={expanded}
-              visibleIds={visibleIds}
-              editingId={editingId}
-              editName={editName}
-              editDescription={editDescription}
-              savingId={savingId}
-              onToggle={toggleExpand}
-              onEditName={setEditName}
-              onEditDescription={setEditDescription}
-              onStartEdit={startEdit}
-              onSaveEdit={saveEdit}
-              onCancelEdit={cancelEdit}
-              onAddChild={openAddChild}
-              onDelete={requestDelete}
-            />
-          </div>
-        )}
       </div>
 
-      {/* Right panel (60%) */}
-      <div className="col-span-3">
-        {rightPanel.kind === 'empty' && (
-          <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-8 text-center text-sm text-gray-500">
-            Select <strong>+ Add Category</strong> or a row action to manage the taxonomy.
-            <br />
-            Inline-edit: click <em>Edit</em> on any row; Enter saves, Esc cancels.
+      {error && (
+        <div className="rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-2 text-xs text-red-700 dark:text-red-300">
+          {error}
+        </div>
+      )}
+
+      {/* Tree — full width of the page content area */}
+      {loading ? (
+        <div className="py-10 text-center text-sm text-gray-400">Loading categories…</div>
+      ) : tree.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 py-16 text-center">
+          <p className="text-sm text-gray-500 mb-4">No categories yet. Add your first category to get started.</p>
+          <button
+            onClick={() => openAddChild(null)}
+            className="rounded-md bg-[#C96330] hover:bg-[#b3582b] text-white px-4 py-2 text-sm font-medium"
+          >
+            + Add Category
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
+          <TreeList
+            nodes={tree}
+            expanded={expanded}
+            visibleIds={visibleIds}
+            editingId={editingId}
+            editName={editName}
+            editDescription={editDescription}
+            savingId={savingId}
+            onToggle={toggleExpand}
+            onEditName={setEditName}
+            onEditDescription={setEditDescription}
+            onStartEdit={startEdit}
+            onSaveEdit={saveEdit}
+            onCancelEdit={cancelEdit}
+            onAddChild={openAddChild}
+            onDelete={requestDelete}
+          />
+        </div>
+      )}
+
+      {/* Slide-in panel — covers right 480px only when something is being added/deleted */}
+      {panelOpen && (
+        <div
+          className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-700 z-40 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="p-5">
+            {rightPanel.kind === 'add' && (
+              <AddCategoryForm
+                parent={rightPanel.parent}
+                onCancel={() => setRightPanel({ kind: 'empty' })}
+                onSubmit={submitAdd}
+              />
+            )}
+            {rightPanel.kind === 'delete' && (
+              <DeleteConfirmForm
+                node={rightPanel.node}
+                childCount={rightPanel.childCount}
+                articlesAffected={rightPanel.articlesAffected}
+                onCancel={() => setRightPanel({ kind: 'empty' })}
+                onConfirm={() => confirmForceDelete(rightPanel.node.id)}
+              />
+            )}
           </div>
-        )}
-        {rightPanel.kind === 'add' && (
-          <AddCategoryForm
-            parent={rightPanel.parent}
-            onCancel={() => setRightPanel({ kind: 'empty' })}
-            onSubmit={submitAdd}
-          />
-        )}
-        {rightPanel.kind === 'delete' && (
-          <DeleteConfirmForm
-            node={rightPanel.node}
-            childCount={rightPanel.childCount}
-            articlesAffected={rightPanel.articlesAffected}
-            onCancel={() => setRightPanel({ kind: 'empty' })}
-            onConfirm={() => confirmForceDelete(rightPanel.node.id)}
-          />
-        )}
-      </div>
+        </div>
+      )}
+      {panelOpen && (
+        <button
+          aria-label="Close panel"
+          className="fixed inset-0 bg-black/20 z-30"
+          onClick={() => setRightPanel({ kind: 'empty' })}
+        />
+      )}
     </div>
   );
 }
@@ -391,23 +391,26 @@ function TreeRow({ node, ...props }: TreeListProps & { node: CategoryNode }) {
   const hasChildren = node.children.length > 0;
   const isEditing = editingId === node.id;
   const showRow = !visibleIds || visibleIds.has(node.id);
-  const dotColor = LEVEL_COLOR[node.level] ?? '#9CA3AF';
+  const meta = LEVEL_META[node.level] ?? LEVEL_META[1]!;
   const canAddChild = node.level < 5;
-  const paddingLeft = 12 + (node.level - 1) * 16;
 
   if (!showRow) return null;
 
   return (
     <li>
-      <div
-        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/30"
-        style={{ paddingLeft }}
-      >
-        {/* Expand chevron */}
+      <div className="group flex items-center gap-2 py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-700/40 min-w-0">
+        {/* Indent spacer (20px per level past L1) */}
+        <span
+          className="shrink-0"
+          style={{ width: `${(node.level - 1) * 20}px` }}
+          aria-hidden
+        />
+
+        {/* Chevron */}
         <button
           onClick={() => hasChildren && onToggle(node.id)}
           className={cn(
-            'w-4 h-4 flex items-center justify-center text-gray-400',
+            'w-4 h-4 flex items-center justify-center text-gray-400 shrink-0',
             !hasChildren && 'invisible',
           )}
           aria-label={isExpanded ? 'Collapse' : 'Expand'}
@@ -425,93 +428,100 @@ function TreeRow({ node, ...props }: TreeListProps & { node: CategoryNode }) {
           </svg>
         </button>
 
-        {/* Level dot */}
+        {/* Colored level dot */}
         <span
-          className="w-2.5 h-2.5 rounded-full shrink-0"
-          style={{ backgroundColor: dotColor }}
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ backgroundColor: meta.color }}
+          title={meta.full}
           aria-hidden
         />
 
-        {/* Level label badge */}
-        <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400 w-[68px] shrink-0">
-          {LEVEL_LABEL[node.level] ?? 'Category'}
-        </span>
+        {/* Name — flex-1 min-w-0 so it takes ALL remaining space */}
+        {isEditing ? (
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <input
+              value={editName}
+              onChange={(e) => onEditName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  onSaveEdit(node.id);
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  onCancelEdit();
+                }
+              }}
+              autoFocus
+              className="flex-1 min-w-0 text-sm border border-blue-400 rounded px-2 py-1 bg-white dark:bg-gray-900"
+            />
+            <input
+              value={editDescription}
+              onChange={(e) => onEditDescription(e.target.value)}
+              placeholder="Description (optional)"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  onSaveEdit(node.id);
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  onCancelEdit();
+                }
+              }}
+              className="w-56 text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-600"
+            />
+          </div>
+        ) : (
+          <span
+            className="flex-1 min-w-0 font-medium truncate text-sm text-gray-900 dark:text-white"
+            title={`${node.name}  /${node.slug}`}
+          >
+            {node.name}
+            <span className="ml-2 text-xs text-gray-400 font-mono font-normal">/{node.slug}</span>
+          </span>
+        )}
 
-        {/* Name + slug (or inline edit) */}
-        <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <div className="space-y-1.5">
-              <input
-                value={editName}
-                onChange={(e) => onEditName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    onSaveEdit(node.id);
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    onCancelEdit();
-                  }
-                }}
-                autoFocus
-                className="w-full text-sm border border-blue-400 rounded px-2 py-1 bg-white dark:bg-gray-900"
-              />
-              <input
-                value={editDescription}
-                onChange={(e) => onEditDescription(e.target.value)}
-                placeholder="Description (optional)"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    onSaveEdit(node.id);
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    onCancelEdit();
-                  }
-                }}
-                className="w-full text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-600"
-              />
-            </div>
-          ) : (
-            <div className="flex items-baseline gap-2 min-w-0">
-              <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {node.name}
-              </span>
-              <span className="text-xs text-gray-400 font-mono truncate">/{node.slug}</span>
-            </div>
-          )}
-        </div>
+        {/* Compact level badge */}
+        <span
+          className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded px-1.5 py-0.5"
+          title={meta.full}
+        >
+          {meta.short}
+        </span>
 
         {/* Article count */}
-        <span className="text-[10px] text-gray-500 bg-gray-100 dark:bg-gray-700 rounded-full px-1.5 py-0.5 shrink-0">
-          {node.article_count} article{node.article_count === 1 ? '' : 's'}
+        <span
+          className="shrink-0 text-xs text-gray-500 tabular-nums"
+          title={`${node.article_count} article${node.article_count === 1 ? '' : 's'}`}
+        >
+          {node.article_count}
+          <span className="hidden md:inline ml-1 text-gray-400">articles</span>
         </span>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Actions — visible on row hover only */}
+        <div
+          className={cn(
+            'shrink-0 flex items-center gap-1 transition-opacity',
+            isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
+          )}
+        >
           {isEditing ? (
             <>
               <button
                 onClick={() => onSaveEdit(node.id)}
                 disabled={savingId === node.id}
                 title="Save (Enter)"
-                className="text-green-600 hover:text-green-700 disabled:opacity-50 p-1"
+                className="text-xs px-2 py-1 rounded text-green-700 hover:bg-green-50 dark:hover:bg-green-900/30 disabled:opacity-50"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+                Save
               </button>
               <button
                 onClick={onCancelEdit}
                 title="Cancel (Esc)"
-                className="text-gray-500 hover:text-gray-700 p-1"
+                className="text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                Cancel
               </button>
             </>
           ) : (
@@ -519,20 +529,21 @@ function TreeRow({ node, ...props }: TreeListProps & { node: CategoryNode }) {
               {canAddChild && (
                 <button
                   onClick={() => onAddChild(node)}
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs px-2 py-1 rounded text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                  title={meta.addLabel}
                 >
-                  + {ADD_CHILD_LABEL[node.level] ?? 'Add Child'}
+                  + Add
                 </button>
               )}
               <button
                 onClick={() => onStartEdit(node)}
-                className="text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-1"
+                className="text-xs px-2 py-1 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 Edit
               </button>
               <button
                 onClick={() => onDelete(node)}
-                className="text-xs text-red-500 hover:text-red-700 px-1"
+                className="text-xs px-2 py-1 rounded text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
               >
                 Delete
               </button>
@@ -553,7 +564,7 @@ function TreeRow({ node, ...props }: TreeListProps & { node: CategoryNode }) {
 }
 
 // ---------------------------------------------------------------------------
-// Right-panel forms
+// Slide-in forms
 // ---------------------------------------------------------------------------
 
 function AddCategoryForm({
@@ -573,7 +584,8 @@ function AddCategoryForm({
   const [err, setErr] = useState<string | null>(null);
 
   const childLevel = (parent?.level ?? 0) + 1;
-  const label = LEVEL_LABEL[childLevel] ?? 'Category';
+  const childMeta = LEVEL_META[childLevel] ?? LEVEL_META[1]!;
+  const label = childMeta.full;
 
   const handleName = (v: string) => {
     setName(v);
@@ -598,17 +610,27 @@ function AddCategoryForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 space-y-4">
-      <div>
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-          Add {label.toLowerCase()}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+            Add {label.toLowerCase()}
+            {parent && (
+              <span className="font-normal text-gray-500"> under <span className="font-medium text-gray-700 dark:text-gray-200">{parent.name}</span></span>
+            )}
+          </h3>
           {parent && (
-            <span className="font-normal text-gray-500"> under <span className="font-medium text-gray-700 dark:text-gray-200">{parent.name}</span></span>
+            <p className="mt-0.5 text-xs text-gray-400">{parent.full_path}</p>
           )}
-        </h3>
-        {parent && (
-          <p className="mt-0.5 text-xs text-gray-400">{parent.full_path}</p>
-        )}
+        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-lg leading-none"
+          aria-label="Close"
+        >
+          ×
+        </button>
       </div>
 
       <label className="block">
@@ -651,7 +673,7 @@ function AddCategoryForm({
         </div>
       )}
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 pt-2">
         <button
           type="button"
           onClick={onCancel}
@@ -688,14 +710,24 @@ function DeleteConfirmForm({
   const [submitting, setSubmitting] = useState(false);
   const ready = confirmText === 'DELETE';
   return (
-    <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50/60 dark:bg-red-900/20 p-5 space-y-4">
-      <h3 className="text-base font-semibold text-red-700 dark:text-red-300">
-        Delete &ldquo;{node.name}&rdquo;?
-      </h3>
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-base font-semibold text-red-700 dark:text-red-300">
+          Delete &ldquo;{node.name}&rdquo;?
+        </h3>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-lg leading-none"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
       <p className="text-sm text-red-700 dark:text-red-200">
         ⚠ This will also remove <strong>{childCount}</strong> sub-item{childCount === 1 ? '' : 's'} and
         unlink <strong>{articlesAffected}</strong> article{articlesAffected === 1 ? '' : 's'}.
-        Type <code className="font-mono bg-white dark:bg-gray-900 px-1 rounded">DELETE</code> to confirm.
+        Type <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 rounded">DELETE</code> to confirm.
       </p>
       <input
         autoFocus
