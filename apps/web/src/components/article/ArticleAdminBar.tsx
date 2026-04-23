@@ -22,7 +22,7 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
     setMounted(true);
 
     const cs = getCognitoSession();
-    if (cs && cs.role === 'admin' && cs.groups?.includes('admins')) {
+    if (cs && cs.role === 'admin' && (cs.groups?.includes('admin') || cs.groups?.includes('admins'))) {
       setIsAdmin(true);
       setSessionChecked(true);
       return;
@@ -42,7 +42,7 @@ export function ArticleAdminBar({ contentId }: ArticleAdminBarProps) {
           | { role?: string; groups?: string[] }
           | undefined;
         const adminByRole = user?.role === 'admin';
-        const adminByGroups = user?.groups?.includes('admins') ?? false;
+        const adminByGroups = (user?.groups?.includes('admin') || user?.groups?.includes('admins')) ?? false;
         if (user && (adminByRole || adminByGroups)) {
           setIsAdmin(true);
         }

@@ -1,4 +1,4 @@
-import { UserManagement } from '@/components/admin/user-management';
+import { UsersAccessGuard } from '@/components/admin/users-access-guard';
 
 export const metadata = { title: 'User Management' };
 
@@ -9,7 +9,7 @@ export default function UsersPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
         <p className="text-sm text-gray-500 mt-1">Manage user roles and access</p>
       </div>
-      <UserManagement />
+      <UsersAccessGuard />
     </div>
   );
 }

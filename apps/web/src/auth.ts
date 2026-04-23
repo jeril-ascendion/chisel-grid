@@ -189,7 +189,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 });
 
 function deriveRole(groups: string[]): 'admin' | 'creator' | 'reader' {
-  if (groups.includes('admins')) return 'admin';
-  if (groups.includes('creators')) return 'creator';
+  if (groups.includes('admin') || groups.includes('admins')) return 'admin';
+  if (groups.includes('creator') || groups.includes('creators')) return 'creator';
   return 'reader';
 }
