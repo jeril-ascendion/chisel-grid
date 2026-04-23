@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tailwind v4 defaults `dark:` to `@media (prefers-color-scheme: dark)`.
+   This switches it to a class-based selector so the toggle (which adds
+   `.dark` to <html>) drives both CSS-variable themes AND `dark:` utilities. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ═══════════════════════════════════════════════════════════
    ChiselGrid Design System — T-06.1
    CSS Custom Properties, Typography Scale, Dark/Light Mode
