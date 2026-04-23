@@ -282,6 +282,12 @@ importers:
       '@chiselgrid/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@chiselgrid/grid-agents':
+        specifier: workspace:*
+        version: link:../../packages/grid-agents
+      '@chiselgrid/grid-ir':
+        specifier: workspace:*
+        version: link:../../packages/grid-ir
       '@chiselgrid/types':
         specifier: workspace:*
         version: link:../../packages/types
