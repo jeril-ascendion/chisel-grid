@@ -1,0 +1,24 @@
+{
+  "name": "@chiselgrid/grid-renderer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@chiselgrid/grid-ir": "workspace:*",
+    "@xyflow/react": "^12.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@chiselgrid/config": "workspace:*",
+    "@types/react": "^18",
+    "@types/node": "^20",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  }
+}
