@@ -16,6 +16,9 @@ export interface StoredArticle {
   category: string;
   categoryName: string;
   categorySlug: string;
+  categoryPath: string;
+  categorySlugPath: string;
+  categoryLevel: number;
   tags: string[];
   authorId: string;
   readTimeMinutes: number;
@@ -32,10 +35,43 @@ const DEFAULT_AUTHOR_ID =
 
 // Lightweight columns for list queries — avoids the 1MB Data API cap
 // that the large `blocks` JSONB hits when many rows are returned.
+// Walks the category parent chain to build breadcrumb path + slug path
+// so callers can show "Cloud Computing > AWS > Serverless" instead of
+// just the leaf name. The CTE is evaluated once per row as a scalar
+// subquery — cheap even on the queue's 500-row cap.
+const CATEGORY_PATH_SUBQUERY = `
+  (WITH RECURSIVE p AS (
+     SELECT category_id, parent_id, name::text AS name_path, slug::text AS slug_path, 1 AS depth
+       FROM categories
+      WHERE category_id = c.category_id
+     UNION ALL
+     SELECT pc.category_id, pc.parent_id,
+            pc.name || ' > ' || p.name_path,
+            pc.slug || '/' || p.slug_path,
+            p.depth + 1
+       FROM categories pc JOIN p ON pc.category_id = p.parent_id
+   )
+   SELECT name_path FROM p WHERE parent_id IS NULL LIMIT 1)
+`;
+const CATEGORY_SLUG_PATH_SUBQUERY = `
+  (WITH RECURSIVE p AS (
+     SELECT category_id, parent_id, slug::text AS slug_path
+       FROM categories
+      WHERE category_id = c.category_id
+     UNION ALL
+     SELECT pc.category_id, pc.parent_id,
+            pc.slug || '/' || p.slug_path
+       FROM categories pc JOIN p ON pc.category_id = p.parent_id
+   )
+   SELECT slug_path FROM p WHERE parent_id IS NULL LIMIT 1)
+`;
 const LIST_COLS = `
   c.content_id, c.title, c.slug, c.description, c.status,
   c.category_id, c.author_id, c.read_time_minutes, c.created_at,
-  cat.name AS category_name, cat.slug AS category_slug
+  cat.name AS category_name, cat.slug AS category_slug,
+  cat.level AS category_level,
+  ${CATEGORY_PATH_SUBQUERY} AS category_path,
+  ${CATEGORY_SLUG_PATH_SUBQUERY} AS category_slug_path
 `;
 const FULL_COLS = `${LIST_COLS}, c.blocks`;
 const CATEGORY_JOIN = ` LEFT JOIN categories cat ON cat.category_id = c.category_id`;
@@ -50,6 +86,9 @@ type Row = {
   category_id: string | null;
   category_name: string | null;
   category_slug: string | null;
+  category_level: number | null;
+  category_path: string | null;
+  category_slug_path: string | null;
   author_id: string | null;
   read_time_minutes: number | null;
   created_at: string;
@@ -68,6 +107,8 @@ function rowToArticle(row: Row): StoredArticle {
   const created = row.created_at
     ? new Date(row.created_at.replace(' ', 'T') + 'Z').toISOString()
     : new Date().toISOString();
+  const leafName = row.category_name ?? '';
+  const leafSlug = row.category_slug ?? '';
   return {
     contentId: row.content_id,
     title: row.title,
@@ -76,8 +117,11 @@ function rowToArticle(row: Row): StoredArticle {
     status: row.status,
     blocks,
     category: row.category_id ?? '',
-    categoryName: row.category_name ?? '',
-    categorySlug: row.category_slug ?? '',
+    categoryName: leafName,
+    categorySlug: leafSlug,
+    categoryPath: row.category_path ?? leafName,
+    categorySlugPath: row.category_slug_path ?? leafSlug,
+    categoryLevel: row.category_level ?? 1,
     tags: [],
     authorId: row.author_id ?? '',
     readTimeMinutes: row.read_time_minutes ?? 5,

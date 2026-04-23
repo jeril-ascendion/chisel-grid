@@ -116,19 +116,30 @@ export default async function ArticlePage({ params }: Props) {
           </div>
           <div>
             <nav aria-label="Breadcrumb" style={{ marginBottom: '0.75rem' }}>
-              <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <ol className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
                 <li>
                   <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
                 </li>
-                <li><span className="mx-1">/</span></li>
-                <li>
-                  <Link
-                    href={`/category/${article.categorySlug}`}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {article.categoryName}
-                  </Link>
-                </li>
+                {(() => {
+                  const names = (article.categoryPath ?? article.categoryName).split(' > ');
+                  const slugs = (article.categorySlugPath ?? article.categorySlug).split('/');
+                  const leafSlug = slugs[slugs.length - 1] ?? article.categorySlug;
+                  return names.map((name, i) => (
+                    <span key={`${name}-${i}`} className="flex items-center gap-1.5">
+                      <span className="mx-1">/</span>
+                      {i === names.length - 1 ? (
+                        <Link
+                          href={`/category/${leafSlug}`}
+                          className="hover:text-foreground transition-colors"
+                        >
+                          {name}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground/80">{name}</span>
+                      )}
+                    </span>
+                  ));
+                })()}
                 <li><span className="mx-1">/</span></li>
                 <li className="text-foreground font-medium truncate max-w-[200px]">
                   {article.title}
@@ -139,8 +150,9 @@ export default async function ArticlePage({ params }: Props) {
               <Link
                 href={`/category/${article.categorySlug}`}
                 className="font-medium text-primary hover:underline"
+                title={article.categoryPath ?? article.categoryName}
               >
-                {article.categoryName}
+                {article.categoryPath ?? article.categoryName}
               </Link>
               <span>&middot;</span>
               <span>{article.readTimeMinutes} min read</span>

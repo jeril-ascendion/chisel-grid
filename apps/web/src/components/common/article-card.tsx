@@ -26,13 +26,17 @@ export function ArticleCard({ article }: { article: Article }) {
       )}
 
       <div className="flex flex-1 flex-col p-5">
-        {/* Category & Read time */}
+        {/* Category & Read time — show top 2 levels of breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
           <Link
             href={`/category/${article.categorySlug}`}
             className="font-medium text-primary hover:underline"
+            title={article.categoryPath ?? article.categoryName}
           >
-            {article.categoryName}
+            {(() => {
+              const parts = (article.categoryPath ?? article.categoryName).split(' > ');
+              return parts.slice(0, 2).join(' > ');
+            })()}
           </Link>
           <span>&middot;</span>
           <span>{article.readTimeMinutes} min read</span>

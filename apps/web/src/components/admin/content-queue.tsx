@@ -12,6 +12,8 @@ interface QueueItem {
   readTimeMinutes: number;
   status: 'in_review' | 'submitted';
   category: string;
+  categoryPath?: string;
+  categoryName?: string;
   importSource?: string;
   description?: string;
   hasSvgAnimation?: boolean;
@@ -133,8 +135,11 @@ export function ContentQueue() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-[10px]">
-                      {item.category}
+                    <span
+                      className="rounded-full bg-gray-100 dark:bg-gray-700 px-2 py-0.5 text-[10px]"
+                      title={item.categoryPath ?? item.category}
+                    >
+                      {item.categoryPath ?? item.category}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center text-xs text-gray-500">{item.readTimeMinutes}m</td>

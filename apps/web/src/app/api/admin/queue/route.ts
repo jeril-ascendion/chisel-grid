@@ -36,8 +36,12 @@ export async function GET(req: NextRequest) {
     submittedAt: a.createdAt,
     readTimeMinutes: a.readTimeMinutes,
     status: a.status === 'submitted' ? 'in_review' : a.status,
-    category: a.categoryName || 'Uncategorised',
+    category: a.categoryPath || a.categoryName || 'Uncategorised',
+    categoryName: a.categoryName,
+    categoryPath: a.categoryPath,
     categorySlug: a.categorySlug,
+    categorySlugPath: a.categorySlugPath,
+    categoryLevel: a.categoryLevel,
     categoryId: a.category,
     description: a.description,
   }));

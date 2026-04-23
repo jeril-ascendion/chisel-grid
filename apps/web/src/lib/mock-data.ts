@@ -20,6 +20,9 @@ export interface Article {
   authorAvatar: string | null;
   categoryName: string;
   categorySlug: string;
+  categoryPath?: string;
+  categorySlugPath?: string;
+  categoryLevel?: number;
   tags: { name: string; slug: string }[];
   publishedAt: string;
   seoMetaTitle: string | null;
