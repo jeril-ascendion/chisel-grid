@@ -13,10 +13,12 @@
     "build:open-next": "open-next build"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1035.0",
     "@aws-sdk/client-rds-data": "^3.1030.0",
     "@chiselgrid/ai": "workspace:*",
     "@chiselgrid/types": "workspace:*",
     "@chiselgrid/ui": "workspace:*",
+    "mermaid": "^11.14.0",
     "next": "16.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",

@@ -47,9 +47,13 @@ const navSections: NavSection[] = [
 export function AdminSidebar({
   user,
   role,
+  collapsed,
+  onToggle,
 }: {
   user: { name?: string | null; email?: string | null };
   role: Role;
+  collapsed: boolean;
+  onToggle: () => void;
 }) {
   const pathname = usePathname();
 
@@ -61,27 +65,115 @@ export function AdminSidebar({
     .filter((section) => section.items.length > 0);
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-      <Link href="/admin" className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm">
-          CG
-        </div>
-        <div>
-          <div className="text-sm font-semibold text-gray-900 dark:text-white">ChiselGrid</div>
-          <div className="text-xs text-gray-500">Content Studio</div>
-        </div>
-      </Link>
+    <aside
+      className={cn(
+        'flex shrink-0 flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-200 ease-in-out overflow-hidden',
+        collapsed ? 'w-14' : 'w-64',
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-center border-b border-gray-200 dark:border-gray-700 py-3 gap-2',
+          collapsed ? 'justify-center px-2' : 'justify-between px-4',
+        )}
+      >
+        <Link
+          href="/admin"
+          className={cn(
+            'flex items-center gap-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors',
+            collapsed ? 'p-1' : 'flex-1 -mx-1 px-1 py-0.5',
+          )}
+          aria-label="ChiselGrid Content Studio"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm">
+            CG
+          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                ChiselGrid
+              </div>
+              <div className="text-xs text-gray-500 truncate">Content Studio</div>
+            </div>
+          )}
+        </Link>
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar (Ctrl+.)"
+            className="rounded-md p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+              <polyline points="15 9 19 13 15 17" />
+            </svg>
+          </button>
+        )}
+      </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+      {collapsed && (
+        <div className="flex justify-center border-b border-gray-200 dark:border-gray-700 py-2">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label="Expand sidebar"
+            title="Expand sidebar (Ctrl+.)"
+            className="rounded-md p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="9" y1="3" x2="9" y2="21" />
+              <polyline points="13 9 17 13 13 17" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      <nav
+        className={cn(
+          'flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4',
+          collapsed ? 'px-1.5' : 'px-3',
+        )}
+      >
         {visibleSections.map((section, idx) => (
           <div key={section.label ?? `section-${idx}`} className="space-y-1">
-            {section.label && (
+            {section.label && !collapsed && (
               <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                 {section.label}
               </div>
             )}
+            {section.label && collapsed && idx > 0 && (
+              <div className="mx-2 my-2 border-t border-gray-200 dark:border-gray-700" />
+            )}
             {section.items.map((item) => {
               const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+
+              if (collapsed) {
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'relative group flex h-10 w-10 items-center justify-center rounded-lg mx-auto transition-colors',
+                      isActive
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700',
+                    )}
+                    aria-label={item.label}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d={item.icon} />
+                    </svg>
+                    <span className="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded bg-gray-900 dark:bg-gray-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-md">
+                      {item.label}
+                    </span>
+                  </Link>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
@@ -93,10 +185,10 @@ export function AdminSidebar({
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700',
                   )}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                     <path d={item.icon} />
                   </svg>
-                  {item.label}
+                  <span className="truncate">{item.label}</span>
                 </Link>
               );
             })}
@@ -104,11 +196,23 @@ export function AdminSidebar({
         ))}
       </nav>
 
-      <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-          {user.name ?? user.email}
+      {!collapsed && (
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+          <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            {user.name ?? user.email}
+          </div>
         </div>
-      </div>
+      )}
+      {collapsed && (
+        <div className="border-t border-gray-200 dark:border-gray-700 py-3 flex justify-center">
+          <div
+            className="h-7 w-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-200"
+            title={user.name ?? user.email ?? undefined}
+          >
+            {(user.name ?? user.email ?? '?').slice(0, 1).toUpperCase()}
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

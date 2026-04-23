@@ -1,5 +1,30 @@
 'use client';
 
+import Link from 'next/link';
+
+interface GridCard {
+  title: string;
+  desc: string;
+  icon: string;
+  href?: string;
+  active?: boolean;
+}
+
+const CARDS: GridCard[] = [
+  {
+    title: 'Architecture Diagrams',
+    desc: 'C4, AWS, sequence and flow diagrams',
+    icon: '⬡',
+    href: '/admin/grid/architecture',
+    active: true,
+  },
+  { title: 'Animated Explainers', desc: 'Step-by-step animated content walkthroughs', icon: '▶' },
+  { title: 'Data Visualisations', desc: 'Charts, graphs and infographics', icon: '◈' },
+  { title: 'System Maps', desc: 'Interactive topology and network maps', icon: '⬡' },
+  { title: 'Timeline Views', desc: 'Roadmap and milestone visualisations', icon: '◷' },
+  { title: 'Comparison Tables', desc: 'Trade-off and feature comparison grids', icon: '▦' },
+];
+
 export default function GridPage() {
   return (
     <div className="space-y-6">
@@ -11,30 +36,44 @@ export default function GridPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { title: 'Architecture Diagrams', desc: 'C4, AWS, sequence and flow diagrams', icon: '⬡', status: 'Coming Soon' },
-          { title: 'Animated Explainers', desc: 'Step-by-step animated content walkthroughs', icon: '▶', status: 'Coming Soon' },
-          { title: 'Data Visualisations', desc: 'Charts, graphs and infographics', icon: '◈', status: 'Coming Soon' },
-          { title: 'System Maps', desc: 'Interactive topology and network maps', icon: '⬡', status: 'Coming Soon' },
-          { title: 'Timeline Views', desc: 'Roadmap and milestone visualisations', icon: '◷', status: 'Coming Soon' },
-          { title: 'Comparison Tables', desc: 'Trade-off and feature comparison grids', icon: '▦', status: 'Coming Soon' },
-        ].map((item) => (
-          <div key={item.title} className="rounded-xl border border-border bg-card p-5 flex flex-col gap-3">
-            <div className="text-3xl">{item.icon}</div>
-            <div>
-              <h3 className="font-semibold text-sm">{item.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+        {CARDS.map((item) => {
+          const card = (
+            <div
+              className={`rounded-xl border p-5 flex flex-col gap-3 h-full transition-colors ${
+                item.active
+                  ? 'border-blue-500/60 bg-card hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-900/10'
+                  : 'border-border bg-card opacity-80'
+              }`}
+            >
+              <div className="text-3xl">{item.icon}</div>
+              <div>
+                <h3 className="font-semibold text-sm">{item.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+              </div>
+              {item.active ? (
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-600 text-white w-fit">
+                  Launch →
+                </span>
+              ) : (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground w-fit">
+                  Coming Soon
+                </span>
+              )}
             </div>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground w-fit">
-              {item.status}
-            </span>
-          </div>
-        ))}
+          );
+          return item.href ? (
+            <Link key={item.title} href={item.href} className="block focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-xl">
+              {card}
+            </Link>
+          ) : (
+            <div key={item.title}>{card}</div>
+          );
+        })}
       </div>
 
       <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
         <p className="text-muted-foreground text-sm">
-          Grid visual creation tools are in development and will be available in Milestone 2.
+          Architecture Diagrams is live. Other Grid tools are in development and will ship in upcoming milestones.
         </p>
         <p className="text-muted-foreground text-xs mt-2">
           Use Chamber to draft content, then Grid will generate matching visuals automatically.

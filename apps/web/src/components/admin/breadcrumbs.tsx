@@ -14,6 +14,7 @@ const labelMap: Record<string, string> = {
   edit: 'Edit',
   studio: 'Studio',
   grid: 'Grid',
+  architecture: 'Architecture Diagrams',
   session: 'Session',
 };
 
