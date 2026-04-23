@@ -8,6 +8,7 @@ import {
   GetUserCommand,
   AdminListGroupsForUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
+import { DEFAULT_TENANT_ID } from '@/lib/db/aurora';
 
 function computeSecretHash(username: string, clientId: string, clientSecret: string): string {
   return createHmac('sha256', clientSecret)
@@ -101,7 +102,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           )?.Value ?? credentials.username as string;
           const tenantId = userInfo.UserAttributes?.find(
             (a) => a.Name === 'custom:tenantId',
-          )?.Value ?? 'default';
+          )?.Value ?? DEFAULT_TENANT_ID;
 
           // Extract groups from the ID token claims (contains cognito:groups)
           let groups: string[] = [];
@@ -154,7 +155,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === 'cognito-credentials' && user) {
         token.groups = (user as Record<string, unknown>).groups as string[] ?? [];
         token.tenantId =
-          (user as Record<string, unknown>).tenantId as string ?? 'default';
+          (user as Record<string, unknown>).tenantId as string ?? DEFAULT_TENANT_ID;
         token.sub = user.id ?? undefined;
       } else if (account && profile) {
         const cognitoGroups =
@@ -164,7 +165,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.groups = cognitoGroups ?? [];
         token.tenantId =
           ((profile as Record<string, unknown>)['custom:tenantId'] as string) ??
-          'default';
+          DEFAULT_TENANT_ID;
         token.sub = profile.sub ?? undefined;
       }
       return token;
@@ -173,7 +174,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.sub!;
         session.user.groups = (token.groups as string[]) ?? [];
-        session.user.tenantId = (token.tenantId as string) ?? 'default';
+        session.user.tenantId = (token.tenantId as string) ?? DEFAULT_TENANT_ID;
         session.user.role = deriveRole((token.groups as string[]) ?? []);
       }
       return session;
