@@ -4,3 +4,8 @@ export {
 } from './agents/architectureAgent';
 export { ARCHITECTURE_SYSTEM_PROMPT } from './prompts/architecture.prompt';
 export { bedrockClient, invokeModel, MODEL_ID } from './bedrock';
+export { validateArchitecture } from './validators/architectureValidator';
+export type {
+  ValidationFinding,
+  ValidationResult,
+} from './validators/architectureValidator';

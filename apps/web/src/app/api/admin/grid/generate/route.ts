@@ -121,6 +121,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const { validateArchitecture } = await import('@chiselgrid/grid-agents');
+  const architectureValidation = validateArchitecture(gridIR, diagramType);
+
   const user = session.user as SessionUser;
   const tenantId = user.tenantId ?? DEFAULT_TENANT_ID;
   const createdBy = user.email ?? 'unknown';
@@ -153,5 +156,15 @@ export async function POST(req: NextRequest) {
     console.warn('[api/admin/grid/generate] Aurora not configured; returning without persisting');
   }
 
-  return NextResponse.json({ gridIR, diagramId });
+  return NextResponse.json({
+    gridIR,
+    diagramId,
+    validation: {
+      score: architectureValidation.score,
+      valid: architectureValidation.valid,
+      criticalCount: architectureValidation.criticalCount,
+      warningCount: architectureValidation.warningCount,
+      findings: architectureValidation.findings,
+    },
+  });
 }
