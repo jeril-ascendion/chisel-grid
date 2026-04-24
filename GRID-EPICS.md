@@ -353,3 +353,44 @@ See GRID.md for architecture, design decisions, and package structure.
 
 *Last updated: April 2026*
 *See GRID.md for architecture overview and design decisions.*
+
+---
+
+## EPIC-GRID-07 — 5-Agent Adversarial Pipeline (Sprint 3, June)
+
+TASK-GRID-07-01: Adversarial Agent
+  File: packages/grid-agents/src/agents/adversarialAgent.ts
+  Input: GridIR + original prompt
+  System prompt: "Attack this design. Find every flaw."
+  Output: FindingsList JSON with severity and location
+
+TASK-GRID-07-02: Domain Expert Agent  
+  File: packages/grid-agents/src/agents/domainExpertAgent.ts
+  Input: GridIR + FindingsList
+  Configurable: aws_payment | ph_banking | microservices | generic
+  Output: CorrectionsList JSON with specific node/edge changes
+
+TASK-GRID-07-03: Synthesis Agent
+  File: packages/grid-agents/src/agents/synthesisAgent.ts
+  Input: GridIR + FindingsList + CorrectionsList
+  Output: Improved GridIR with all corrections applied
+
+TASK-GRID-07-04: Quality Gate Agent (Haiku — cheap)
+  File: packages/grid-agents/src/agents/qualityGateAgent.ts
+  Input: Final GridIR + requirements checklist
+  Output: { score: number, approved: boolean, remaining: string[] }
+  If score < 85 and iteration < 3: feed back to Synthesis Agent
+
+TASK-GRID-07-05: Pipeline Orchestrator
+  File: packages/grid-agents/src/pipeline/architecturePipeline.ts
+  Runs all 4 agents in sequence with iteration loop.
+  Returns final GridIR + full audit trail of agent findings.
+  Max 3 iterations to prevent runaway costs.
+  Total cost target: under $0.25 per diagram.
+
+TASK-GRID-07-06: Export to Draw.io and Excalidraw
+  File: packages/grid-ir/src/transforms.ts (extend existing)
+  gridIRToDrawio(ir: GridIR): string  (Draw.io XML)
+  gridIRToExcalidraw(ir: GridIR): object  (Excalidraw elements)
+  Add export buttons to DiagramToolbar: Download Draw.io, Download Excalidraw
+
