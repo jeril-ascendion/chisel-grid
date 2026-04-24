@@ -16,11 +16,11 @@ const ContentStudioButton = dynamic(
 
 const NAV_LABELS: Record<string, string> = {
   'cloud-architecture': 'Cloud',
-  'ai-ml': 'AI/ML',
-  'full-stack': 'Software',
-  'devops-sre': 'DevOps',
+  'ai-architecture': 'AI/ML',
+  'system-design': 'Software',
+  'ci-cd': 'DevOps',
   'data-engineering': 'Data',
-  'engineering-culture': 'Culture',
+  'engineering-strategy': 'Strategy',
 };
 
 function Wordmark() {

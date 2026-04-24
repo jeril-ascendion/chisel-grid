@@ -1,4 +1,4 @@
-import type { Node, Edge } from '@xyflow/react';
+import { MarkerType, type Node, type Edge } from '@xyflow/react';
 import dagre from 'dagre';
 import type { GridIR, GridNode, GridEdge } from '@chiselgrid/grid-ir';
 
@@ -13,7 +13,7 @@ function mapNodeType(irType: string): string {
 
 function irNodeToRFNode(node: GridNode): Node {
   const rfType = mapNodeType(String(node.type));
-  const base: Node = {
+  return {
     id: node.id,
     type: rfType,
     position: node.position ?? { x: 0, y: 0 },
@@ -24,7 +24,6 @@ function irNodeToRFNode(node: GridNode): Node {
       properties: node.properties ?? {},
     },
   };
-  return base;
 }
 
 function irEdgeToRFEdge(edge: GridEdge): Edge {
@@ -32,8 +31,12 @@ function irEdgeToRFEdge(edge: GridEdge): Edge {
     id: edge.id,
     source: edge.from,
     target: edge.to,
-    type: edge.animated === true ? 'animatedEdge' : 'default',
+    type: edge.animated === true ? 'smoothstep' : 'default',
     animated: edge.animated === true,
+    style: { stroke: '#64748b', strokeWidth: 1.75 },
+    labelStyle: { fontSize: 11, fill: '#475569', fontWeight: 500 },
+    labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9 },
+    markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b', width: 18, height: 18 },
     data: {
       protocol: edge.protocol,
       latency_ms: edge.latency_ms,
@@ -57,20 +60,21 @@ function hasAuthoredPositions(irNodes: readonly GridNode[]): boolean {
 
 function applyDagreLayout(nodes: Node[], edges: Edge[]): Node[] {
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: 'LR', nodesep: 80, ranksep: 120 });
+  g.setGraph({ rankdir: 'LR', nodesep: 80, ranksep: 150, marginx: 40, marginy: 40 });
   g.setDefaultEdgeLabel(() => ({}));
 
   nodes.forEach((node) => {
     g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   });
   edges.forEach((edge) => {
-    g.setEdge(edge.source, edge.target);
+    if (edge.source && edge.target) g.setEdge(edge.source, edge.target);
   });
 
   dagre.layout(g);
 
   return nodes.map((node) => {
     const pos = g.node(node.id);
+    if (!pos) return { ...node, position: { x: 0, y: 0 } };
     return {
       ...node,
       position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
