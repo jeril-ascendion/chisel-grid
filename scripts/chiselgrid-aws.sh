@@ -206,6 +206,52 @@ deploy_latest() {
     SMOKE_OK=0
   fi
 
+  # Asset integrity check — fetch each page, find every /_next/static/*
+  # reference in the HTML, and verify the chunk resolves 200 from S3.
+  # Catches CLAUDE.md rule #3 regressions (Lambda SSR'd HTML references
+  # a BUILD_ID whose chunks were never synced to S3 → unstyled pages
+  # that still return 200). We follow redirects so /admin's asset list
+  # comes from the /login page it redirects to.
+  check_assets() {
+    local label="$1"
+    local url="$2"
+    local html
+    html=$(curl -sL "$url" 2>/dev/null) || { warn "$label: fetch failed"; SMOKE_OK=0; return; }
+    local assets
+    assets=$(echo "$html" | grep -oE '/_next/static/[A-Za-z0-9/_.+-]+\.(css|js|woff2|woff)' | sort -u)
+    local total=0
+    local bad=0
+    local bad_list=""
+    for asset in $assets; do
+      total=$((total + 1))
+      local code
+      code=$(curl -s -o /dev/null -w "%{http_code}" "https://www.chiselgrid.com${asset}")
+      if [ "$code" != "200" ]; then
+        bad=$((bad + 1))
+        bad_list="${bad_list}      ${code}  ${asset}\n"
+      fi
+    done
+    if [ $total -eq 0 ]; then
+      echo "  Assets for $label: no /_next/static refs found (skipping)"
+    elif [ $bad -eq 0 ]; then
+      echo "  Assets for $label: ${total}/${total} OK"
+    else
+      warn "Assets for $label: ${bad}/${total} chunks broken:"
+      printf "%b" "$bad_list"
+      warn "  Fix: aws s3 sync apps/web/.open-next/assets/_next/static/ s3://$S3_BUCKET/_next/static/ \\"
+      warn "         --cache-control \"public,max-age=31536000,immutable\" \\"
+      warn "         --profile \$AWS_PROFILE --region \$AWS_REGION"
+      warn "  (See CLAUDE.md rule #3 — OpenNext BUILD_ID chunks missing in S3.)"
+      SMOKE_OK=0
+    fi
+  }
+  check_assets "homepage"   "https://www.chiselgrid.com"
+  check_assets "/login"     "https://www.chiselgrid.com/login"
+  # /admin redirects to /login — curl -L will fetch /login HTML. That still
+  # validates the Lambda BUILD_ID's chunks, which is what matters.
+  check_assets "/admin"     "https://www.chiselgrid.com/admin"
+  check_assets "category"   "https://www.chiselgrid.com/category/cloud-architecture"
+
   if [ $SMOKE_OK -eq 1 ]; then
     ok "Smoke test passed."
   else
