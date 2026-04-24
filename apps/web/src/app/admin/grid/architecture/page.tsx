@@ -99,12 +99,14 @@ export default function ArchitecturePage() {
   const [attachment, setAttachment] = useState<{ name: string; type: string } | null>(null);
   const [restored, setRestored] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const templatesRef = useRef<HTMLDivElement | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!templatesOpen) return;
@@ -187,8 +189,15 @@ export default function ArchitecturePage() {
 
   const lastPromptRef = useRef<string>('');
 
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, []);
+
   const runGeneration = useCallback(
-    async (text: string) => {
+    async (text: string, isRetry = false) => {
       setIsGenerating(true);
       try {
         const res = await fetch('/api/admin/grid/generate', {
@@ -211,18 +220,54 @@ export default function ArchitecturePage() {
           } catch {
             detail = await res.text().catch(() => '');
           }
-          setMessages((m) => [
-            ...m,
-            {
-              role: 'ai',
-              content:
-                res.status === 504
-                  ? 'Aurora is waking up. Click Retry or it will auto-retry in 10 seconds.'
-                  : `Generation failed (${res.status}). ${detail.slice(0, 200)}`,
-              error: true,
-              retryable: retryable || res.status === 504,
-            },
-          ]);
+
+          if (res.status === 504) {
+            // Aurora cold start. Collapse any prior Aurora status line into one.
+            clearRetryTimer();
+            if (isRetry) {
+              // Auto-retry already fired — stop. User must click Retry manually.
+              setIsRetrying(false);
+              setMessages((m) => [
+                ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
+                {
+                  role: 'ai',
+                  content:
+                    'Aurora is still waking. Please click Retry in 30 seconds.',
+                  error: true,
+                  retryable: true,
+                },
+              ]);
+            } else {
+              setMessages((m) => [
+                ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
+                {
+                  role: 'ai',
+                  content: 'Aurora is waking up. Auto-retrying in 15 seconds...',
+                  retryable: true,
+                },
+              ]);
+              setIsRetrying(true);
+              retryTimerRef.current = setTimeout(() => {
+                retryTimerRef.current = null;
+                setIsRetrying(false);
+                setMessages((m) => [
+                  ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
+                  { role: 'ai', content: 'Retrying...', retryable: false },
+                ]);
+                void runGeneration(text, true);
+              }, 15_000);
+            }
+          } else {
+            setMessages((m) => [
+              ...m,
+              {
+                role: 'ai',
+                content: `Generation failed (${res.status}). ${detail.slice(0, 200)}`,
+                error: true,
+                retryable,
+              },
+            ]);
+          }
           return;
         }
 
@@ -234,7 +279,7 @@ export default function ArchitecturePage() {
         setGridIR(data.gridIR);
         const label = formatDiagramType(data.gridIR.diagram_type);
         setMessages((m) => [
-          ...m,
+          ...m.filter((msg) => !msg.content.startsWith('Aurora is ') && msg.content !== 'Retrying...'),
           {
             role: 'ai',
             content: `Generated ${label} with ${data.gridIR.nodes.length} nodes and ${data.gridIR.edges.length} edges.`,
@@ -256,12 +301,17 @@ export default function ArchitecturePage() {
         setIsGenerating(false);
       }
     },
-    [diagramType, gridIR],
+    [diagramType, gridIR, clearRetryTimer],
   );
 
   const handleGenerate = useCallback(async () => {
     const text = prompt.trim();
     if (!text || isGenerating) return;
+
+    // User typed a fresh prompt — cancel any pending Aurora auto-retry so we
+    // don't race a stale retry against the new request.
+    clearRetryTimer();
+    setIsRetrying(false);
 
     const userContent = attachment ? `${text}\n📎 ${attachment.name}` : text;
     setMessages((m) => [...m, { role: 'user', content: userContent }]);
@@ -269,13 +319,23 @@ export default function ArchitecturePage() {
     setAttachment(null);
     lastPromptRef.current = text;
     await runGeneration(text);
-  }, [prompt, isGenerating, attachment, runGeneration]);
+  }, [prompt, isGenerating, attachment, runGeneration, clearRetryTimer]);
 
   const handleRetry = useCallback(async () => {
     const text = lastPromptRef.current;
     if (!text || isGenerating) return;
-    await runGeneration(text);
-  }, [isGenerating, runGeneration]);
+    // Manual click cancels any pending auto-retry and clears the status line.
+    clearRetryTimer();
+    setIsRetrying(false);
+    setMessages((m) => m.filter((msg) => !msg.content.startsWith('Aurora is ')));
+    await runGeneration(text, true);
+  }, [isGenerating, runGeneration, clearRetryTimer]);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, []);
 
   const handleApplyFixes = useCallback(
     async (findings: ValidationFinding[], messageIndex: number) => {
@@ -301,17 +361,6 @@ export default function ArchitecturePage() {
       ),
     );
   }, []);
-
-  // Auto-retry once, 10 seconds after the most recent retryable 504.
-  useEffect(() => {
-    const last = messages[messages.length - 1];
-    if (!last || !last.retryable || last.role !== 'ai') return;
-    const id = setTimeout(() => {
-      if (lastPromptRef.current) void handleRetry();
-    }, 10_000);
-    return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages.length]);
 
   const toggleRecording = useCallback(() => {
     const Ctor = getSpeechRecognition();
@@ -552,7 +601,7 @@ export default function ArchitecturePage() {
                       onClick={() => void handleRetry()}
                       className="mt-2 inline-flex items-center gap-1 rounded-md bg-red-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-red-700"
                     >
-                      Retry
+                      {isRetrying ? 'Retry now' : 'Retry'}
                     </button>
                   )}
                   {m.role === 'ai' && m.validation && !m.dismissed && (
