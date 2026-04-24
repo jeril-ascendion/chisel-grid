@@ -176,17 +176,42 @@ deploy_latest() {
   ok "Deployed! chiselgrid.com updates in 2-3 minutes."
   echo "  URL: https://www.chiselgrid.com"
 
-  # Regression guard — /admin must redirect. If it ever returns 200 the auth
-  # layer is broken (see CLAUDE.md CRITICAL PERMANENT RULE #2).
-  log "Verifying /admin auth redirect…"
-  sleep 10
-  ADMIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/admin || echo "000")
-  if [ "$ADMIN_STATUS" = "307" ] || [ "$ADMIN_STATUS" = "302" ] || [ "$ADMIN_STATUS" = "308" ]; then
-    ok "/admin returns $ADMIN_STATUS redirect — auth guard intact"
-  else
-    warn "/admin returned $ADMIN_STATUS — auth guard may have regressed! See CLAUDE.md rule #2."
-    warn "  Do not ship until /admin returns 307 or 302."
+  echo ""
+  log "=== Post-deploy smoke test ==="
+  sleep 30
+  HOME_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com || echo "000")
+  LOGIN_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/login || echo "000")
+  ADMIN_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/admin || echo "000")
+
+  echo "  Homepage : $HOME_CODE  (expect 200)"
+  echo "  Login    : $LOGIN_CODE  (expect 200)"
+  echo "  Admin    : $ADMIN_CODE  (expect 307)"
+
+  SMOKE_OK=1
+  # /admin returning 200 means CloudFront is routing /admin to S3, bypassing
+  # the Lambda auth guard (see CLAUDE.md "CLOUDFRONT BEHAVIOR REGRESSION").
+  if [ "$ADMIN_CODE" = "200" ]; then
+    echo ""
+    warn "CRITICAL: /admin returned 200 — CloudFront is serving S3 not Lambda."
+    warn "          CSS will be broken. Run: bash scripts/fix-cloudfront-behaviors.sh"
+    echo ""
+    SMOKE_OK=0
   fi
+  if [ "$ADMIN_CODE" != "307" ] && [ "$ADMIN_CODE" != "302" ] && [ "$ADMIN_CODE" != "308" ]; then
+    warn "/admin returned $ADMIN_CODE — auth redirect missing (CLAUDE.md rule #2)."
+    SMOKE_OK=0
+  fi
+  if [ "$HOME_CODE" != "200" ] || [ "$LOGIN_CODE" != "200" ]; then
+    warn "Homepage or /login returned non-200 — check CloudFront behaviors."
+    SMOKE_OK=0
+  fi
+
+  if [ $SMOKE_OK -eq 1 ]; then
+    ok "Smoke test passed."
+  else
+    warn "Smoke test failed. Do not demo until resolved."
+  fi
+  log "=== Smoke test complete ==="
 }
 
 case "${1:-status}" in

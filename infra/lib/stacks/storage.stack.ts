@@ -52,19 +52,34 @@ export class StorageStack extends Stack {
       autoDeleteObjects: config.enableDeletion,
     });
 
-    // CloudFront distribution with OAC for both buckets.
+    // CloudFront distribution with OAC for both buckets + Lambda (API Gateway)
+    // origin for dynamic Next.js routes.
     //
-    // WARNING — DO NOT REDEPLOY THIS STACK WITHOUT SYNCING BEHAVIORS.
-    // The live distribution (EWLP3KOX3KKTV) has three additional cache
-    // behaviors that are managed OUTSIDE CDK and are not reflected here:
-    //   /admin    → API Gateway origin (Lambda), CACHING_DISABLED
-    //   /admin/*  → API Gateway origin (Lambda), CACHING_DISABLED
-    //   /api/*    → API Gateway origin (Lambda), CACHING_DISABLED
-    // The /admin and /admin/* behaviors enforce the server-side auth redirect
-    // (CLAUDE.md CRITICAL PERMANENT RULE #2). Re-deploying this CDK stack as-is
-    // will remove those behaviors and regress auth protection. Before deploy:
-    //   1. Add the missing behaviors to `additionalBehaviors` here, OR
-    //   2. Reapply them via AWS CLI immediately after deploy.
+    // CRITICAL — The paths in `additionalBehaviors` below are the contract
+    // between CloudFront and the Next.js Lambda. This has regressed 4+ times
+    // when behaviors were managed manually in the AWS console. Every path
+    // here MUST remain pinned to the API Gateway origin. See CLAUDE.md rule:
+    // "CLOUDFRONT BEHAVIOR REGRESSION".
+    //
+    // The API Gateway domain is hardcoded because it lives in `WebStack`
+    // (ChiselGrid-Dev-Web / NextjsHttpApiC1301D2C). Cross-stack reference is
+    // avoided to keep this stack deployable independently of WebStack.
+    // If the API Gateway ID ever changes, update `apiGatewayDomain` below
+    // AND rerun the post-deploy smoke test in scripts/chiselgrid-aws.sh.
+    const apiGatewayDomain = `ux71c274nd.execute-api.${config.region}.amazonaws.com`;
+    const apiOrigin = new origins.HttpOrigin(apiGatewayDomain, {
+      protocolPolicy: cf.OriginProtocolPolicy.HTTPS_ONLY,
+    });
+
+    const lambdaBehavior: cf.BehaviorOptions = {
+      origin: apiOrigin,
+      viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      allowedMethods: cf.AllowedMethods.ALLOW_ALL,
+      cachePolicy: cf.CachePolicy.CACHING_DISABLED,
+      originRequestPolicy: cf.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+      compress: true,
+    };
+
     const distribution = new cf.Distribution(this, 'WebDistribution', {
       comment: `ChiselGrid Web Distribution — ${id}`,
       defaultRootObject: 'index.html',
@@ -75,6 +90,17 @@ export class StorageStack extends Stack {
         allowedMethods: cf.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
       },
       additionalBehaviors: {
+        // Lambda-served dynamic routes — MUST stay pinned to API Gateway.
+        '/api/*':        lambdaBehavior,
+        '/admin':        lambdaBehavior,
+        '/admin/*':      lambdaBehavior,
+        '/login':        lambdaBehavior,
+        '/login/*':      lambdaBehavior,
+        '/category/*':   lambdaBehavior,
+        '/articles/*':   lambdaBehavior,
+        '/search*':      lambdaBehavior,
+        '/_next/data/*': lambdaBehavior,
+        // Media bucket (separate S3 origin).
         '/media/*': {
           origin: origins.S3BucketOrigin.withOriginAccessControl(mediaBucket),
           viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,

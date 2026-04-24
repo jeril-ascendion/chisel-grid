@@ -68,6 +68,37 @@
        ls apps/web/.open-next/assets/_next/static/ | grep -E '^[A-Za-z0-9_-]{20,}$'
    The listed BUILD_ID dir must exist under _next/static/ in S3.
 
+4. CLOUDFRONT BEHAVIOR REGRESSION — This has regressed 4+ times. Every
+   CDK or console change risks removing the Lambda cache behaviors that
+   serve /admin, /api, and other dynamic routes, causing /admin to be
+   served from the S3 default origin (unstyled, no auth redirect, 200
+   instead of 307).
+
+   The live distribution is EWLP3KOX3KKTV, owned by the
+   ChiselGrid-Dev-Storage stack (infra/lib/stacks/storage.stack.ts — NOT
+   web.stack.ts; WebStack creates an unused distribution E23TR00XJJCH02).
+
+   The storage stack MUST declare these nine paths in `additionalBehaviors`,
+   all pointing to the API Gateway (Lambda) origin with
+   CACHING_DISABLED + ALL_VIEWER_EXCEPT_HOST_HEADER + ALLOW_ALL methods:
+
+       /api/*   /admin   /admin/*   /login   /login/*
+       /category/*   /articles/*   /search*   /_next/data/*
+
+   The API Gateway origin is hardcoded in storage.stack.ts as
+   `ux71c274nd.execute-api.ap-southeast-1.amazonaws.com` because the
+   HttpApi lives in a different stack (ChiselGrid-Dev-Web /
+   NextjsHttpApiC1301D2C). If that API ID ever changes, update the
+   hardcode and rerun the smoke test.
+
+   Mandatory post-deploy check (already baked into
+   scripts/chiselgrid-aws.sh deploy):
+       curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/admin
+   MUST return 307. If it returns 200, run:
+       bash scripts/fix-cloudfront-behaviors.sh
+
+   The fix script is idempotent — safe to run any time behaviors drift.
+
 ## Architecture Decisions (Follow These Always)
 - Content stored as `ContentBlock[]` JSON in Aurora JSONB column — see packages/types/src/content.ts
 - AI agent workflows run in Step Functions — never block synchronous API responses
