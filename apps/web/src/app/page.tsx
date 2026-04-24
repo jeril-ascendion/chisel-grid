@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { getArticles, getCategories } from '@/lib/mock-data';
+import { getCategories } from '@/lib/mock-data';
+import { getPublishedArticles } from '@/lib/db/articles';
+import { DEFAULT_TENANT_ID } from '@/lib/db/aurora';
 import { ArticleCard } from '@/components/common/article-card';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { formatDate } from '@/lib/utils';
@@ -13,8 +15,8 @@ const CATEGORY_ICONS: Record<string, string> = {
   users: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
 };
 
-export default function HomePage() {
-  const { items: articles } = getArticles({ limit: 6 });
+export default async function HomePage() {
+  const articles = await getPublishedArticles(DEFAULT_TENANT_ID, 6);
   const categories = getCategories();
   const featured = articles[0];
 
@@ -89,11 +91,15 @@ export default function HomePage() {
             View all
           </Link>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.slice(0, 6).map((article) => (
-            <ArticleCard key={article.contentId} article={article} />
-          ))}
-        </div>
+        {articles.length > 0 ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {articles.slice(0, 6).map((article) => (
+              <ArticleCard key={article.contentId} article={article} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground py-8 text-center">Content coming soon.</p>
+        )}
       </section>
 
     </div>

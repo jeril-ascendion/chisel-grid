@@ -1,14 +1,18 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getArticleBySlug, getRelatedArticles, MOCK_ARTICLES } from '@/lib/mock-data';
+import {
+  getArticleBySlug,
+  getArticlesByCategory,
+  getAllPublishedSlugs,
+} from '@/lib/db/articles';
+import { DEFAULT_TENANT_ID } from '@/lib/db/aurora';
 import { BlockRenderer } from '@/components/content/block-renderer';
 import { TableOfContents } from '@/components/content/table-of-contents';
 import { AudioPlayer } from '@/components/content/audio-player';
 import { ArticleCard } from '@/components/common/article-card';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { formatDate, SITE_NAME, SITE_URL } from '@/lib/utils';
-import type { ContentBlock } from '@chiselgrid/types';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -16,7 +20,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(DEFAULT_TENANT_ID, slug);
   if (!article) return {};
 
   const title = article.seoMetaTitle ?? article.title;
@@ -41,16 +45,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  return MOCK_ARTICLES.map((a) => ({ slug: a.slug }));
+  const slugs = await getAllPublishedSlugs(DEFAULT_TENANT_ID);
+  return slugs.map((slug) => ({ slug }));
 }
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(DEFAULT_TENANT_ID, slug);
 
   if (!article) notFound();
 
-  const related = getRelatedArticles(article.contentId, 3);
+  const sameCategory = await getArticlesByCategory(
+    DEFAULT_TENANT_ID,
+    article.categorySlug,
+  );
+  const related = sameCategory
+    .filter((a) => a.contentId !== article.contentId)
+    .slice(0, 3);
 
   // JSON-LD structured data
   const jsonLd = {

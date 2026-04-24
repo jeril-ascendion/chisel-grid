@@ -1,7 +1,12 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getCategoryBySlug, getArticles, getCategories } from '@/lib/mock-data';
+import {
+  getArticlesByCategory,
+  getCategoryBySlug,
+  getCategorySlugsWithPublishedContent,
+} from '@/lib/db/articles';
+import { DEFAULT_TENANT_ID } from '@/lib/db/aurora';
 import { ArticleCard } from '@/components/common/article-card';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { SITE_URL } from '@/lib/utils';
@@ -12,7 +17,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(DEFAULT_TENANT_ID, slug);
   if (!category) return {};
 
   return {
@@ -25,7 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  return getCategories().map((c) => ({ slug: c.slug }));
+  const slugs = await getCategorySlugsWithPublishedContent(DEFAULT_TENANT_ID);
+  return slugs.map((slug) => ({ slug }));
 }
 
 const ITEMS_PER_PAGE = 12;
@@ -33,19 +39,17 @@ const ITEMS_PER_PAGE = 12;
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
 
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(DEFAULT_TENANT_ID, slug);
   if (!category) notFound();
 
-  const { items: articles, total } = getArticles({
-    categorySlug: slug,
-    limit: ITEMS_PER_PAGE,
-  });
+  const allArticles = await getArticlesByCategory(DEFAULT_TENANT_ID, slug);
+  const articles = allArticles.slice(0, ITEMS_PER_PAGE);
+  const total = allArticles.length;
 
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  // Collect unique tags from articles for filter
+  // Tags not yet wired to Aurora — leave empty for now.
   const allTags = new Map<string, string>();
-  articles.forEach((a) => a.tags.forEach((t) => allTags.set(t.slug, t.name)));
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',
