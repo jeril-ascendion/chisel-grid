@@ -2,9 +2,21 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GridIR } from '@chiselgrid/grid-ir';
+import { TEMPLATES, type GridIR } from '@chiselgrid/grid-ir';
 import { useSessionId } from '@/hooks/use-session-id';
 import { upsertRecentSession } from '@/lib/recent-sessions';
+
+interface TemplateOption {
+  key: string;
+  label: string;
+  emoji: string;
+}
+
+const TEMPLATE_OPTIONS: TemplateOption[] = [
+  { key: 'aws_payment_serverless', label: 'Serverless Payment API', emoji: '💳' },
+  { key: 'c4_context_banking', label: 'C4 Banking Context', emoji: '🏗️' },
+  { key: 'aws_microservices', label: 'Microservices', emoji: '⚙️' },
+];
 
 const DiagramCanvas = dynamic(
   () => import('@chiselgrid/grid-renderer').then((m) => m.DiagramCanvas),
@@ -16,11 +28,35 @@ const DiagramToolbar = dynamic(
   { ssr: false },
 );
 
+interface ValidationFinding {
+  severity: 'critical' | 'warning' | 'info';
+  rule: string;
+  message: string;
+  fix: string;
+  affectedNodeIds?: string[];
+}
+
+interface ValidationSummary {
+  score: number;
+  valid: boolean;
+  criticalCount: number;
+  warningCount: number;
+  findings: ValidationFinding[];
+}
+
 interface ChatMessage {
   role: 'user' | 'ai';
   content: string;
   error?: boolean;
   retryable?: boolean;
+  validation?: ValidationSummary;
+  dismissed?: boolean;
+}
+
+function scoreBadgeClass(score: number): string {
+  if (score >= 90) return 'bg-green-600 text-white';
+  if (score >= 70) return 'bg-amber-500 text-white';
+  return 'bg-red-600 text-white';
 }
 
 type SpeechCtor = new () => SpeechRecognitionInstance;
@@ -62,11 +98,48 @@ export default function ArchitecturePage() {
   const [isRecording, setIsRecording] = useState(false);
   const [attachment, setAttachment] = useState<{ name: string; type: string } | null>(null);
   const [restored, setRestored] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const templatesRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!templatesOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (!templatesRef.current) return;
+      if (!templatesRef.current.contains(e.target as Node)) {
+        setTemplatesOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [templatesOpen]);
+
+  const handleLoadTemplate = useCallback((option: TemplateOption) => {
+    const template = TEMPLATES[option.key];
+    if (!template) {
+      setMessages((m) => [
+        ...m,
+        { role: 'ai', content: `Template "${option.label}" is not available.`, error: true },
+      ]);
+      setTemplatesOpen(false);
+      return;
+    }
+    const cloned = JSON.parse(JSON.stringify(template)) as GridIR;
+    setGridIR(cloned);
+    setDiagramType(cloned.diagram_type);
+    setMessages((m) => [
+      ...m,
+      {
+        role: 'ai',
+        content: `Loaded ${option.label} template. You can now refine it with prompts.`,
+      },
+    ]);
+    setTemplatesOpen(false);
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -153,7 +226,11 @@ export default function ArchitecturePage() {
           return;
         }
 
-        const data = (await res.json()) as { gridIR: GridIR; diagramId: string | null };
+        const data = (await res.json()) as {
+          gridIR: GridIR;
+          diagramId: string | null;
+          validation?: ValidationSummary;
+        };
         setGridIR(data.gridIR);
         const label = formatDiagramType(data.gridIR.diagram_type);
         setMessages((m) => [
@@ -161,6 +238,7 @@ export default function ArchitecturePage() {
           {
             role: 'ai',
             content: `Generated ${label} with ${data.gridIR.nodes.length} nodes and ${data.gridIR.edges.length} edges.`,
+            validation: data.validation,
           },
         ]);
       } catch (err) {
@@ -198,6 +276,31 @@ export default function ArchitecturePage() {
     if (!text || isGenerating) return;
     await runGeneration(text);
   }, [isGenerating, runGeneration]);
+
+  const handleApplyFixes = useCallback(
+    async (findings: ValidationFinding[], messageIndex: number) => {
+      if (isGenerating || findings.length === 0) return;
+      const fixPrompt =
+        'Fix these architectural issues in the current diagram:\n' +
+        findings.map((f) => f.fix).join('. ');
+      setMessages((m) =>
+        m.map((msg, i) =>
+          i === messageIndex ? { ...msg, dismissed: true } : msg,
+        ).concat({ role: 'user', content: fixPrompt }),
+      );
+      lastPromptRef.current = fixPrompt;
+      await runGeneration(fixPrompt);
+    },
+    [isGenerating, runGeneration],
+  );
+
+  const handleDismissValidation = useCallback((messageIndex: number) => {
+    setMessages((m) =>
+      m.map((msg, i) =>
+        i === messageIndex ? { ...msg, dismissed: true } : msg,
+      ),
+    );
+  }, []);
 
   // Auto-retry once, 10 seconds after the most recent retryable 504.
   useEffect(() => {
@@ -299,11 +402,74 @@ export default function ArchitecturePage() {
     <div className="flex h-[calc(100vh-7rem)] gap-4">
       {/* LEFT PANEL — 60% — Diagram canvas */}
       <div className="flex flex-[3] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
-        <DiagramToolbar
-          diagramType={diagramType}
-          onDiagramTypeChange={setDiagramType}
-          onExportPNG={handleExportPNG}
-        />
+        <div className="flex items-center gap-2 border-b border-border bg-white px-3 py-2">
+          <div ref={templatesRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setTemplatesOpen((v) => !v)}
+              className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+              aria-haspopup="menu"
+              aria-expanded={templatesOpen}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+              </svg>
+              Templates
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {templatesOpen && (
+              <div
+                role="menu"
+                className="absolute left-0 top-full z-20 mt-1 w-64 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+              >
+                {TEMPLATE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleLoadTemplate(opt)}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <span aria-hidden className="text-base">
+                      {opt.emoji}
+                    </span>
+                    <span>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <DiagramToolbar
+              diagramType={diagramType}
+              onDiagramTypeChange={setDiagramType}
+              onExportPNG={handleExportPNG}
+            />
+          </div>
+        </div>
         <div className="relative flex-1 min-h-0">
           {gridIR ? (
             <DiagramCanvas gridIR={gridIR} />
@@ -388,6 +554,82 @@ export default function ArchitecturePage() {
                     >
                       Retry
                     </button>
+                  )}
+                  {m.role === 'ai' && m.validation && !m.dismissed && (
+                    <div className="mt-3 rounded-md border border-border bg-background/60 p-2 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${scoreBadgeClass(
+                              m.validation.score,
+                            )}`}
+                          >
+                            Architecture Score: {m.validation.score}/100
+                          </span>
+                          <span className="text-xs">
+                            🔴 {m.validation.criticalCount} Critical
+                          </span>
+                          <span className="text-xs">
+                            🟡 {m.validation.warningCount} Warnings
+                          </span>
+                        </div>
+                      </div>
+                      {m.validation.findings.filter((f) => f.severity === 'critical').length > 0 && (
+                        <ul className="space-y-1 text-xs">
+                          {m.validation.findings
+                            .filter((f) => f.severity === 'critical')
+                            .map((f) => (
+                              <li
+                                key={f.rule}
+                                className="flex gap-2 text-red-700 dark:text-red-300"
+                              >
+                                <span aria-hidden>•</span>
+                                <span>
+                                  <strong>{f.rule}:</strong> {f.message}
+                                </span>
+                              </li>
+                            ))}
+                        </ul>
+                      )}
+                      {m.validation.findings.filter((f) => f.severity === 'warning').length > 0 && (
+                        <ul className="space-y-1 text-xs">
+                          {m.validation.findings
+                            .filter((f) => f.severity === 'warning')
+                            .map((f) => (
+                              <li
+                                key={f.rule}
+                                className="flex gap-2 text-amber-700 dark:text-amber-300"
+                              >
+                                <span aria-hidden>•</span>
+                                <span>
+                                  <strong>{f.rule}:</strong> {f.message}
+                                </span>
+                              </li>
+                            ))}
+                        </ul>
+                      )}
+                      {m.validation.findings.length > 0 && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            disabled={isGenerating}
+                            onClick={() =>
+                              void handleApplyFixes(m.validation!.findings, i)
+                            }
+                            className="inline-flex items-center gap-1 rounded-md bg-blue-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Apply All Fixes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDismissValidation(i)}
+                            className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               );
