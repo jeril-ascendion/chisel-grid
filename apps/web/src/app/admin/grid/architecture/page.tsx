@@ -20,6 +20,7 @@ interface ChatMessage {
   role: 'user' | 'ai';
   content: string;
   error?: boolean;
+  retryable?: boolean;
 }
 
 type SpeechCtor = new () => SpeechRecognitionInstance;
@@ -111,6 +112,75 @@ export default function ArchitecturePage() {
     ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
   }, [prompt]);
 
+  const lastPromptRef = useRef<string>('');
+
+  const runGeneration = useCallback(
+    async (text: string) => {
+      setIsGenerating(true);
+      try {
+        const res = await fetch('/api/admin/grid/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: text,
+            diagramType,
+            existingIR: gridIR ?? undefined,
+          }),
+        });
+
+        if (!res.ok) {
+          let retryable = false;
+          let detail = '';
+          try {
+            const parsed = (await res.json()) as { detail?: string; retryable?: boolean };
+            detail = parsed.detail ?? '';
+            retryable = parsed.retryable === true;
+          } catch {
+            detail = await res.text().catch(() => '');
+          }
+          setMessages((m) => [
+            ...m,
+            {
+              role: 'ai',
+              content:
+                res.status === 504
+                  ? 'Aurora is waking up. Click Retry or it will auto-retry in 10 seconds.'
+                  : `Generation failed (${res.status}). ${detail.slice(0, 200)}`,
+              error: true,
+              retryable: retryable || res.status === 504,
+            },
+          ]);
+          return;
+        }
+
+        const data = (await res.json()) as { gridIR: GridIR; diagramId: string | null };
+        setGridIR(data.gridIR);
+        const label = formatDiagramType(data.gridIR.diagram_type);
+        setMessages((m) => [
+          ...m,
+          {
+            role: 'ai',
+            content: `Generated ${label} with ${data.gridIR.nodes.length} nodes and ${data.gridIR.edges.length} edges.`,
+          },
+        ]);
+      } catch (err) {
+        setMessages((m) => [
+          ...m,
+          {
+            role: 'ai',
+            content:
+              'Request failed: ' + (err instanceof Error ? err.message : String(err)),
+            error: true,
+            retryable: true,
+          },
+        ]);
+      } finally {
+        setIsGenerating(false);
+      }
+    },
+    [diagramType, gridIR],
+  );
+
   const handleGenerate = useCallback(async () => {
     const text = prompt.trim();
     if (!text || isGenerating) return;
@@ -119,56 +189,26 @@ export default function ArchitecturePage() {
     setMessages((m) => [...m, { role: 'user', content: userContent }]);
     setPrompt('');
     setAttachment(null);
-    setIsGenerating(true);
+    lastPromptRef.current = text;
+    await runGeneration(text);
+  }, [prompt, isGenerating, attachment, runGeneration]);
 
-    try {
-      const res = await fetch('/api/admin/grid/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: text,
-          diagramType,
-          existingIR: gridIR ?? undefined,
-        }),
-      });
+  const handleRetry = useCallback(async () => {
+    const text = lastPromptRef.current;
+    if (!text || isGenerating) return;
+    await runGeneration(text);
+  }, [isGenerating, runGeneration]);
 
-      if (!res.ok) {
-        const detail = await res.text();
-        setMessages((m) => [
-          ...m,
-          {
-            role: 'ai',
-            content: `Generation failed (${res.status}). ${detail.slice(0, 200)}`,
-            error: true,
-          },
-        ]);
-        return;
-      }
-
-      const data = (await res.json()) as { gridIR: GridIR; diagramId: string | null };
-      setGridIR(data.gridIR);
-      const label = formatDiagramType(data.gridIR.diagram_type);
-      setMessages((m) => [
-        ...m,
-        {
-          role: 'ai',
-          content: `Generated ${label} with ${data.gridIR.nodes.length} nodes and ${data.gridIR.edges.length} edges.`,
-        },
-      ]);
-    } catch (err) {
-      setMessages((m) => [
-        ...m,
-        {
-          role: 'ai',
-          content:
-            'Request failed: ' + (err instanceof Error ? err.message : String(err)),
-          error: true,
-        },
-      ]);
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [prompt, diagramType, gridIR, isGenerating, attachment]);
+  // Auto-retry once, 10 seconds after the most recent retryable 504.
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (!last || !last.retryable || last.role !== 'ai') return;
+    const id = setTimeout(() => {
+      if (lastPromptRef.current) void handleRetry();
+    }, 10_000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length]);
 
   const toggleRecording = useCallback(() => {
     const Ctor = getSpeechRecognition();
@@ -323,23 +363,35 @@ export default function ArchitecturePage() {
               </p>
             </div>
           ) : (
-            messages.map((m, i) => (
-              <div
-                key={i}
-                className={
-                  m.role === 'user'
-                    ? 'ml-8 rounded-lg bg-blue-600 text-white px-3 py-2 text-sm whitespace-pre-wrap break-words'
-                    : m.error
-                      ? 'mr-8 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800 px-3 py-2 text-sm whitespace-pre-wrap break-words'
-                      : 'mr-8 rounded-lg bg-muted text-foreground px-3 py-2 text-sm whitespace-pre-wrap break-words'
-                }
-              >
-                <div className="text-[10px] uppercase tracking-wider opacity-60 mb-1">
-                  {m.role === 'user' ? 'You' : 'Grid AI'}
+            messages.map((m, i) => {
+              const isLast = i === messages.length - 1;
+              return (
+                <div
+                  key={i}
+                  className={
+                    m.role === 'user'
+                      ? 'ml-8 rounded-lg bg-blue-600 text-white px-3 py-2 text-sm whitespace-pre-wrap break-words'
+                      : m.error
+                        ? 'mr-8 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800 px-3 py-2 text-sm whitespace-pre-wrap break-words'
+                        : 'mr-8 rounded-lg bg-muted text-foreground px-3 py-2 text-sm whitespace-pre-wrap break-words'
+                  }
+                >
+                  <div className="text-[10px] uppercase tracking-wider opacity-60 mb-1">
+                    {m.role === 'user' ? 'You' : 'Grid AI'}
+                  </div>
+                  {m.content}
+                  {m.retryable && isLast && !isGenerating && (
+                    <button
+                      type="button"
+                      onClick={() => void handleRetry()}
+                      className="mt-2 inline-flex items-center gap-1 rounded-md bg-red-600 text-white px-2.5 py-1 text-xs font-medium hover:bg-red-700"
+                    >
+                      Retry
+                    </button>
+                  )}
                 </div>
-                {m.content}
-              </div>
-            ))
+              );
+            })
           )}
           <div ref={chatEndRef} />
         </div>

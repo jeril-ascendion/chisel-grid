@@ -13,6 +13,20 @@ export const maxDuration = 60;
 
 const VALID_DIAGRAM_TYPES = new Set<string>(Object.values(DiagramType));
 
+const BEDROCK_TIMEOUT_MS = 55_000;
+
+async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 interface SessionUser {
   email?: string | null;
   tenantId?: string;
@@ -70,15 +84,30 @@ export async function POST(req: NextRequest) {
 
   let gridIR: GridIR;
   try {
-    gridIR = await architectureAgent({
-      prompt,
-      diagramType,
-      ...(existingIR ? { existingIR } : {}),
-    });
+    gridIR = await withTimeout(
+      architectureAgent({
+        prompt,
+        diagramType,
+        ...(existingIR ? { existingIR } : {}),
+      }),
+      BEDROCK_TIMEOUT_MS,
+      'Diagram generation',
+    );
   } catch (err) {
+    const message = (err as Error).message;
     console.error('[api/admin/grid/generate] architectureAgent failed:', err);
+    if (message.includes('timed out')) {
+      return NextResponse.json(
+        {
+          error: 'Generation timed out',
+          detail: 'Aurora may be waking from idle. Please try again in 10 seconds.',
+          retryable: true,
+        },
+        { status: 504 },
+      );
+    }
     return NextResponse.json(
-      { error: 'Diagram generation failed', detail: (err as Error).message },
+      { error: 'Diagram generation failed', detail: message },
       { status: 502 },
     );
   }

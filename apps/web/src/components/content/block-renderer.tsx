@@ -99,6 +99,13 @@ function MermaidDiagram({ code }: { code: string }) {
           securityLevel: 'loose',
           fontFamily: 'IBM Plex Sans, sans-serif',
         });
+        // Validate first with suppressErrors so mermaid does not inject a
+        // "Syntax error in text" element into the DOM on invalid input.
+        const parsed = await mermaid.parse(code, { suppressErrors: true });
+        if (parsed === false) {
+          if (!cancelled) setError('invalid');
+          return;
+        }
         const { svg } = await mermaid.render(domId, code);
         if (!cancelled) setSvg(svg);
       } catch (e) {
@@ -107,6 +114,12 @@ function MermaidDiagram({ code }: { code: string }) {
     })();
     return () => {
       cancelled = true;
+      // Mermaid may leave orphan error nodes appended to <body>; sweep them.
+      if (typeof document !== 'undefined') {
+        document
+          .querySelectorAll(`#${domId}, [id^="d${domId}"]`)
+          .forEach((n) => n.remove());
+      }
     };
   }, [code, domId]);
 
