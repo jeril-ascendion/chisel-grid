@@ -6,6 +6,8 @@ import { DiagramType, TEMPLATES, type GridEdge, type GridIR, type GridNode } fro
 import { useSessionId } from '@/hooks/use-session-id';
 import { upsertRecentSession } from '@/lib/recent-sessions';
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
+import { ShareButton } from '@/components/workspace/share-button';
+import { fetchSession, saveSession } from '@/lib/session-client';
 
 interface TemplateOption {
   key: string;
@@ -185,36 +187,58 @@ export default function ArchitecturePage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
+  // Hydrate from server first (so a shared link in a new tab restores state),
+  // fall back to sessionStorage if the server has no record yet (first
+  // generation hasn't completed). sessionStorage stays as a fast-paint cache.
   useEffect(() => {
     if (!sessionId || restored) return;
-    try {
-      const raw = sessionStorage.getItem('grid_session_' + sessionId);
-      if (raw) {
-        const data = JSON.parse(raw) as {
-          schemaVersion?: number;
+    let cancelled = false;
+    const applyData = (data: {
+      messages?: ChatMessage[];
+      gridIR?: GridIR | null;
+      reasoningTrails?: Record<string, TrailEntry[]>;
+    }) => {
+      if (Array.isArray(data.messages)) {
+        // Legacy v1 records lack `id`; mint one for any message missing it.
+        setMessages(
+          data.messages.map((m) => (m.id ? m : { ...m, id: mkMessageId() })),
+        );
+      }
+      if (data.gridIR) setGridIR(data.gridIR);
+      if (data.reasoningTrails && typeof data.reasoningTrails === 'object') {
+        setCommittedTrails(data.reasoningTrails);
+      }
+    };
+    void (async () => {
+      const remote = await fetchSession(sessionId);
+      if (cancelled) return;
+      if (remote && remote.kind === 'grid') {
+        applyData(remote.state as {
           messages?: ChatMessage[];
           gridIR?: GridIR | null;
           reasoningTrails?: Record<string, TrailEntry[]>;
-        };
-        if (Array.isArray(data.messages)) {
-          // Legacy v1 records lack `id`; mint one for any message missing it.
-          setMessages(
-            data.messages.map((m) => (m.id ? m : { ...m, id: mkMessageId() })),
-          );
-        }
-        if (data.gridIR) setGridIR(data.gridIR);
-        if (data.reasoningTrails && typeof data.reasoningTrails === 'object') {
-          setCommittedTrails(data.reasoningTrails);
+        });
+      } else {
+        try {
+          const raw = sessionStorage.getItem('grid_session_' + sessionId);
+          if (raw) applyData(JSON.parse(raw));
+        } catch {
+          // ignore corrupt payloads
         }
       }
-    } catch {
-      // ignore corrupt payloads
-    }
-    setRestored(true);
+      if (!cancelled) setRestored(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId, restored]);
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!sessionId || !restored) return;
+    const title =
+      gridIR?.title || messages.find((m) => m.role === 'user')?.content?.slice(0, 40) || null;
     try {
       sessionStorage.setItem(
         'grid_session_' + sessionId,
@@ -230,10 +254,22 @@ export default function ArchitecturePage() {
     }
     upsertRecentSession({
       id: sessionId,
-      title: gridIR?.title || messages.find((m) => m.role === 'user')?.content?.slice(0, 40),
+      title: title ?? undefined,
       lastPage: '/admin/grid/architecture',
       updatedAt: Date.now(),
     });
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      void saveSession(sessionId, {
+        kind: 'grid',
+        title,
+        state: { messages, gridIR, reasoningTrails: committedTrails },
+      });
+    }, 1000);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
   }, [sessionId, restored, messages, gridIR, committedTrails]);
 
   useEffect(() => {
@@ -760,6 +796,7 @@ export default function ArchitecturePage() {
               onExportPNG={handleExportPNG}
             />
           </div>
+          <ShareButton />
         </div>
         <div className="relative flex-1 min-h-0">
           {gridIR ? (
