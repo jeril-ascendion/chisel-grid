@@ -65,10 +65,13 @@ describe('gridIRToExcalidraw', () => {
     expect(byId.get('node-3')!.backgroundColor).toBe('#F5F3FF'); // external
   });
 
-  it('binds arrows to source and target node ids', () => {
+  it('binds arrows to endpoints and emits L-shaped (elbowed) arrows', () => {
     const arrows = elements.filter((e): e is ExcalidrawArrow => e.type === 'arrow');
     expect(arrows[0]!.startBinding?.elementId).toBe('node-0');
     expect(arrows[0]!.endBinding?.elementId).toBe('node-1');
+    expect(arrows[0]!.elbowed).toBe(true);
+    expect(arrows[0]!.strokeColor).toBe('#374151');
+    expect(arrows[0]!.strokeWidth).toBe(1.5);
   });
 
   it('skips arrows whose endpoints are missing', () => {
