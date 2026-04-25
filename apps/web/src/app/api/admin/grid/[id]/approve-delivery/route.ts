@@ -42,7 +42,7 @@ export async function POST(
     const { rows } = await query<{ mode: string; article_id: string | null }>(
       `SELECT mode, article_id::text AS article_id
          FROM grid_diagrams
-        WHERE id = $1 AND tenant_id = $2`,
+        WHERE id = $1 AND tenant_id::text = $2::text`,
       [asUuid(id), tenantId],
     );
     const source = rows[0];
@@ -58,7 +58,7 @@ export async function POST(
 
     await query(
       `INSERT INTO grid_training_data (diagram_id, tenant_id, mode, approved_by, notes)
-       VALUES ($1, $2, 'precise', $3, $4)`,
+       VALUES ($1, $2::text, 'precise', $3, $4)`,
       [asUuid(id), tenantId, approvedBy, body.notes ?? null],
     );
 

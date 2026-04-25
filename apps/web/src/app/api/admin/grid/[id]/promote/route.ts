@@ -43,7 +43,7 @@ export async function POST(
     const { rows } = await query<SourceRow>(
       `SELECT id, title, diagram_type, grid_ir, mode
          FROM grid_diagrams
-        WHERE id = $1 AND tenant_id = $2`,
+        WHERE id = $1 AND tenant_id::text = $2::text`,
       [asUuid(id), tenantId],
     );
     const source = rows[0];
@@ -59,7 +59,7 @@ export async function POST(
 
     const { rows: insertRows } = await query<{ id: string }>(
       `INSERT INTO grid_diagrams (tenant_id, title, diagram_type, grid_ir, created_by, mode, parent_id)
-       VALUES ($1, $2, $3, $4::jsonb, $5, 'architecture', $6)
+       VALUES ($1::text, $2, $3, $4::jsonb, $5, 'architecture', $6)
        RETURNING id`,
       [
         tenantId,
