@@ -99,8 +99,8 @@ export function AdminSidebar({
     >
       <div
         className={cn(
-          'flex items-center border-b border-gray-200 dark:border-gray-700 py-3 gap-2',
-          collapsed ? 'justify-center px-2' : 'justify-between px-4',
+          'flex items-center border-b border-gray-200 dark:border-gray-700 py-3',
+          collapsed ? 'justify-center px-2' : 'px-4',
         )}
       >
         <Link
@@ -123,40 +123,7 @@ export function AdminSidebar({
             </div>
           )}
         </Link>
-        {!collapsed && (
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar (Ctrl+.)"
-            className="rounded-md p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <line x1="9" y1="3" x2="9" y2="21" />
-              <polyline points="15 9 19 13 15 17" />
-            </svg>
-          </button>
-        )}
       </div>
-
-      {collapsed && (
-        <div className="flex justify-center border-b border-gray-200 dark:border-gray-700 py-2">
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label="Expand sidebar"
-            title="Expand sidebar (Ctrl+.)"
-            className="rounded-md p-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <line x1="9" y1="3" x2="9" y2="21" />
-              <polyline points="13 9 17 13 13 17" />
-            </svg>
-          </button>
-        </div>
-      )}
 
       <nav
         className={cn(

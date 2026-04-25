@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { AdminSidebar } from '@/components/admin/sidebar';
 import { AdminBreadcrumbs } from '@/components/admin/breadcrumbs';
 import { AdminThemeToggle } from '@/components/admin/admin-theme-toggle';
+import { FloatingSidebarToggle } from '@/components/admin/floating-sidebar-toggle';
 
 type Role = 'admin' | 'creator' | 'reader';
 
@@ -56,6 +57,10 @@ export function AdminShell({
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      <FloatingSidebarToggle
+        collapsed={hydrated && collapsed}
+        onToggle={toggle}
+      />
       <AdminSidebar
         user={user}
         role={role}
