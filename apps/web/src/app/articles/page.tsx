@@ -43,7 +43,7 @@ export default function ArticlesPage() {
           <Link
             key={cat.slug}
             href={`/category/${cat.slug}/`}
-            className="px-3 py-1 text-sm rounded-full bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            className="px-3 py-1 text-sm rounded-full bg-muted text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             {cat.name}
           </Link>

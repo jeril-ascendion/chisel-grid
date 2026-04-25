@@ -112,7 +112,7 @@ export default async function CategoryPage({ params }: Props) {
               <Link
                 key={tagSlug}
                 href={`/search?tag=${tagSlug}`}
-                className="px-3 py-1 text-sm rounded-full transition-colors bg-muted text-muted-foreground hover:bg-accent"
+                className="px-3 py-1 text-sm rounded-full transition-colors bg-muted text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 {tagName}
               </Link>

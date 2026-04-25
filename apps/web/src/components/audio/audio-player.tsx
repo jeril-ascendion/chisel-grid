@@ -170,7 +170,7 @@ export function AudioPlayer({ src, title, sticky = false }: AudioPlayerProps) {
         <button
           onClick={skipBackward}
           aria-label="Skip back 15 seconds"
-          className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+          className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="1 4 1 10 7 10" />
@@ -200,7 +200,7 @@ export function AudioPlayer({ src, title, sticky = false }: AudioPlayerProps) {
         <button
           onClick={skipForward}
           aria-label="Skip forward 15 seconds"
-          className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+          className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="23 4 23 10 17 10" />
@@ -211,7 +211,7 @@ export function AudioPlayer({ src, title, sticky = false }: AudioPlayerProps) {
         {/* Speed */}
         <button
           onClick={cycleSpeed}
-          className="shrink-0 px-2 py-1 text-xs font-mono font-medium rounded bg-muted hover:bg-accent transition-colors"
+          className="shrink-0 px-2 py-1 text-xs font-mono font-medium rounded bg-muted hover:bg-muted transition-colors"
           aria-label={`Playback speed ${speed}x`}
         >
           {speed}x
