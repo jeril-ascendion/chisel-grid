@@ -44,7 +44,7 @@ export async function POST(
       `SELECT id, title, diagram_type, grid_ir, mode
          FROM grid_diagrams
         WHERE id = $1 AND tenant_id = $2`,
-      [asUuid(id), asUuid(tenantId)],
+      [asUuid(id), tenantId],
     );
     const source = rows[0];
     if (!source) {
@@ -62,7 +62,7 @@ export async function POST(
        VALUES ($1, $2, $3, $4::jsonb, $5, 'architecture', $6)
        RETURNING id`,
       [
-        asUuid(tenantId),
+        tenantId,
         source.title,
         source.diagram_type,
         JSON.stringify(source.grid_ir),
