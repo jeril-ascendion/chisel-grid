@@ -204,7 +204,7 @@ export default function StudioDocumentPage() {
     closePicker();
     try {
       const section = sections[idx]!;
-      const embed = `![${label}](/api/admin/grid/${diagramId}/png)\n\n_Diagram: ${label} (Grid id ${diagramId})_`;
+      const embed = `![${label}](/api/admin/grid/${diagramId}/svg)\n\n_Diagram: ${label} (Grid id ${diagramId})_`;
       const nextSections = [...sections];
       nextSections[idx] = {
         ...section,
@@ -370,6 +370,16 @@ export default function StudioDocumentPage() {
               />
               {isPopulating && (
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Pulling content from {section.source}...</p>
+              )}
+              {section.ref?.type === 'grid' && (
+                <div className="mt-3 rounded border border-gray-200 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-900">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/api/admin/grid/${section.ref.id}/svg`}
+                    alt={section.ref.label ?? 'Grid diagram'}
+                    className="mx-auto max-h-96 w-auto"
+                  />
+                </div>
               )}
             </section>
           );
