@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DiagramType, TEMPLATES, type GridEdge, type GridIR, type GridNode } from '@chiselgrid/grid-ir';
 import { useSessionId } from '@/hooks/use-session-id';
+import { DiagramSourceBanner } from '@/components/grid/DiagramSourceBanner';
 import { upsertRecentSession } from '@/lib/recent-sessions';
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
 import { ShareButton } from '@/components/workspace/share-button';
@@ -97,6 +98,7 @@ function formatDiagramType(t: string): string {
 export default function ArchitecturePage() {
   const sessionId = useSessionId();
   const [gridIR, setGridIR] = useState<GridIR | null>(null);
+  const [diagramId, setDiagramId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
@@ -367,6 +369,7 @@ export default function ArchitecturePage() {
             prompt: text,
             diagramType,
             existingIR: gridIR ?? undefined,
+            sessionId: sessionId || undefined,
           }),
         });
 
@@ -497,6 +500,7 @@ export default function ArchitecturePage() {
                 }),
               };
               setGridIR(finalIR);
+              setDiagramId(event.diagramId);
               const label = formatDiagramType(event.gridIR.diagram_type);
               addTrail(
                 'agent',
@@ -854,6 +858,11 @@ export default function ArchitecturePage() {
           </div>
           <ShareButton />
         </div>
+        {diagramId && (
+          <div className="border-b border-border px-3 py-2">
+            <DiagramSourceBanner diagramId={diagramId} />
+          </div>
+        )}
         <div className="relative flex-1 min-h-0">
           {gridIR ? (
             <DiagramCanvas gridIR={gridIR} />

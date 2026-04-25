@@ -11,6 +11,8 @@ import {
   type GridNode,
 } from '@chiselgrid/grid-ir';
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
+import { useSessionId } from '@/hooks/use-session-id';
+import { DiagramSourceBanner } from '@/components/grid/DiagramSourceBanner';
 
 const DiagramCanvas = dynamic(
   () => import('@chiselgrid/grid-renderer').then((m) => m.DiagramCanvas),
@@ -54,6 +56,7 @@ function downloadBlob(content: string, filename: string, mime: string): void {
 }
 
 export default function PreciseModePage() {
+  const sessionId = useSessionId();
   const [prompt, setPrompt] = useState('');
   const [diagramType, setDiagramType] = useState<string>(DiagramType.AWSArchitecture);
   const [gridIR, setGridIR] = useState<GridIR | null>(null);
@@ -96,7 +99,12 @@ export default function PreciseModePage() {
       const res = await fetch('/api/admin/grid/generate-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: text, diagramType, mode: 'precise' }),
+        body: JSON.stringify({
+          prompt: text,
+          diagramType,
+          mode: 'precise',
+          sessionId: sessionId || undefined,
+        }),
       });
       if (!res.ok || !res.body) {
         const detail = await res.text().catch(() => '');
@@ -320,6 +328,12 @@ export default function PreciseModePage() {
           <div className="border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
             <strong>Score &lt; {DELIVERY_THRESHOLD}.</strong> Not recommended for client delivery.
             Refine the architecture before approving.
+          </div>
+        )}
+
+        {diagramId && (
+          <div className="border-b border-border bg-blue-50/20 px-3 py-2">
+            <DiagramSourceBanner diagramId={diagramId} />
           </div>
         )}
 

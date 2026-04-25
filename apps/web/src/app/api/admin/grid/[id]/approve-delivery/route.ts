@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { asUuid, auroraConfigured, DEFAULT_TENANT_ID, query } from '@/lib/db/aurora';
+import { insertRelation } from '@/lib/db/relations';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,8 +39,9 @@ export async function POST(
   const approvedBy = user.email ?? 'unknown';
 
   try {
-    const { rows } = await query<{ mode: string }>(
-      `SELECT mode FROM grid_diagrams
+    const { rows } = await query<{ mode: string; article_id: string | null }>(
+      `SELECT mode, article_id::text AS article_id
+         FROM grid_diagrams
         WHERE id = $1 AND tenant_id = $2`,
       [asUuid(id), asUuid(tenantId)],
     );
@@ -60,7 +62,27 @@ export async function POST(
       [asUuid(id), asUuid(tenantId), approvedBy, body.notes ?? null],
     );
 
-    return NextResponse.json({ ok: true });
+    let articleLink: string | null = null;
+    if (source.article_id) {
+      try {
+        articleLink = await insertRelation({
+          tenantId,
+          sourceId: source.article_id,
+          sourceType: 'article',
+          targetId: id,
+          targetType: 'diagram',
+          relationType: 'illustrates',
+          createdBy: approvedBy,
+        });
+      } catch (relErr) {
+        console.error(
+          '[api/admin/grid/[id]/approve-delivery] article relation insert failed:',
+          relErr,
+        );
+      }
+    }
+
+    return NextResponse.json({ ok: true, articleLinked: !!articleLink });
   } catch (err) {
     console.error('[api/admin/grid/[id]/approve-delivery] failed:', err);
     return NextResponse.json(

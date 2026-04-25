@@ -10,6 +10,8 @@ import {
   type GridNode,
 } from '@chiselgrid/grid-ir';
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
+import { useSessionId } from '@/hooks/use-session-id';
+import { DiagramSourceBanner } from '@/components/grid/DiagramSourceBanner';
 
 const SketchCanvas = dynamic(() => import('./SketchCanvas'), {
   ssr: false,
@@ -48,6 +50,7 @@ function scoreBadgeClass(score: number): string {
 }
 
 export default function SketchModePage() {
+  const sessionId = useSessionId();
   const router = useRouter();
   const [prompt, setPrompt] = useState('');
   const [diagramType, setDiagramType] = useState<string>(DiagramType.AWSArchitecture);
@@ -89,7 +92,12 @@ export default function SketchModePage() {
       const res = await fetch('/api/admin/grid/generate-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: text, diagramType, mode: 'sketch' }),
+        body: JSON.stringify({
+          prompt: text,
+          diagramType,
+          mode: 'sketch',
+          sessionId: sessionId || undefined,
+        }),
       });
 
       if (!res.ok || !res.body) {
@@ -227,6 +235,11 @@ export default function SketchModePage() {
             )}
           </div>
         </div>
+        {diagramId && (
+          <div className="border-b border-border bg-amber-50/20 px-3 py-2">
+            <DiagramSourceBanner diagramId={diagramId} />
+          </div>
+        )}
         <div className="relative flex-1 min-h-0">
           <SketchCanvas gridIR={gridIR} />
           {!gridIR && !isStreaming && (

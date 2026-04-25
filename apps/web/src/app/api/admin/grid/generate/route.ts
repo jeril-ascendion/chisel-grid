@@ -7,7 +7,11 @@ import {
   type GridIR,
 } from '@chiselgrid/grid-ir';
 import { asJson, asUuid, auroraConfigured, DEFAULT_TENANT_ID, query } from '@/lib/db/aurora';
+import { insertRelation } from '@/lib/db/relations';
 import { loadEnabledTenantSkills } from '@/lib/db/tenant-skills';
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -44,6 +48,7 @@ export async function POST(req: NextRequest) {
     diagramType?: string;
     existingIR?: unknown;
     currentDiagramIR?: unknown;
+    sessionId?: string;
   };
   try {
     body = await req.json();
@@ -53,6 +58,10 @@ export async function POST(req: NextRequest) {
 
   const prompt = (body.prompt ?? '').trim();
   const diagramType = (body.diagramType ?? '').trim();
+  const sourceSessionId =
+    typeof body.sessionId === 'string' && UUID_RE.test(body.sessionId)
+      ? body.sessionId
+      : null;
 
   if (!prompt) {
     return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
@@ -157,6 +166,25 @@ export async function POST(req: NextRequest) {
         ],
       );
       diagramId = rows[0]?.id ?? null;
+
+      if (diagramId && sourceSessionId) {
+        try {
+          await insertRelation({
+            tenantId,
+            sourceId: sourceSessionId,
+            sourceType: 'session',
+            targetId: diagramId,
+            targetType: 'diagram',
+            relationType: 'created_from',
+            createdBy,
+          });
+        } catch (relErr) {
+          console.error(
+            '[api/admin/grid/generate] relation insert failed:',
+            relErr,
+          );
+        }
+      }
     } catch (err) {
       console.error('[api/admin/grid/generate] persist failed:', err);
       return NextResponse.json(
