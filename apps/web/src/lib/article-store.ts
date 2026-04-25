@@ -22,6 +22,7 @@ export interface StoredArticle {
   tags: string[];
   authorId: string;
   readTimeMinutes: number;
+  timesReferenced?: number;
   createdAt: string;
 }
 
@@ -67,7 +68,7 @@ const CATEGORY_SLUG_PATH_SUBQUERY = `
 `;
 const LIST_COLS = `
   c.content_id, c.title, c.slug, c.description, c.status,
-  c.category_id, c.author_id, c.read_time_minutes, c.created_at,
+  c.category_id, c.author_id, c.read_time_minutes, c.times_referenced, c.created_at,
   cat.name AS category_name, cat.slug AS category_slug,
   cat.level AS category_level,
   ${CATEGORY_PATH_SUBQUERY} AS category_path,
@@ -91,6 +92,7 @@ type Row = {
   category_slug_path: string | null;
   author_id: string | null;
   read_time_minutes: number | null;
+  times_referenced: number | null;
   created_at: string;
 };
 
@@ -125,6 +127,7 @@ function rowToArticle(row: Row): StoredArticle {
     tags: [],
     authorId: row.author_id ?? '',
     readTimeMinutes: row.read_time_minutes ?? 5,
+    timesReferenced: row.times_referenced ?? 0,
     createdAt: created,
   };
 }
@@ -246,7 +249,12 @@ export async function updateArticle(
 // both items awaiting review and already-published content in one list.
 const QUEUE_DEFAULT_STATUSES = ['in_review', 'submitted', 'draft', 'approved', 'published'] as const;
 
-export async function getQueueArticles(statusFilter?: string): Promise<StoredArticle[]> {
+export type ArticleSort = 'recent' | 'most_referenced';
+
+export async function getQueueArticles(
+  statusFilter?: string,
+  sort: ArticleSort = 'recent',
+): Promise<StoredArticle[]> {
   if (auroraConfigured()) {
     try {
       let sql = `SELECT ${LIST_COLS} FROM content c${CATEGORY_JOIN} WHERE c.tenant_id = $1`;
@@ -261,7 +269,11 @@ export async function getQueueArticles(statusFilter?: string): Promise<StoredArt
         sql += ` AND c.status IN (${placeholders})`;
         params.push(...QUEUE_DEFAULT_STATUSES);
       }
-      sql += ` ORDER BY c.created_at DESC LIMIT 500`;
+      const orderBy =
+        sort === 'most_referenced'
+          ? `ORDER BY c.times_referenced DESC, c.created_at DESC`
+          : `ORDER BY c.created_at DESC`;
+      sql += ` ${orderBy} LIMIT 500`;
       const { rows } = await query<Row>(sql, params);
       return rows.map(rowToArticle);
     } catch (e) {
@@ -269,15 +281,21 @@ export async function getQueueArticles(statusFilter?: string): Promise<StoredArt
     }
   }
 
-  const all = Array.from(memoryStore.values()).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  const all = Array.from(memoryStore.values()).sort((a, b) => {
+    if (sort === 'most_referenced') {
+      const diff = (b.timesReferenced ?? 0) - (a.timesReferenced ?? 0);
+      if (diff !== 0) return diff;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
   if (statusFilter === 'all') return all;
   if (!statusFilter)
     return all.filter((a) => (QUEUE_DEFAULT_STATUSES as readonly string[]).includes(a.status));
   return all.filter((a) => a.status === statusFilter);
 }
 
-export async function getAllArticles(): Promise<StoredArticle[]> {
-  return getQueueArticles('all');
+export async function getAllArticles(
+  sort: ArticleSort = 'recent',
+): Promise<StoredArticle[]> {
+  return getQueueArticles('all', sort);
 }

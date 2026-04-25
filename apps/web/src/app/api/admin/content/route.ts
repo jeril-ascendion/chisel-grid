@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { getAllArticles } from '@/lib/article-store';
+import { getAllArticles, type ArticleSort } from '@/lib/article-store';
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -10,8 +10,10 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
+  const sortParam = searchParams.get('sort');
+  const sort: ArticleSort = sortParam === 'most_referenced' ? 'most_referenced' : 'recent';
 
-  let articles = await getAllArticles();
+  let articles = await getAllArticles(sort);
   if (status && status !== 'all') {
     articles = articles.filter((a) => a.status === status);
   }
@@ -28,6 +30,7 @@ export async function GET(req: NextRequest) {
     categorySlugPath: a.categorySlugPath,
     categoryLevel: a.categoryLevel,
     categoryId: a.category,
+    timesReferenced: a.timesReferenced,
     updatedAt: a.createdAt,
     publishedAt: a.status === 'published' ? a.createdAt : null,
   }));

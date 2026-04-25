@@ -17,6 +17,8 @@
     "relations:verify": "tsx src/relations-schema.ts verify",
     "relations:counters": "tsx src/relations-counters.ts migrate",
     "relations:counters:verify": "tsx src/relations-counters.ts verify",
+    "relations:backfill": "tsx src/backfill-times-referenced.ts run",
+    "relations:backfill:verify": "tsx src/backfill-times-referenced.ts verify",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
