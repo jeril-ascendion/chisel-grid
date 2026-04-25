@@ -5,3 +5,4 @@ export * from './media';
 export * from './ai-jobs';
 export * from './audit-log';
 export * from './subscribers';
+export * from './sessions';

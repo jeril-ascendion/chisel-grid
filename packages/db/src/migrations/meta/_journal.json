@@ -8,6 +8,13 @@
       "when": 1775467431685,
       "tag": "0000_jazzy_vargas",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777082108765,
+      "tag": "0001_regular_micromacro",
+      "breakpoints": true
     }
   ]
 }

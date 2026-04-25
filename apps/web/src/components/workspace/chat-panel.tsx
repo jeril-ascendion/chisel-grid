@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useWorkspaceStore } from '@/stores/workspace-store';
 import { cn } from '@/lib/utils';
+import { ReasoningTrail, type TrailEntry } from './ReasoningTrail';
+
+const TOKENS_PER_WORD = 1 / 0.75;
 
 export function ChatPanel() {
   const [input, setInput] = useState('');
@@ -13,9 +16,34 @@ export function ChatPanel() {
   const addAgentEvent = useWorkspaceStore((s) => s.addAgentEvent);
   const setBlocks = useWorkspaceStore((s) => s.setBlocks);
   const setPipelineStatus = useWorkspaceStore((s) => s.setPipelineStatus);
+  const reasoningTrails = useWorkspaceStore((s) => s.reasoningTrails);
+  const setReasoningTrail = useWorkspaceStore((s) => s.setReasoningTrail);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
+  const [trailEntries, setTrailEntries] = useState<TrailEntry[]>([]);
+  const trailEntriesRef = useRef<TrailEntry[]>([]);
+
+  const addTrail = useCallback(
+    (
+      type: TrailEntry['type'],
+      message: string,
+      detail?: string,
+      durationMs?: number,
+    ) => {
+      const entry: TrailEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        timestamp: Date.now(),
+        type,
+        message,
+        ...(detail !== undefined ? { detail } : {}),
+        ...(durationMs !== undefined ? { durationMs } : {}),
+      };
+      trailEntriesRef.current = [...trailEntriesRef.current, entry];
+      setTrailEntries(trailEntriesRef.current);
+    },
+    [],
+  );
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,6 +81,16 @@ export function ChatPanel() {
     addMessage({ role: 'user', content: text });
     setGenerating(true);
     setPipelineStatus('writing');
+    setTrailEntries([]);
+    trailEntriesRef.current = [];
+    addTrail('thinking', 'Reading your message...', text);
+    addTrail(
+      'skill',
+      'Loading domain context from knowledge base...',
+      'tenant-knowledge.rag\nstyle-guide.md\ncontent-blocks.schema',
+    );
+    addTrail('agent', 'Chamber agent reasoning...');
+    const t0 = Date.now();
 
     addAgentEvent({ agentName: 'Writer', status: 'running', message: 'Generating content...' });
 
@@ -69,16 +107,45 @@ export function ChatPanel() {
 
       if (!res.ok) throw new Error(`Failed: ${res.status}`);
 
-      const data = (await res.json()) as { blocks?: unknown[]; message?: string };
+      const data = (await res.json()) as {
+        blocks?: unknown[];
+        message?: string;
+        articles?: { title: string }[];
+      };
       if (data.blocks) {
         setBlocks(data.blocks as import('@chiselgrid/types').ContentBlock[]);
       }
-      addMessage({ role: 'assistant', content: data.message ?? 'Content generated successfully.' });
+      const responseText = data.message ?? 'Content generated successfully.';
+      const wordCount = responseText.split(/\s+/).filter(Boolean).length;
+      const tokenEstimate = Math.max(1, Math.round(wordCount * TOKENS_PER_WORD));
+      const elapsed = Date.now() - t0;
+      if (data.articles && data.articles.length > 0) {
+        addTrail(
+          'skill',
+          `Referenced ${data.articles.length} knowledge articles`,
+          data.articles.map((a) => `• ${a.title}`).join('\n'),
+        );
+      }
+      addTrail(
+        'success',
+        `Response complete (~${tokenEstimate} tokens, ${wordCount} words)`,
+        undefined,
+        elapsed,
+      );
+      const messageId = addMessage({ role: 'assistant', content: responseText });
+      setReasoningTrail(messageId, trailEntriesRef.current);
+      setTrailEntries([]);
+      trailEntriesRef.current = [];
       addAgentEvent({ agentName: 'Writer', status: 'completed', message: 'Draft ready' });
       setPipelineStatus('reviewing');
       setAttachedFile(null);
     } catch (err) {
-      addMessage({ role: 'system', content: `Error: ${err instanceof Error ? err.message : 'Unknown error'}` });
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      addTrail('error', `Generation failed: ${message}`, undefined, Date.now() - t0);
+      const messageId = addMessage({ role: 'system', content: `Error: ${message}` });
+      setReasoningTrail(messageId, trailEntriesRef.current);
+      setTrailEntries([]);
+      trailEntriesRef.current = [];
       addAgentEvent({ agentName: 'Writer', status: 'failed', message: 'Generation failed' });
       setPipelineStatus('idle');
     } finally {
@@ -95,19 +162,32 @@ export function ChatPanel() {
             <p>Describe a topic to generate an article...</p>
           </div>
         )}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={cn(
-              'rounded-lg px-3 py-2 text-sm',
-              msg.role === 'user' && 'ml-8 bg-blue-600 text-white',
-              msg.role === 'assistant' && 'mr-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100',
-              msg.role === 'system' && 'mx-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-center text-xs',
-            )}
-          >
-            {msg.content}
-          </div>
-        ))}
+        {messages.map((msg) => {
+          const pastTrail = reasoningTrails[msg.id];
+          return (
+            <div key={msg.id}>
+              <div
+                className={cn(
+                  'rounded-lg px-3 py-2 text-sm',
+                  msg.role === 'user' && 'ml-8 bg-blue-600 text-white',
+                  msg.role === 'assistant' && 'mr-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100',
+                  msg.role === 'system' && 'mx-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-center text-xs',
+                )}
+              >
+                {msg.content}
+              </div>
+              {pastTrail && pastTrail.length > 0 && msg.role !== 'user' && (
+                <div className="mr-8 mt-2">
+                  <ReasoningTrail
+                    entries={pastTrail}
+                    isActive={false}
+                    defaultExpanded={false}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
         {isGenerating && (
           <div className="mr-8 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-500">
             <span className="inline-flex gap-1">
@@ -117,6 +197,14 @@ export function ChatPanel() {
             </span>
           </div>
         )}
+      </div>
+
+      <div className="px-4 pb-2 shrink-0">
+        <ReasoningTrail
+          entries={trailEntries}
+          isActive={isGenerating}
+          defaultExpanded={false}
+        />
       </div>
 
       {/* Input */}

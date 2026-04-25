@@ -1,6 +1,7 @@
 import {
   BedrockRuntimeClient,
   InvokeModelCommand,
+  InvokeModelWithResponseStreamCommand,
 } from '@aws-sdk/client-bedrock-runtime';
 
 export const bedrockClient = new BedrockRuntimeClient({
@@ -58,5 +59,58 @@ export async function invokeModel(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Bedrock invokeModel failed: ${message}`);
+  }
+}
+
+interface BedrockStreamChunk {
+  type: string;
+  delta?: { type?: string; text?: string };
+  content_block?: { type?: string; text?: string };
+}
+
+export async function* streamModel(
+  systemPrompt: string,
+  userMessage: string,
+): AsyncGenerator<string, void, void> {
+  const body = {
+    anthropic_version: 'bedrock-2023-05-31',
+    max_tokens: 4096,
+    system: systemPrompt,
+    messages: [
+      {
+        role: 'user',
+        content: [{ type: 'text', text: userMessage }],
+      },
+    ],
+  };
+
+  const command = new InvokeModelWithResponseStreamCommand({
+    modelId: MODEL_ID,
+    contentType: 'application/json',
+    accept: 'application/json',
+    body: JSON.stringify(body),
+  });
+
+  const response = await bedrockClient.send(command);
+  if (!response.body) {
+    throw new Error('Bedrock stream response had no body');
+  }
+
+  const decoder = new TextDecoder();
+  for await (const event of response.body) {
+    const bytes = event.chunk?.bytes;
+    if (!bytes) continue;
+    const decoded = decoder.decode(bytes);
+    let parsed: BedrockStreamChunk;
+    try {
+      parsed = JSON.parse(decoded) as BedrockStreamChunk;
+    } catch {
+      continue;
+    }
+    if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+      yield parsed.delta.text;
+    } else if (parsed.type === 'content_block_start' && parsed.content_block?.text) {
+      yield parsed.content_block.text;
+    }
   }
 }

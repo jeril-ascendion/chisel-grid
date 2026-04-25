@@ -2,9 +2,10 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TEMPLATES, type GridIR } from '@chiselgrid/grid-ir';
+import { DiagramType, TEMPLATES, type GridEdge, type GridIR, type GridNode } from '@chiselgrid/grid-ir';
 import { useSessionId } from '@/hooks/use-session-id';
 import { upsertRecentSession } from '@/lib/recent-sessions';
+import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
 
 interface TemplateOption {
   key: string;
@@ -45,6 +46,7 @@ interface ValidationSummary {
 }
 
 interface ChatMessage {
+  id: string;
   role: 'user' | 'ai';
   content: string;
   error?: boolean;
@@ -52,6 +54,8 @@ interface ChatMessage {
   validation?: ValidationSummary;
   dismissed?: boolean;
 }
+
+const mkMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 function scoreBadgeClass(score: number): string {
   if (score >= 90) return 'bg-green-600 text-white';
@@ -93,6 +97,39 @@ export default function ArchitecturePage() {
   const [gridIR, setGridIR] = useState<GridIR | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
+  const [trailEntries, setTrailEntries] = useState<TrailEntry[]>([]);
+  const trailEntriesRef = useRef<TrailEntry[]>([]);
+  const [committedTrails, setCommittedTrails] = useState<Record<string, TrailEntry[]>>({});
+
+  const addTrail = useCallback(
+    (
+      type: TrailEntry['type'],
+      message: string,
+      detail?: string,
+      durationMs?: number,
+    ) => {
+      const entry: TrailEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        timestamp: Date.now(),
+        type,
+        message,
+        ...(detail !== undefined ? { detail } : {}),
+        ...(durationMs !== undefined ? { durationMs } : {}),
+      };
+      trailEntriesRef.current = [...trailEntriesRef.current, entry];
+      setTrailEntries(trailEntriesRef.current);
+    },
+    [],
+  );
+
+  const commitTrailToMessage = useCallback((messageId: string) => {
+    if (trailEntriesRef.current.length === 0) return;
+    const snapshot = trailEntriesRef.current;
+    setCommittedTrails((prev) => ({ ...prev, [messageId]: snapshot }));
+    trailEntriesRef.current = [];
+    setTrailEntries([]);
+  }, []);
   const [prompt, setPrompt] = useState('');
   const [diagramType, setDiagramType] = useState<string>('aws_architecture');
   const [isRecording, setIsRecording] = useState(false);
@@ -125,7 +162,7 @@ export default function ArchitecturePage() {
     if (!template) {
       setMessages((m) => [
         ...m,
-        { role: 'ai', content: `Template "${option.label}" is not available.`, error: true },
+        { id: mkMessageId(), role: 'ai', content: `Template "${option.label}" is not available.`, error: true },
       ]);
       setTemplatesOpen(false);
       return;
@@ -136,6 +173,7 @@ export default function ArchitecturePage() {
     setMessages((m) => [
       ...m,
       {
+        id: mkMessageId(),
         role: 'ai',
         content: `Loaded ${option.label} template. You can now refine it with prompts.`,
       },
@@ -152,9 +190,22 @@ export default function ArchitecturePage() {
     try {
       const raw = sessionStorage.getItem('grid_session_' + sessionId);
       if (raw) {
-        const data = JSON.parse(raw) as { messages?: ChatMessage[]; gridIR?: GridIR | null };
-        if (Array.isArray(data.messages)) setMessages(data.messages);
+        const data = JSON.parse(raw) as {
+          schemaVersion?: number;
+          messages?: ChatMessage[];
+          gridIR?: GridIR | null;
+          reasoningTrails?: Record<string, TrailEntry[]>;
+        };
+        if (Array.isArray(data.messages)) {
+          // Legacy v1 records lack `id`; mint one for any message missing it.
+          setMessages(
+            data.messages.map((m) => (m.id ? m : { ...m, id: mkMessageId() })),
+          );
+        }
         if (data.gridIR) setGridIR(data.gridIR);
+        if (data.reasoningTrails && typeof data.reasoningTrails === 'object') {
+          setCommittedTrails(data.reasoningTrails);
+        }
       }
     } catch {
       // ignore corrupt payloads
@@ -167,7 +218,12 @@ export default function ArchitecturePage() {
     try {
       sessionStorage.setItem(
         'grid_session_' + sessionId,
-        JSON.stringify({ messages, gridIR }),
+        JSON.stringify({
+          schemaVersion: 2,
+          messages,
+          gridIR,
+          reasoningTrails: committedTrails,
+        }),
       );
     } catch {
       // ignore quota errors
@@ -178,7 +234,7 @@ export default function ArchitecturePage() {
       lastPage: '/admin/grid/architecture',
       updatedAt: Date.now(),
     });
-  }, [sessionId, restored, messages, gridIR]);
+  }, [sessionId, restored, messages, gridIR, committedTrails]);
 
   useEffect(() => {
     const ta = textareaRef.current;
@@ -199,8 +255,76 @@ export default function ArchitecturePage() {
   const runGeneration = useCallback(
     async (text: string, isRetry = false) => {
       setIsGenerating(true);
+      setStreamingStatus('Architect is designing…');
+      setTrailEntries([]);
+      trailEntriesRef.current = [];
+      addTrail('thinking', 'Reading your prompt...', text);
+      addTrail(
+        'skill',
+        `Loading skills: aws-well-architected, ${diagramType}`,
+        `aws-well-architected.md\n${diagramType}.prompt.ts\npci-dss-rules.md`,
+      );
+      addTrail('agent', 'Architecture Agent activated');
+      const t0 = Date.now();
+
+      // Reset canvas to an empty IR scoped to the current diagram type. As
+      // streaming proceeds, nodes and edges are appended live.
+      const seedIR: GridIR = {
+        version: '1.0',
+        diagram_type: diagramType as DiagramType,
+        title: 'Designing…',
+        nodes: [],
+        edges: [],
+      };
+      setGridIR(seedIR);
+
+      let nodeCount = 0;
+      let edgeCount = 0;
+      let streamErrored = false;
+      let coldStartHandled = false;
+      let firstEdgeLogged = false;
+
+      const handleColdStart = () => {
+        if (coldStartHandled) return;
+        coldStartHandled = true;
+        clearRetryTimer();
+        if (isRetry) {
+          setIsRetrying(false);
+          setMessages((m) => [
+            ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
+            {
+              id: mkMessageId(),
+              role: 'ai',
+              content: 'Aurora is still waking. Please click Retry in 30 seconds.',
+              error: true,
+              retryable: true,
+            },
+          ]);
+        } else {
+          setMessages((m) => [
+            ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
+            {
+              id: mkMessageId(),
+              role: 'ai',
+              content: 'Aurora is waking up. Auto-retrying in 15 seconds…',
+              retryable: true,
+            },
+          ]);
+          setIsRetrying(true);
+          retryTimerRef.current = setTimeout(() => {
+            retryTimerRef.current = null;
+            setIsRetrying(false);
+            setMessages((m) => [
+              ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
+              { id: mkMessageId(), role: 'ai', content: 'Retrying…', retryable: false },
+            ]);
+            void runGeneration(text, true);
+          }, 15_000);
+        }
+      };
+
       try {
-        const res = await fetch('/api/admin/grid/generate', {
+        const res = await fetch('/api/admin/grid/generate-stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -210,98 +334,216 @@ export default function ArchitecturePage() {
           }),
         });
 
-        if (!res.ok) {
-          let retryable = false;
+        if (!res.ok || !res.body) {
           let detail = '';
           try {
-            const parsed = (await res.json()) as { detail?: string; retryable?: boolean };
-            detail = parsed.detail ?? '';
-            retryable = parsed.retryable === true;
+            const parsed = (await res.json()) as { detail?: string; error?: string };
+            detail = parsed.detail ?? parsed.error ?? '';
           } catch {
             detail = await res.text().catch(() => '');
           }
-
           if (res.status === 504) {
-            // Aurora cold start. Collapse any prior Aurora status line into one.
-            clearRetryTimer();
-            if (isRetry) {
-              // Auto-retry already fired — stop. User must click Retry manually.
-              setIsRetrying(false);
-              setMessages((m) => [
-                ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
-                {
-                  role: 'ai',
-                  content:
-                    'Aurora is still waking. Please click Retry in 30 seconds.',
-                  error: true,
-                  retryable: true,
-                },
-              ]);
-            } else {
-              setMessages((m) => [
-                ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
-                {
-                  role: 'ai',
-                  content: 'Aurora is waking up. Auto-retrying in 15 seconds...',
-                  retryable: true,
-                },
-              ]);
-              setIsRetrying(true);
-              retryTimerRef.current = setTimeout(() => {
-                retryTimerRef.current = null;
-                setIsRetrying(false);
-                setMessages((m) => [
-                  ...m.filter((msg) => !msg.content.startsWith('Aurora is ')),
-                  { role: 'ai', content: 'Retrying...', retryable: false },
-                ]);
-                void runGeneration(text, true);
-              }, 15_000);
-            }
+            handleColdStart();
+            addTrail('warning', 'Aurora cold start (504), auto-retrying...');
           } else {
-            setMessages((m) => [
-              ...m,
-              {
-                role: 'ai',
-                content: `Generation failed (${res.status}). ${detail.slice(0, 200)}`,
-                error: true,
-                retryable,
-              },
-            ]);
+            addTrail(
+              'error',
+              `HTTP ${res.status}: ${detail.slice(0, 120) || 'request failed'}`,
+            );
+            const errMsg: ChatMessage = {
+              id: mkMessageId(),
+              role: 'ai',
+              content: `Generation failed (${res.status}). ${detail.slice(0, 200)}`,
+              error: true,
+              retryable: true,
+            };
+            setMessages((m) => [...m, errMsg]);
+            commitTrailToMessage(errMsg.id);
           }
           return;
         }
 
-        const data = (await res.json()) as {
-          gridIR: GridIR;
-          diagramId: string | null;
-          validation?: ValidationSummary;
-        };
-        setGridIR(data.gridIR);
-        const label = formatDiagramType(data.gridIR.diagram_type);
-        setMessages((m) => [
-          ...m.filter((msg) => !msg.content.startsWith('Aurora is ') && msg.content !== 'Retrying...'),
-          {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let nl: number;
+          while ((nl = buffer.indexOf('\n')) !== -1) {
+            const line = buffer.slice(0, nl).trim();
+            buffer = buffer.slice(nl + 1);
+            if (!line) continue;
+
+            let event:
+              | { kind: 'meta'; data: { title?: string; diagram_type?: string; abstraction_level?: number } }
+              | { kind: 'node'; data: GridNode }
+              | { kind: 'edge'; data: GridEdge }
+              | {
+                  kind: 'done';
+                  gridIR: GridIR;
+                  diagramId: string | null;
+                  validation?: ValidationSummary;
+                }
+              | { kind: 'error'; error: string };
+            try {
+              event = JSON.parse(line);
+            } catch {
+              continue;
+            }
+
+            if (event.kind === 'meta') {
+              const meta = event.data;
+              setGridIR((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      title: meta.title ?? prev.title,
+                      diagram_type: (meta.diagram_type as DiagramType) ?? prev.diagram_type,
+                      ...(meta.abstraction_level !== undefined
+                        ? { abstraction_level: meta.abstraction_level }
+                        : {}),
+                    }
+                  : prev,
+              );
+              setStreamingStatus(`Designing ${meta.title ?? 'diagram'}…`);
+              addTrail('thinking', `Designing: ${meta.title ?? 'diagram'}`);
+            } else if (event.kind === 'node') {
+              nodeCount += 1;
+              const newNode = event.data;
+              setGridIR((prev) => {
+                if (!prev) return prev;
+                if (prev.nodes.some((n) => n.id === newNode.id)) return prev;
+                return { ...prev, nodes: [...prev.nodes, newNode] };
+              });
+              setStreamingStatus(`Placing ${newNode.label}… (${nodeCount} nodes)`);
+              addTrail(
+                'thinking',
+                `Placing ${newNode.label} (${newNode.zone ?? 'no zone'} zone)`,
+              );
+              // Pace the render so each node visibly lands on the canvas.
+              // API Gateway buffers Lambda responses, so without a delay all
+              // events would land in one frame in production. 90 ms keeps
+              // the live-build-up feel even when the body arrives at once.
+              await new Promise((r) => setTimeout(r, 90));
+            } else if (event.kind === 'edge') {
+              edgeCount += 1;
+              const newEdge = event.data;
+              setGridIR((prev) => {
+                if (!prev) return prev;
+                if (prev.edges.some((e) => e.id === newEdge.id)) return prev;
+                return { ...prev, edges: [...prev.edges, newEdge] };
+              });
+              setStreamingStatus(`Wiring connections… (${edgeCount} edges)`);
+              if (!firstEdgeLogged) {
+                firstEdgeLogged = true;
+                addTrail('thinking', `Wiring connections...`);
+              }
+              await new Promise((r) => setTimeout(r, 60));
+            } else if (event.kind === 'done') {
+              setGridIR(event.gridIR);
+              const label = formatDiagramType(event.gridIR.diagram_type);
+              addTrail(
+                'agent',
+                'Architecture Agent complete',
+                `${event.gridIR.nodes.length} nodes, ${event.gridIR.edges.length} edges`,
+                Date.now() - t0,
+              );
+              addTrail('validation', 'Running compliance validator...');
+              if (event.validation) {
+                if (event.validation.criticalCount > 0) {
+                  addTrail(
+                    'warning',
+                    `${event.validation.criticalCount} critical findings`,
+                    event.validation.findings
+                      .filter((f) => f.severity === 'critical')
+                      .map((f) => `• ${f.message}`)
+                      .join('\n'),
+                  );
+                } else if (event.validation.warningCount > 0) {
+                  addTrail(
+                    'success',
+                    `Architecture score: ${event.validation.score}/100`,
+                    event.validation.findings
+                      .filter((f) => f.severity === 'warning')
+                      .map((f) => `• ${f.message}`)
+                      .join('\n'),
+                  );
+                } else {
+                  addTrail(
+                    'success',
+                    `Architecture score: ${event.validation.score}/100`,
+                  );
+                }
+              }
+              const doneMsg: ChatMessage = {
+                id: mkMessageId(),
+                role: 'ai',
+                content: `Generated ${label} with ${event.gridIR.nodes.length} nodes and ${event.gridIR.edges.length} edges.`,
+                validation: event.validation,
+              };
+              setMessages((m) => [
+                ...m.filter(
+                  (msg) =>
+                    !msg.content.startsWith('Aurora is ') && msg.content !== 'Retrying…',
+                ),
+                doneMsg,
+              ]);
+              commitTrailToMessage(doneMsg.id);
+            } else if (event.kind === 'error') {
+              streamErrored = true;
+              addTrail('error', `Generation failed: ${event.error.slice(0, 200)}`);
+              if (/timed out|aurora|cold/i.test(event.error)) {
+                handleColdStart();
+              } else {
+                const errMsg: ChatMessage = {
+                  id: mkMessageId(),
+                  role: 'ai',
+                  content: `Generation failed: ${event.error.slice(0, 240)}`,
+                  error: true,
+                  retryable: true,
+                };
+                setMessages((m) => [...m, errMsg]);
+                commitTrailToMessage(errMsg.id);
+              }
+            }
+          }
+        }
+
+        if (!streamErrored && nodeCount === 0) {
+          const emptyMsg: ChatMessage = {
+            id: mkMessageId(),
             role: 'ai',
-            content: `Generated ${label} with ${data.gridIR.nodes.length} nodes and ${data.gridIR.edges.length} edges.`,
-            validation: data.validation,
-          },
-        ]);
-      } catch (err) {
-        setMessages((m) => [
-          ...m,
-          {
-            role: 'ai',
-            content:
-              'Request failed: ' + (err instanceof Error ? err.message : String(err)),
+            content: 'Stream ended without producing a diagram. Try again.',
             error: true,
             retryable: true,
-          },
-        ]);
+          };
+          setMessages((m) => [...m, emptyMsg]);
+          commitTrailToMessage(emptyMsg.id);
+        }
+      } catch (err) {
+        addTrail(
+          'error',
+          `Request failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        const failMsg: ChatMessage = {
+          id: mkMessageId(),
+          role: 'ai',
+          content:
+            'Request failed: ' + (err instanceof Error ? err.message : String(err)),
+          error: true,
+          retryable: true,
+        };
+        setMessages((m) => [...m, failMsg]);
+        commitTrailToMessage(failMsg.id);
       } finally {
         setIsGenerating(false);
+        setStreamingStatus(null);
       }
     },
-    [diagramType, gridIR, clearRetryTimer],
+    [diagramType, gridIR, clearRetryTimer, addTrail, commitTrailToMessage],
   );
 
   const handleGenerate = useCallback(async () => {
@@ -314,7 +556,7 @@ export default function ArchitecturePage() {
     setIsRetrying(false);
 
     const userContent = attachment ? `${text}\n📎 ${attachment.name}` : text;
-    setMessages((m) => [...m, { role: 'user', content: userContent }]);
+    setMessages((m) => [...m, { id: mkMessageId(), role: 'user', content: userContent }]);
     setPrompt('');
     setAttachment(null);
     lastPromptRef.current = text;
@@ -346,7 +588,7 @@ export default function ArchitecturePage() {
       setMessages((m) =>
         m.map((msg, i) =>
           i === messageIndex ? { ...msg, dismissed: true } : msg,
-        ).concat({ role: 'user', content: fixPrompt }),
+        ).concat({ id: mkMessageId(), role: 'user', content: fixPrompt }),
       );
       lastPromptRef.current = fixPrompt;
       await runGeneration(fixPrompt);
@@ -532,13 +774,14 @@ export default function ArchitecturePage() {
               </p>
             </div>
           )}
-          {isGenerating && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-              <div className="flex items-center gap-2 rounded-lg bg-card px-4 py-2 shadow">
+          {isGenerating && streamingStatus && (
+            <div className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
+              <div className="flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-4 py-1.5 shadow-md backdrop-blur-sm">
                 <svg
-                  className="animate-spin h-4 w-4 text-blue-600"
+                  className="animate-spin h-3.5 w-3.5 text-blue-600"
                   viewBox="0 0 24 24"
                   fill="none"
+                  aria-hidden
                 >
                   <circle
                     className="opacity-25"
@@ -554,7 +797,7 @@ export default function ArchitecturePage() {
                     d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                   />
                 </svg>
-                <span className="text-sm">Generating…</span>
+                <span className="text-xs font-medium text-slate-700">{streamingStatus}</span>
               </div>
             </div>
           )}
@@ -580,9 +823,10 @@ export default function ArchitecturePage() {
           ) : (
             messages.map((m, i) => {
               const isLast = i === messages.length - 1;
+              const pastTrail = committedTrails[m.id];
               return (
+                <div key={m.id}>
                 <div
-                  key={i}
                   className={
                     m.role === 'user'
                       ? 'ml-8 rounded-lg bg-blue-600 text-white px-3 py-2 text-sm whitespace-pre-wrap break-words'
@@ -681,10 +925,28 @@ export default function ArchitecturePage() {
                     </div>
                   )}
                 </div>
+                {pastTrail && pastTrail.length > 0 && m.role === 'ai' && (
+                  <div className="mr-8 mt-2">
+                    <ReasoningTrail
+                      entries={pastTrail}
+                      isActive={false}
+                      defaultExpanded={false}
+                    />
+                  </div>
+                )}
+                </div>
               );
             })
           )}
           <div ref={chatEndRef} />
+        </div>
+
+        <div className="px-4 pb-2">
+          <ReasoningTrail
+            entries={trailEntries}
+            isActive={isGenerating}
+            defaultExpanded={false}
+          />
         </div>
 
         <div className="border-t border-border p-3 space-y-2">
