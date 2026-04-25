@@ -6,7 +6,7 @@ import {
   validateGridIR,
   type GridIR,
 } from '@chiselgrid/grid-ir';
-import { asJson, asUuid, auroraConfigured, DEFAULT_TENANT_ID, query } from '@/lib/db/aurora';
+import { asJson, auroraConfigured, DEFAULT_TENANT_ID, query } from '@/lib/db/aurora';
 import { insertRelation } from '@/lib/db/relations';
 import { loadEnabledTenantSkills } from '@/lib/db/tenant-skills';
 
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id`,
         [
-          asUuid(tenantId),
+          tenantId,
           title,
           diagramType,
           asJson(gridIR),

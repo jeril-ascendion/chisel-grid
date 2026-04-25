@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { asUuid, auroraConfigured, DEFAULT_TENANT_ID, query } from '@/lib/db/aurora';
+import { auroraConfigured, DEFAULT_TENANT_ID, query } from '@/lib/db/aurora';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,10 +33,10 @@ export async function GET() {
     const { rows } = await query<DiagramRow>(
       `SELECT id, title, diagram_type, created_at, created_by
          FROM grid_diagrams
-        WHERE tenant_id = $1
+        WHERE tenant_id::text = $1::text
         ORDER BY created_at DESC
         LIMIT 200`,
-      [asUuid(tenantId)],
+      [tenantId],
     );
     return NextResponse.json(rows);
   } catch (err) {
