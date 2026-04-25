@@ -10,6 +10,7 @@ import {
   type GridIR,
 } from '@chiselgrid/grid-ir';
 import { asJson, asUuid, auroraConfigured, DEFAULT_TENANT_ID, query } from '@/lib/db/aurora';
+import { loadEnabledTenantSkills } from '@/lib/db/tenant-skills';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -88,6 +89,15 @@ export async function POST(req: NextRequest) {
   const tenantId = user.tenantId ?? DEFAULT_TENANT_ID;
   const createdBy = user.email ?? 'unknown';
 
+  let tenantSkills: Awaited<ReturnType<typeof loadEnabledTenantSkills>> = [];
+  if (auroraConfigured()) {
+    try {
+      tenantSkills = await loadEnabledTenantSkills(tenantId);
+    } catch (err) {
+      console.error('[api/admin/grid/generate-stream] tenant skill load failed:', err);
+    }
+  }
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let finalIR: GridIR | null = null;
@@ -97,6 +107,7 @@ export async function POST(req: NextRequest) {
           prompt,
           diagramType,
           ...(existingIR ? { existingIR } : {}),
+          ...(tenantSkills.length > 0 ? { tenantSkills } : {}),
         })) {
           if (chunk.event.kind === 'done') {
             finalIR = chunk.event.gridIR;

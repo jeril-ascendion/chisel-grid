@@ -5,14 +5,19 @@ import {
   type GridIR,
 } from '@chiselgrid/grid-ir';
 import { streamModel } from '../bedrock';
-import { ARCHITECTURE_SYSTEM_PROMPT } from '../prompts/architecture.prompt';
+import { buildArchitecturePrompt } from '../prompts/architecture.prompt';
+import type { SkillFile } from '../skills';
 import {
   StreamingGridIRParser,
   type StreamEvent,
 } from '../streaming/parser';
 
 export interface StreamChunk {
-  event: StreamEvent | { kind: 'done'; gridIR: GridIR } | { kind: 'error'; error: string };
+  event:
+    | StreamEvent
+    | { kind: 'done'; gridIR: GridIR }
+    | { kind: 'error'; error: string }
+    | { kind: 'skills'; skills: string[]; estimatedTokens: number };
 }
 
 export interface ArchitectureAgentStreamInput {
@@ -20,6 +25,7 @@ export interface ArchitectureAgentStreamInput {
   diagramType: string;
   context?: string;
   existingIR?: GridIR;
+  tenantSkills?: SkillFile[];
 }
 
 function buildUserMessage(input: ArchitectureAgentStreamInput): string {
@@ -105,6 +111,21 @@ export async function* architectureAgentStream(
     return;
   }
 
+  const built = buildArchitecturePrompt({
+    prompt: input.prompt,
+    diagramType: input.diagramType,
+    ...(input.context ? { context: input.context } : {}),
+    ...(input.tenantSkills ? { tenantSkills: input.tenantSkills } : {}),
+  });
+
+  yield {
+    event: {
+      kind: 'skills',
+      skills: built.skillNames,
+      estimatedTokens: built.estimatedTokens,
+    },
+  };
+
   const userMessage = buildUserMessage(input);
   const parser = new StreamingGridIRParser();
   const queued: StreamEvent[] = [];
@@ -114,7 +135,7 @@ export async function* architectureAgentStream(
 
   let raw = '';
   try {
-    for await (const chunk of streamModel(ARCHITECTURE_SYSTEM_PROMPT, userMessage)) {
+    for await (const chunk of streamModel(built.systemPrompt, userMessage)) {
       raw += chunk;
       parser.feed(chunk, emit);
       while (queued.length > 0) {

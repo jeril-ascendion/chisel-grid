@@ -5,13 +5,15 @@ import {
   type GridIR,
 } from '@chiselgrid/grid-ir';
 import { invokeModel } from '../bedrock';
-import { ARCHITECTURE_SYSTEM_PROMPT } from '../prompts/architecture.prompt';
+import { buildArchitecturePrompt } from '../prompts/architecture.prompt';
+import type { SkillFile } from '../skills';
 
 export interface ArchitectureAgentInput {
   prompt: string;
   diagramType: string;
   context?: string;
   existingIR?: GridIR;
+  tenantSkills?: SkillFile[];
 }
 
 function buildUserMessage(input: ArchitectureAgentInput): string {
@@ -67,8 +69,15 @@ export async function architectureAgent(
     return mockResponse(input.diagramType);
   }
 
+  const built = buildArchitecturePrompt({
+    prompt: input.prompt,
+    diagramType: input.diagramType,
+    ...(input.context ? { context: input.context } : {}),
+    ...(input.tenantSkills ? { tenantSkills: input.tenantSkills } : {}),
+  });
+
   const userMessage = buildUserMessage(input);
-  const rawFirst = await invokeModel(ARCHITECTURE_SYSTEM_PROMPT, userMessage);
+  const rawFirst = await invokeModel(built.systemPrompt, userMessage);
 
   let parsed: unknown;
   let parseError: string | null = null;
@@ -96,7 +105,7 @@ export async function architectureAgent(
     'Return ONLY the corrected Grid-IR JSON. No markdown. No prose.',
   ].join('\n');
 
-  const rawRetry = await invokeModel(ARCHITECTURE_SYSTEM_PROMPT, retryMessage);
+  const rawRetry = await invokeModel(built.systemPrompt, retryMessage);
   const retryParsed = JSON.parse(extractJSON(rawRetry));
   const retryResult = validateGridIR(retryParsed);
   if (!retryResult.valid) {
