@@ -6,3 +6,4 @@ export * from './ai-jobs';
 export * from './audit-log';
 export * from './subscribers';
 export * from './sessions';
+export * from './content-relations';
