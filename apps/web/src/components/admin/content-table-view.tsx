@@ -236,7 +236,21 @@ export function ContentTableView() {
                 {visibleColumns.map((c) => {
                   switch (c.id) {
                     case 'title':
-                      return <td key={c.id} className="px-4 py-3 font-medium text-gray-900 dark:text-white">{item.title}</td>;
+                      return (
+                        <td key={c.id} className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                          <span className="inline-flex items-center gap-2">
+                            <span>{item.title}</span>
+                            {(item.timesReferenced ?? 0) > 0 ? (
+                              <span
+                                className="rounded bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300"
+                                title={`${item.timesReferenced} backlink${item.timesReferenced === 1 ? '' : 's'}`}
+                              >
+                                ↗ {item.timesReferenced}
+                              </span>
+                            ) : null}
+                          </span>
+                        </td>
+                      );
                     case 'type':
                       return <td key={c.id} className="px-4 py-3"><ContentTypeBadge contentType={item.contentType} /></td>;
                     case 'status':
