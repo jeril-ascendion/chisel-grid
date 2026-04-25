@@ -2,6 +2,7 @@ import { ContentStatusBoard } from '@/components/admin/content-status-board';
 import { DashboardAIUsage } from '@/components/admin/dashboard-ai-usage';
 import { DashboardPlatformHealth } from '@/components/admin/dashboard-platform-health';
 import { DashboardBilling } from '@/components/admin/dashboard-billing';
+import { DashboardKnowledgeGraph } from '@/components/admin/dashboard-knowledge-graph';
 
 export const metadata = { title: 'Content Studio Dashboard' };
 
@@ -14,6 +15,7 @@ export default function AdminDashboard() {
       </div>
 
       <ContentStatusBoard />
+      <DashboardKnowledgeGraph />
       <DashboardAIUsage />
       <DashboardPlatformHealth />
       <DashboardBilling />
