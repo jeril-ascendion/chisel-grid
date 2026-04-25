@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSessionId } from '@/hooks/use-session-id';
 import { useWorkspaceStore, type ChatMessage } from '@/stores/workspace-store';
 import { upsertRecentSession } from '@/lib/recent-sessions';
-import { fetchSession, saveSession } from '@/lib/session-client';
+import { fetchSession, saveSession, useSessionPolling } from '@/lib/session-client';
 import type { ContentBlock } from '@chiselgrid/types';
 import type { TrailEntry } from '@/components/workspace/ReasoningTrail';
 
@@ -21,34 +21,37 @@ export function ChamberSessionSync() {
   const reasoningTrails = useWorkspaceStore((s) => s.reasoningTrails);
   const [restored, setRestored] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const localUpdatedAtRef = useRef<string | null>(null);
+
+  const applyChamberState = (data: ChamberState) => {
+    const patch: Partial<{
+      messages: ChatMessage[];
+      blocks: ContentBlock[];
+      reasoningTrails: Record<string, TrailEntry[]>;
+    }> = {};
+    if (Array.isArray(data.messages)) patch.messages = data.messages;
+    if (Array.isArray(data.blocks)) patch.blocks = data.blocks;
+    if (data.reasoningTrails && typeof data.reasoningTrails === 'object') {
+      patch.reasoningTrails = data.reasoningTrails;
+    }
+    if (Object.keys(patch).length > 0) {
+      useWorkspaceStore.setState(patch);
+    }
+  };
 
   useEffect(() => {
     if (!sessionId || restored) return;
     let cancelled = false;
-    const apply = (data: ChamberState) => {
-      const patch: Partial<{
-        messages: ChatMessage[];
-        blocks: ContentBlock[];
-        reasoningTrails: Record<string, TrailEntry[]>;
-      }> = {};
-      if (Array.isArray(data.messages)) patch.messages = data.messages;
-      if (Array.isArray(data.blocks)) patch.blocks = data.blocks;
-      if (data.reasoningTrails && typeof data.reasoningTrails === 'object') {
-        patch.reasoningTrails = data.reasoningTrails;
-      }
-      if (Object.keys(patch).length > 0) {
-        useWorkspaceStore.setState(patch);
-      }
-    };
     void (async () => {
       const remote = await fetchSession(sessionId);
       if (cancelled) return;
       if (remote && remote.kind === 'chamber') {
-        apply(remote.state as ChamberState);
+        applyChamberState(remote.state as ChamberState);
+        localUpdatedAtRef.current = remote.updatedAt;
       } else {
         try {
           const raw = sessionStorage.getItem('chamber_session_' + sessionId);
-          if (raw) apply(JSON.parse(raw) as ChamberState);
+          if (raw) applyChamberState(JSON.parse(raw) as ChamberState);
         } catch {
           // ignore corrupt payloads
         }
@@ -59,6 +62,17 @@ export function ChamberSessionSync() {
       cancelled = true;
     };
   }, [sessionId, restored]);
+
+  useSessionPolling(
+    sessionId,
+    localUpdatedAtRef,
+    (remote) => {
+      if (remote.kind !== 'chamber') return;
+      applyChamberState(remote.state as ChamberState);
+      localUpdatedAtRef.current = remote.updatedAt;
+    },
+    { enabled: restored },
+  );
 
   useEffect(() => {
     if (!sessionId || !restored) return;
@@ -90,6 +104,10 @@ export function ChamberSessionSync() {
         kind: 'chamber',
         title,
         state: { messages, blocks, reasoningTrails },
+      }).then((saved) => {
+        if (saved?.updatedAt) {
+          localUpdatedAtRef.current = saved.updatedAt;
+        }
       });
     }, 1000);
     return () => {

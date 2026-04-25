@@ -9,7 +9,7 @@ import { RelatedContent } from '@/components/grid/RelatedContent';
 import { upsertRecentSession } from '@/lib/recent-sessions';
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
 import { ShareButton } from '@/components/workspace/share-button';
-import { fetchSession, saveSession } from '@/lib/session-client';
+import { fetchSession, saveSession, useSessionPolling } from '@/lib/session-client';
 import { useChatPanel } from '@/hooks/use-chat-panel';
 import { ChatPanelToggle } from '@/components/workspace/chat-panel-toggle';
 
@@ -152,6 +152,26 @@ export default function ArchitecturePage() {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const templatesRef = useRef<HTMLDivElement | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const localUpdatedAtRef = useRef<string | null>(null);
+
+  const applyGridSessionState = useCallback(
+    (data: {
+      messages?: ChatMessage[];
+      gridIR?: GridIR | null;
+      reasoningTrails?: Record<string, TrailEntry[]>;
+    }) => {
+      if (Array.isArray(data.messages)) {
+        setMessages(
+          data.messages.map((m) => (m.id ? m : { ...m, id: mkMessageId() })),
+        );
+      }
+      if (data.gridIR) setGridIR(data.gridIR);
+      if (data.reasoningTrails && typeof data.reasoningTrails === 'object') {
+        setCommittedTrails(data.reasoningTrails);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!templatesOpen) return;
@@ -199,35 +219,20 @@ export default function ArchitecturePage() {
   useEffect(() => {
     if (!sessionId || restored) return;
     let cancelled = false;
-    const applyData = (data: {
-      messages?: ChatMessage[];
-      gridIR?: GridIR | null;
-      reasoningTrails?: Record<string, TrailEntry[]>;
-    }) => {
-      if (Array.isArray(data.messages)) {
-        // Legacy v1 records lack `id`; mint one for any message missing it.
-        setMessages(
-          data.messages.map((m) => (m.id ? m : { ...m, id: mkMessageId() })),
-        );
-      }
-      if (data.gridIR) setGridIR(data.gridIR);
-      if (data.reasoningTrails && typeof data.reasoningTrails === 'object') {
-        setCommittedTrails(data.reasoningTrails);
-      }
-    };
     void (async () => {
       const remote = await fetchSession(sessionId);
       if (cancelled) return;
       if (remote && remote.kind === 'grid') {
-        applyData(remote.state as {
+        applyGridSessionState(remote.state as {
           messages?: ChatMessage[];
           gridIR?: GridIR | null;
           reasoningTrails?: Record<string, TrailEntry[]>;
         });
+        localUpdatedAtRef.current = remote.updatedAt;
       } else {
         try {
           const raw = sessionStorage.getItem('grid_session_' + sessionId);
-          if (raw) applyData(JSON.parse(raw));
+          if (raw) applyGridSessionState(JSON.parse(raw));
         } catch {
           // ignore corrupt payloads
         }
@@ -237,7 +242,22 @@ export default function ArchitecturePage() {
     return () => {
       cancelled = true;
     };
-  }, [sessionId, restored]);
+  }, [sessionId, restored, applyGridSessionState]);
+
+  useSessionPolling(
+    sessionId,
+    localUpdatedAtRef,
+    (remote) => {
+      if (remote.kind !== 'grid') return;
+      applyGridSessionState(remote.state as {
+        messages?: ChatMessage[];
+        gridIR?: GridIR | null;
+        reasoningTrails?: Record<string, TrailEntry[]>;
+      });
+      localUpdatedAtRef.current = remote.updatedAt;
+    },
+    { enabled: restored },
+  );
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -271,6 +291,10 @@ export default function ArchitecturePage() {
         kind: 'grid',
         title,
         state: { messages, gridIR, reasoningTrails: committedTrails },
+      }).then((saved) => {
+        if (saved?.updatedAt) {
+          localUpdatedAtRef.current = saved.updatedAt;
+        }
       });
     }, 1000);
     return () => {
