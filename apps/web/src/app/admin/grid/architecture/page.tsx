@@ -10,6 +10,8 @@ import { upsertRecentSession } from '@/lib/recent-sessions';
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
 import { ShareButton } from '@/components/workspace/share-button';
 import { fetchSession, saveSession } from '@/lib/session-client';
+import { useChatPanel } from '@/hooks/use-chat-panel';
+import { ChatPanelToggle } from '@/components/workspace/chat-panel-toggle';
 
 interface TemplateOption {
   key: string;
@@ -98,6 +100,7 @@ function formatDiagramType(t: string): string {
 
 export default function ArchitecturePage() {
   const sessionId = useSessionId();
+  const chatPanel = useChatPanel();
   const [gridIR, setGridIR] = useState<GridIR | null>(null);
   const [diagramId, setDiagramId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -785,9 +788,10 @@ export default function ArchitecturePage() {
   }, [gridIR]);
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] gap-4">
-      {/* LEFT PANEL — 60% — Diagram canvas */}
-      <div className="flex flex-[3] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+    <div className="relative flex h-[calc(100vh-7rem)] gap-4">
+      <ChatPanelToggle open={chatPanel.open} onToggle={chatPanel.toggle} side="right" width={388} />
+      {/* LEFT PANEL — Diagram canvas */}
+      <div className="flex flex-1 min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex items-center gap-2 border-b border-border bg-white px-3 py-2">
           <div ref={templatesRef} className="relative">
             <button
@@ -915,8 +919,12 @@ export default function ArchitecturePage() {
         </div>
       </div>
 
-      {/* RIGHT PANEL — 40% — Prompt and chat */}
-      <div className="flex flex-[2] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card">
+      {/* RIGHT PANEL — Prompt and chat (collapsible) */}
+      <div
+        className="flex shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card transition-[width] duration-200 ease-out"
+        style={{ width: chatPanel.open ? 380 : 0 }}
+        aria-hidden={!chatPanel.open}
+      >
         <div className="border-b border-border p-4">
           <h1 className="text-lg font-bold">Architecture Diagrams</h1>
           <p className="text-xs text-muted-foreground mt-1">

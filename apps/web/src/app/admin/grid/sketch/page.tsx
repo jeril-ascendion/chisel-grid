@@ -12,6 +12,8 @@ import {
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
 import { useSessionId } from '@/hooks/use-session-id';
 import { DiagramSourceBanner } from '@/components/grid/DiagramSourceBanner';
+import { useChatPanel } from '@/hooks/use-chat-panel';
+import { ChatPanelToggle } from '@/components/workspace/chat-panel-toggle';
 
 const SketchCanvas = dynamic(() => import('./SketchCanvas'), {
   ssr: false,
@@ -51,6 +53,7 @@ function scoreBadgeClass(score: number): string {
 
 export default function SketchModePage() {
   const sessionId = useSessionId();
+  const chatPanel = useChatPanel();
   const router = useRouter();
   const [prompt, setPrompt] = useState('');
   const [diagramType, setDiagramType] = useState<string>(DiagramType.AWSArchitecture);
@@ -208,8 +211,9 @@ export default function SketchModePage() {
   }, [diagramId, isPromoting, router]);
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] gap-4">
-      <div className="flex flex-[3] min-w-0 flex-col overflow-hidden rounded-xl border-2 border-amber-400 bg-card">
+    <div className="relative flex h-[calc(100vh-7rem)] gap-4">
+      <ChatPanelToggle open={chatPanel.open} onToggle={chatPanel.toggle} side="right" width={388} />
+      <div className="flex flex-1 min-w-0 flex-col overflow-hidden rounded-xl border-2 border-amber-400 bg-card">
         <div className="flex items-center justify-between gap-2 border-b border-border bg-amber-50/40 px-3 py-2">
           <div className="flex items-center gap-2">
             <span className="text-amber-700 font-semibold text-sm">✎ Sketch mode</span>
@@ -253,7 +257,11 @@ export default function SketchModePage() {
         </div>
       </div>
 
-      <div className="flex flex-[2] min-w-0 flex-col gap-3 overflow-hidden">
+      <div
+        className="flex shrink-0 flex-col gap-3 overflow-hidden transition-[width] duration-200 ease-out"
+        style={{ width: chatPanel.open ? 380 : 0 }}
+        aria-hidden={!chatPanel.open}
+      >
         <div className="rounded-xl border border-border bg-card p-3">
           <label htmlFor="diagramType" className="block text-xs font-semibold text-muted-foreground mb-1">
             Diagram type

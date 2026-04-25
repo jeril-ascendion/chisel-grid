@@ -14,6 +14,8 @@ import { ReasoningTrail, type TrailEntry } from '@/components/workspace/Reasonin
 import { useSessionId } from '@/hooks/use-session-id';
 import { DiagramSourceBanner } from '@/components/grid/DiagramSourceBanner';
 import { RelatedContent } from '@/components/grid/RelatedContent';
+import { useChatPanel } from '@/hooks/use-chat-panel';
+import { ChatPanelToggle } from '@/components/workspace/chat-panel-toggle';
 
 const DiagramCanvas = dynamic(
   () => import('@chiselgrid/grid-renderer').then((m) => m.DiagramCanvas),
@@ -58,6 +60,7 @@ function downloadBlob(content: string, filename: string, mime: string): void {
 
 export default function PreciseModePage() {
   const sessionId = useSessionId();
+  const chatPanel = useChatPanel();
   const [prompt, setPrompt] = useState('');
   const [diagramType, setDiagramType] = useState<string>(DiagramType.AWSArchitecture);
   const [gridIR, setGridIR] = useState<GridIR | null>(null);
@@ -289,8 +292,9 @@ export default function PreciseModePage() {
   const showDeliveryWarning = validation !== null && validation.score < DELIVERY_THRESHOLD;
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] gap-4">
-      <div className="flex flex-[3] min-w-0 flex-col overflow-hidden rounded-xl border-2 border-blue-400 bg-card">
+    <div className="relative flex h-[calc(100vh-7rem)] gap-4">
+      <ChatPanelToggle open={chatPanel.open} onToggle={chatPanel.toggle} side="right" width={388} />
+      <div className="flex flex-1 min-w-0 flex-col overflow-hidden rounded-xl border-2 border-blue-400 bg-card">
         <div className="flex items-center justify-between gap-2 border-b border-border bg-blue-50/40 px-3 py-2">
           <span className="text-blue-700 font-semibold text-sm">◧ Precise mode</span>
           <div className="flex items-center gap-2">
@@ -382,7 +386,11 @@ export default function PreciseModePage() {
         )}
       </div>
 
-      <div className="flex flex-[2] min-w-0 flex-col gap-3 overflow-hidden">
+      <div
+        className="flex shrink-0 flex-col gap-3 overflow-hidden transition-[width] duration-200 ease-out"
+        style={{ width: chatPanel.open ? 380 : 0 }}
+        aria-hidden={!chatPanel.open}
+      >
         <div className="flex-1 min-h-0 overflow-auto rounded-xl border border-border bg-card p-3">
           <ReasoningTrail entries={trail} isActive={isStreaming} />
           {streamingStatus && (

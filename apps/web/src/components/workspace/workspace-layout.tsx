@@ -6,16 +6,31 @@ import { PreviewPanel } from './preview-panel';
 import { AgentTimeline } from './agent-timeline';
 import { SEOPanel } from './seo-panel';
 import { SubmitForm } from './submit-form';
+import { ChatPanelToggle } from './chat-panel-toggle';
+import { useChatPanel } from '@/hooks/use-chat-panel';
 import { cn } from '@/lib/utils';
+
+const CHAT_WIDTH = 480;
 
 export function WorkspaceLayout() {
   const pipelineStatus = useWorkspaceStore((s) => s.pipelineStatus);
   const blocks = useWorkspaceStore((s) => s.blocks);
+  const chatPanel = useChatPanel();
 
   return (
-    <div className="flex h-full overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="relative flex h-full overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <ChatPanelToggle
+        open={chatPanel.open}
+        onToggle={chatPanel.toggle}
+        side="left"
+        width={CHAT_WIDTH}
+      />
       {/* Left pane: Chat + Agent Timeline */}
-      <div className="flex w-[480px] shrink-0 flex-col border-r border-gray-200 dark:border-gray-700">
+      <div
+        className="flex shrink-0 flex-col overflow-hidden border-r border-gray-200 transition-[width] duration-200 ease-out dark:border-gray-700"
+        style={{ width: chatPanel.open ? CHAT_WIDTH : 0 }}
+        aria-hidden={!chatPanel.open}
+      >
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             AI Content Studio
