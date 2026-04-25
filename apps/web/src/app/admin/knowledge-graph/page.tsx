@@ -1,6 +1,6 @@
-import dynamic from 'next/dynamic';
+'use client';
 
-export const metadata = { title: 'Knowledge Graph' };
+import dynamic from 'next/dynamic';
 
 const KnowledgeGraphClient = dynamic(
   () => import('./KnowledgeGraphClient').then((m) => m.KnowledgeGraphClient),

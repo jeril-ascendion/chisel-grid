@@ -5,6 +5,7 @@ import { AdminSidebar } from '@/components/admin/sidebar';
 import { AdminBreadcrumbs } from '@/components/admin/breadcrumbs';
 import { AdminThemeToggle } from '@/components/admin/admin-theme-toggle';
 import { FloatingSidebarToggle } from '@/components/admin/floating-sidebar-toggle';
+import { useAuthSync } from '@/lib/auth-sync';
 
 type Role = 'admin' | 'creator' | 'reader';
 
@@ -19,6 +20,7 @@ export function AdminShell({
   role: Role;
   children: React.ReactNode;
 }) {
+  useAuthSync();
   const [collapsed, setCollapsed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 

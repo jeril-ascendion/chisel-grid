@@ -5,6 +5,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
 import { getCognitoSession, cognitoSignOut } from '@/lib/cognito-client';
+import { broadcastSignedOut } from '@/lib/auth-sync';
 import { ThemeToggle } from './theme-toggle';
 import { MobileMenu } from './mobile-menu';
 import { getCategories } from '@/lib/mock-data';
@@ -69,6 +70,7 @@ export function Header() {
     // NextAuth cookie that let the next "Sign In" auto-redirect to /admin.
     cognitoSignOut();
     setCognitoUser(null);
+    broadcastSignedOut();
     signOut({ callbackUrl: '/' });
   };
 
