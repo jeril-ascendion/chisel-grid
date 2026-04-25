@@ -4,6 +4,8 @@ export interface DiagramToolbarProps {
   diagramType: string;
   onDiagramTypeChange: (type: string) => void;
   onExportPNG: () => void;
+  onExportDrawio?: () => void;
+  onExportExcalidraw?: () => void;
 }
 
 export interface DiagramTypeOption {
@@ -19,10 +21,34 @@ export const DIAGRAM_TYPES: DiagramTypeOption[] = [
   { value: 'flowchart', label: 'Flow' },
 ];
 
+const PRIMARY_BUTTON: React.CSSProperties = {
+  padding: '6px 14px',
+  borderRadius: 8,
+  border: '1px solid #0f172a',
+  background: '#0f172a',
+  color: '#ffffff',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+};
+
+const SECONDARY_BUTTON: React.CSSProperties = {
+  padding: '6px 14px',
+  borderRadius: 8,
+  border: '1px solid #cbd5e1',
+  background: '#ffffff',
+  color: '#0f172a',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+};
+
 export function DiagramToolbar({
   diagramType,
   onDiagramTypeChange,
   onExportPNG,
+  onExportDrawio,
+  onExportExcalidraw,
 }: DiagramToolbarProps) {
   return (
     <div
@@ -60,22 +86,21 @@ export function DiagramToolbar({
           );
         })}
       </div>
-      <button
-        type="button"
-        onClick={onExportPNG}
-        style={{
-          padding: '6px 14px',
-          borderRadius: 8,
-          border: '1px solid #0f172a',
-          background: '#0f172a',
-          color: '#ffffff',
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: 'pointer',
-        }}
-      >
-        Export PNG
-      </button>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {onExportExcalidraw && (
+          <button type="button" onClick={onExportExcalidraw} style={SECONDARY_BUTTON}>
+            Export Sketch
+          </button>
+        )}
+        {onExportDrawio && (
+          <button type="button" onClick={onExportDrawio} style={SECONDARY_BUTTON}>
+            Export Draw.io
+          </button>
+        )}
+        <button type="button" onClick={onExportPNG} style={PRIMARY_BUTTON}>
+          Export PNG
+        </button>
+      </div>
     </div>
   );
 }

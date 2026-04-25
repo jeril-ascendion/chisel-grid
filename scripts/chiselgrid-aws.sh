@@ -182,10 +182,17 @@ deploy_latest() {
   HOME_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com || echo "000")
   LOGIN_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/login || echo "000")
   ADMIN_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/admin || echo "000")
+  SKETCH_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/admin/grid/sketch || echo "000")
+  PRECISE_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://www.chiselgrid.com/admin/grid/precise || echo "000")
 
   echo "  Homepage : $HOME_CODE  (expect 200)"
   echo "  Login    : $LOGIN_CODE  (expect 200)"
   echo "  Admin    : $ADMIN_CODE  (expect 307)"
+  echo "  Grid sketch (unauthed):  $SKETCH_CODE (must be 307)"
+  echo "  Grid precise (unauthed): $PRECISE_CODE (must be 307)"
+  if [ "$SKETCH_CODE" != "307" ] || [ "$PRECISE_CODE" != "307" ]; then
+    echo "WARNING: Grid sketch/precise routes not protected"
+  fi
 
   SMOKE_OK=1
   # /admin returning 200 means CloudFront is routing /admin to S3, bypassing

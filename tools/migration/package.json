@@ -12,6 +12,7 @@
     "import-taxonomy": "tsx src/import-taxonomy.ts",
     "seed-categories": "tsx src/seed-categories.ts",
     "verify-import": "tsx src/verify-import.ts",
+    "grid:add-mode": "tsx src/grid-mode-column.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

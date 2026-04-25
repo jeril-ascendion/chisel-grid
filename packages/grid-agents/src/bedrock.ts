@@ -97,9 +97,12 @@ export async function* streamModel(
   }
 
   const decoder = new TextDecoder();
+  let chunkCount = 0;
   for await (const event of response.body) {
     const bytes = event.chunk?.bytes;
     if (!bytes) continue;
+    chunkCount += 1;
+    console.log('[bedrock-stream]', JSON.stringify({ n: chunkCount, bytes: bytes.length }));
     const decoded = decoder.decode(bytes);
     let parsed: BedrockStreamChunk;
     try {

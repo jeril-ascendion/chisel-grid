@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     diagramType?: string;
     existingIR?: unknown;
     currentDiagramIR?: unknown;
+    mode?: string;
   };
   try {
     body = await req.json();
@@ -52,6 +53,8 @@ export async function POST(req: NextRequest) {
 
   const prompt = (body.prompt ?? '').trim();
   const diagramType = (body.diagramType ?? '').trim();
+  const VALID_MODES = new Set(['architecture', 'sketch', 'precise']);
+  const mode = VALID_MODES.has(body.mode ?? '') ? (body.mode as string) : 'architecture';
 
   if (!prompt) {
     return new Response(JSON.stringify({ error: 'Prompt is required' }), {
@@ -147,8 +150,8 @@ export async function POST(req: NextRequest) {
       if (auroraConfigured()) {
         try {
           const { rows } = await query<{ id: string }>(
-            `INSERT INTO grid_diagrams (tenant_id, title, diagram_type, grid_ir, created_by)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO grid_diagrams (tenant_id, title, diagram_type, grid_ir, created_by, mode)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING id`,
             [
               asUuid(tenantId),
@@ -156,6 +159,7 @@ export async function POST(req: NextRequest) {
               diagramType,
               asJson(finalIR),
               createdBy,
+              mode,
             ],
           );
           diagramId = rows[0]?.id ?? null;

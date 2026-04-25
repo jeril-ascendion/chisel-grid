@@ -452,7 +452,14 @@ export default function ArchitecturePage() {
               setGridIR((prev) => {
                 if (!prev) return prev;
                 if (prev.nodes.some((n) => n.id === newNode.id)) return prev;
-                return { ...prev, nodes: [...prev.nodes, newNode] };
+                // Override agent positions with a deterministic grid during streaming.
+                // gridIRToReactFlow skips dagre when every node has a non-zero position,
+                // so a stable grid keeps already-placed nodes still as new ones arrive.
+                // Dagre is fired once on the 'done' event below.
+                const idx = prev.nodes.length;
+                const streamingPosition = { x: (idx % 5) * 220, y: Math.floor(idx / 5) * 160 };
+                const positionedNode = { ...newNode, position: streamingPosition };
+                return { ...prev, nodes: [...prev.nodes, positionedNode] };
               });
               setStreamingStatus(`Placing ${newNode.label}… (${nodeCount} nodes)`);
               addTrail(
@@ -479,7 +486,17 @@ export default function ArchitecturePage() {
               }
               await new Promise((r) => setTimeout(r, 60));
             } else if (event.kind === 'done') {
-              setGridIR(event.gridIR);
+              // Strip per-node positions so gridIRToReactFlow runs dagre exactly once
+              // for the final layout. The streaming grid above kept things still;
+              // this delivers the polished diagram.
+              const finalIR = {
+                ...event.gridIR,
+                nodes: event.gridIR.nodes.map((n) => {
+                  const { position: _drop, ...rest } = n;
+                  return rest;
+                }),
+              };
+              setGridIR(finalIR);
               const label = formatDiagramType(event.gridIR.diagram_type);
               addTrail(
                 'agent',
@@ -691,6 +708,43 @@ export default function ArchitecturePage() {
     [handleGenerate],
   );
 
+  const downloadBlob = useCallback((content: string, filename: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, []);
+
+  const fileBaseName = useCallback(
+    () => (gridIR?.title || 'diagram').toLowerCase().replace(/\s+/g, '-'),
+    [gridIR],
+  );
+
+  const handleExportDrawio = useCallback(async () => {
+    if (!gridIR) {
+      alert('Generate a diagram first.');
+      return;
+    }
+    const { gridIRToDrawio } = await import('@chiselgrid/grid-ir');
+    downloadBlob(gridIRToDrawio(gridIR), `${fileBaseName()}.drawio`, 'application/xml');
+  }, [gridIR, downloadBlob, fileBaseName]);
+
+  const handleExportExcalidraw = useCallback(async () => {
+    if (!gridIR) {
+      alert('Generate a diagram first.');
+      return;
+    }
+    const { gridIRToExcalidrawFile } = await import('@chiselgrid/grid-ir');
+    downloadBlob(
+      gridIRToExcalidrawFile(gridIR),
+      `${fileBaseName()}.excalidraw`,
+      'application/json',
+    );
+  }, [gridIR, downloadBlob, fileBaseName]);
+
   const handleExportPNG = useCallback(async () => {
     if (!gridIR) {
       alert('Generate a diagram first.');
@@ -794,6 +848,8 @@ export default function ArchitecturePage() {
               diagramType={diagramType}
               onDiagramTypeChange={setDiagramType}
               onExportPNG={handleExportPNG}
+              onExportDrawio={handleExportDrawio}
+              onExportExcalidraw={handleExportExcalidraw}
             />
           </div>
           <ShareButton />
