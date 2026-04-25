@@ -99,7 +99,7 @@ function formatDiagramType(t: string): string {
 }
 
 export default function ArchitecturePage() {
-  const sessionId = useSessionId();
+  const sessionId = useSessionId({ restoreKind: 'grid' });
   const chatPanel = useChatPanel();
   const [gridIR, setGridIR] = useState<GridIR | null>(null);
   const [diagramId, setDiagramId] = useState<string | null>(null);

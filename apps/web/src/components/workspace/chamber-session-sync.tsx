@@ -15,7 +15,7 @@ interface ChamberState {
 }
 
 export function ChamberSessionSync() {
-  const sessionId = useSessionId();
+  const sessionId = useSessionId({ restoreKind: 'chamber' });
   const messages = useWorkspaceStore((s) => s.messages);
   const blocks = useWorkspaceStore((s) => s.blocks);
   const reasoningTrails = useWorkspaceStore((s) => s.reasoningTrails);

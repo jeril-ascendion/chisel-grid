@@ -185,6 +185,44 @@ export async function getPublicSession(
   return rowToSession(rows[0]!);
 }
 
+export interface ListSessionsOptions {
+  kind?: SessionKind;
+  limit?: number;
+  /** Currently only 'updated_at_desc' is supported. */
+  sort?: 'updated_at_desc';
+}
+
+/**
+ * Tenant + owner scoped listing of work sessions, most-recently-updated
+ * first. Used by session-restore-on-login: limit=1 returns the user's
+ * latest session of the requested kind.
+ */
+export async function listSessionsForOwner(
+  tenantId: string,
+  ownerId: string,
+  opts: ListSessionsOptions = {},
+): Promise<WorkSession[]> {
+  const limit = Math.max(1, Math.min(opts.limit ?? 20, 100));
+  const params: unknown[] = [asUuid(tenantId), asUuid(ownerId)];
+  let kindClause = '';
+  if (opts.kind) {
+    params.push(opts.kind);
+    kindClause = `AND kind = $${params.length}::session_kind`;
+  }
+  params.push(limit);
+  const limitParamIdx = params.length;
+
+  const { rows } = await query<Row>(
+    `SELECT ${SELECT_COLUMNS}
+     FROM work_sessions
+     WHERE tenant_id = $1 AND created_by = $2 ${kindClause}
+     ORDER BY updated_at DESC
+     LIMIT $${limitParamIdx}`,
+    params,
+  );
+  return rows.map(rowToSession);
+}
+
 export async function setVisibility(
   sessionId: string,
   tenantId: string,
