@@ -1,12 +1,23 @@
 import { z } from 'zod';
 
-export const ContentTypeEnum = z.enum(['standard_doc', 'blog_post']);
-export type ContentType = z.infer<typeof ContentTypeEnum>;
+export const CONTENT_TYPES = [
+  'article',
+  'adr',
+  'diagram',
+  'decision',
+  'runbook',
+  'template',
+  'post_mortem',
+] as const;
+export const ContentTypeEnum = z.enum(CONTENT_TYPES);
+export type ContentType = (typeof CONTENT_TYPES)[number];
 
-export const ContentStatusEnum = z.enum([
-  'draft', 'submitted', 'in_review', 'approved', 'published', 'deprecated', 'rejected',
-]);
-export type ContentStatus = z.infer<typeof ContentStatusEnum>;
+export const CONTENT_STATUSES = [
+  'draft', 'submitted', 'in_review', 'approved', 'published',
+  'archived', 'deprecated', 'rejected',
+] as const;
+export const ContentStatusEnum = z.enum(CONTENT_STATUSES);
+export type ContentStatus = (typeof CONTENT_STATUSES)[number];
 
 export const TextBlockSchema = z.object({
   type: z.literal('text'),

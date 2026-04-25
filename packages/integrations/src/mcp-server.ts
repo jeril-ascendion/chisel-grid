@@ -75,7 +75,7 @@ export const MCP_TOOLS = [
       type: 'object' as const,
       properties: {
         topic: { type: 'string', description: 'Article topic to generate' },
-        contentType: { type: 'string', description: 'Content type: standard_doc, tutorial, case_study' },
+        contentType: { type: 'string', description: 'Content type: article, adr, diagram, decision, runbook, template, post_mortem' },
         tenantId: { type: 'string', description: 'Tenant identifier' },
       },
       required: ['topic', 'contentType', 'tenantId'],

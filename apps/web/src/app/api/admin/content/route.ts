@@ -10,6 +10,9 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
+  const contentType = searchParams.get('contentType');
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
   const sortParam = searchParams.get('sort');
   const sort: ArticleSort = sortParam === 'most_referenced' ? 'most_referenced' : 'recent';
 
@@ -17,11 +20,27 @@ export async function GET(req: NextRequest) {
   if (status && status !== 'all') {
     articles = articles.filter((a) => a.status === status);
   }
+  if (contentType && contentType !== 'all') {
+    articles = articles.filter((a) => a.contentType === contentType);
+  }
+  if (from) {
+    const fromTs = Date.parse(from);
+    if (!Number.isNaN(fromTs)) {
+      articles = articles.filter((a) => Date.parse(a.createdAt) >= fromTs);
+    }
+  }
+  if (to) {
+    const toTs = Date.parse(to);
+    if (!Number.isNaN(toTs)) {
+      articles = articles.filter((a) => Date.parse(a.createdAt) <= toTs);
+    }
+  }
 
   const items = articles.map((a) => ({
     id: a.contentId,
     title: a.title,
     status: a.status,
+    contentType: a.contentType,
     author: a.authorId,
     category: a.categoryPath || a.categoryName || 'Uncategorised',
     categoryName: a.categoryName,
@@ -32,7 +51,7 @@ export async function GET(req: NextRequest) {
     categoryId: a.category,
     timesReferenced: a.timesReferenced,
     updatedAt: a.createdAt,
-    publishedAt: a.status === 'published' ? a.createdAt : null,
+    publishedAt: a.publishedAt ?? (a.status === 'published' ? a.createdAt : null),
   }));
 
   return NextResponse.json({ items });

@@ -20,7 +20,7 @@ export class WriterAgent extends BaseAgent<WriterOutput> {
   }): Promise<AgentResult<WriterOutput>> {
     return this.run({
       topic: params.topic,
-      contentType: params.contentType ?? 'standard_doc',
+      contentType: params.contentType ?? 'article',
       categoryContext: params.categoryContext ?? '',
       additionalInstructions: params.additionalInstructions ?? '',
     });

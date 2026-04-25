@@ -5,13 +5,15 @@
  */
 
 import { query, auroraConfigured, asUuid, asJson, DEFAULT_TENANT_ID } from './db/aurora';
+import type { ContentType, ContentStatus } from '@chiselgrid/types';
 
 export interface StoredArticle {
   contentId: string;
   title: string;
   slug: string;
   description: string;
-  status: 'draft' | 'submitted' | 'in_review' | 'approved' | 'published' | 'rejected';
+  status: ContentStatus;
+  contentType: ContentType;
   blocks: unknown[];
   category: string;
   categoryName: string;
@@ -24,6 +26,7 @@ export interface StoredArticle {
   readTimeMinutes: number;
   timesReferenced?: number;
   createdAt: string;
+  publishedAt: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -67,8 +70,9 @@ const CATEGORY_SLUG_PATH_SUBQUERY = `
    SELECT slug_path FROM p WHERE parent_id IS NULL LIMIT 1)
 `;
 const LIST_COLS = `
-  c.content_id, c.title, c.slug, c.description, c.status,
-  c.category_id, c.author_id, c.read_time_minutes, c.times_referenced, c.created_at,
+  c.content_id, c.title, c.slug, c.description, c.status, c.content_type,
+  c.category_id, c.author_id, c.read_time_minutes, c.times_referenced,
+  c.created_at, c.published_at,
   cat.name AS category_name, cat.slug AS category_slug,
   cat.level AS category_level,
   ${CATEGORY_PATH_SUBQUERY} AS category_path,
@@ -83,6 +87,7 @@ type Row = {
   slug: string;
   description: string | null;
   status: StoredArticle['status'];
+  content_type: StoredArticle['contentType'];
   blocks?: unknown;
   category_id: string | null;
   category_name: string | null;
@@ -94,6 +99,7 @@ type Row = {
   read_time_minutes: number | null;
   times_referenced: number | null;
   created_at: string;
+  published_at: string | null;
 };
 
 function rowToArticle(row: Row): StoredArticle {
@@ -109,6 +115,9 @@ function rowToArticle(row: Row): StoredArticle {
   const created = row.created_at
     ? new Date(row.created_at.replace(' ', 'T') + 'Z').toISOString()
     : new Date().toISOString();
+  const published = row.published_at
+    ? new Date(row.published_at.replace(' ', 'T') + 'Z').toISOString()
+    : null;
   const leafName = row.category_name ?? '';
   const leafSlug = row.category_slug ?? '';
   return {
@@ -117,6 +126,7 @@ function rowToArticle(row: Row): StoredArticle {
     slug: row.slug,
     description: row.description ?? '',
     status: row.status,
+    contentType: row.content_type ?? 'article',
     blocks,
     category: row.category_id ?? '',
     categoryName: leafName,
@@ -129,6 +139,7 @@ function rowToArticle(row: Row): StoredArticle {
     readTimeMinutes: row.read_time_minutes ?? 5,
     timesReferenced: row.times_referenced ?? 0,
     createdAt: created,
+    publishedAt: published,
   };
 }
 
@@ -142,9 +153,9 @@ export async function addArticle(article: StoredArticle): Promise<void> {
   try {
     await query(
       `INSERT INTO content (
-        content_id, tenant_id, author_id, title, slug, description, status,
+        content_id, tenant_id, author_id, title, slug, description, status, content_type,
         blocks, read_time_minutes, created_at, updated_at
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7::content_status, $8::content_type, $9, $10, NOW(), NOW())
        ON CONFLICT (content_id) DO NOTHING`,
       [
         asUuid(article.contentId),
@@ -154,6 +165,7 @@ export async function addArticle(article: StoredArticle): Promise<void> {
         article.slug,
         article.description,
         article.status,
+        article.contentType ?? 'article',
         asJson(article.blocks),
         article.readTimeMinutes,
       ],
@@ -226,6 +238,10 @@ export async function updateArticle(
       if (updates.status !== undefined) {
         params.push(updates.status);
         sets.push(`status = $${params.length}::content_status`);
+      }
+      if (updates.contentType !== undefined) {
+        params.push(updates.contentType);
+        sets.push(`content_type = $${params.length}::content_type`);
       }
       if (updates.blocks !== undefined) push('blocks', asJson(updates.blocks));
       if (updates.readTimeMinutes !== undefined) push('read_time_minutes', updates.readTimeMinutes);

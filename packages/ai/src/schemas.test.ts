@@ -138,7 +138,7 @@ describe('PipelineInputSchema', () => {
       authorId: '550e8400-e29b-41d4-a716-446655440001',
     };
     const result = PipelineInputSchema.parse(input);
-    expect(result.contentType).toBe('standard_doc');
+    expect(result.contentType).toBe('article');
     expect(result.maxRevisions).toBe(3);
     expect(result.revisionThreshold).toBe(60);
   });

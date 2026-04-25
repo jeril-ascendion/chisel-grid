@@ -117,7 +117,7 @@ export class VoiceContentPipeline {
           content: PROMPT_TEMPLATES.writeFromTranscript.buildUserMessage({
             structuredTranscript: JSON.stringify(structured),
             languageCode: input.languageCode,
-            contentType: input.contentType ?? 'standard_doc',
+            contentType: input.contentType ?? 'article',
           }),
         },
       ],

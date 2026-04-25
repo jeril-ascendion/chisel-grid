@@ -7,7 +7,7 @@ import {
   tags,
   categories,
 } from '../schema/content';
-import type { ContentBlock } from '@chiselgrid/types';
+import type { ContentBlock, ContentType, ContentStatus } from '@chiselgrid/types';
 
 export interface CreateContentInput {
   tenantId: string;
@@ -15,7 +15,7 @@ export interface CreateContentInput {
   title: string;
   slug: string;
   description?: string;
-  contentType?: 'standard_doc' | 'blog_post';
+  contentType?: ContentType;
   blocks?: ContentBlock[];
   categoryId?: string;
   heroImageUrl?: string;
@@ -25,7 +25,8 @@ export interface UpdateContentInput {
   title?: string;
   slug?: string;
   description?: string;
-  status?: 'draft' | 'submitted' | 'in_review' | 'approved' | 'published' | 'deprecated' | 'rejected';
+  status?: ContentStatus;
+  contentType?: ContentType;
   blocks?: ContentBlock[];
   heroImageUrl?: string;
   audioUrl?: string;
@@ -58,7 +59,7 @@ export class ContentRepository {
         title: input.title,
         slug: input.slug,
         description: input.description ?? null,
-        contentType: input.contentType ?? 'standard_doc',
+        contentType: input.contentType ?? 'article',
         blocks: JSON.stringify(input.blocks ?? []),
         categoryId: input.categoryId ?? null,
         heroImageUrl: input.heroImageUrl ?? null,

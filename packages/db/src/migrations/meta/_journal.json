@@ -15,6 +15,27 @@
       "when": 1777082108765,
       "tag": "0001_regular_micromacro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777881600000,
+      "tag": "0002_rebucket_blogpost",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777881700000,
+      "tag": "0003_extend_content_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777881800000,
+      "tag": "0004_extend_content_status",
+      "breakpoints": true
     }
   ]
 }

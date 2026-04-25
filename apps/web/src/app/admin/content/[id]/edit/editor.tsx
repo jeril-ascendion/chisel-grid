@@ -2,8 +2,9 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import type { ContentBlock } from '@chiselgrid/types';
+import type { ContentBlock, ContentType } from '@chiselgrid/types';
 import { RelatedContent } from '@/components/grid/RelatedContent';
+import { CONTENT_TYPE_OPTIONS } from '@/lib/content-types';
 
 interface ArticleData {
   contentId: string;
@@ -11,6 +12,7 @@ interface ArticleData {
   slug: string;
   description: string;
   status: string;
+  contentType: ContentType;
   blocks: ContentBlock[];
   categorySlug: string;
   categoryName: string;
@@ -28,6 +30,7 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('draft');
+  const [contentType, setContentType] = useState<ContentType>('article');
   const [categorySlug, setCategorySlug] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [readTime, setReadTime] = useState(5);
@@ -45,6 +48,7 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
         setTitle(data.title);
         setDescription(data.description);
         setStatus(data.status);
+        setContentType((data.contentType ?? 'article') as ContentType);
         setCategorySlug(data.categorySlug);
         setTagsInput(data.tags.map((t) => t.name).join(', '));
         setReadTime(data.readTimeMinutes);
@@ -65,7 +69,7 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
       const res = await fetch(`/api/content/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status, categorySlug, tags: tagsInput, readTimeMinutes: readTime, blocks }),
+        body: JSON.stringify({ title, description, status, contentType, categorySlug, tags: tagsInput, readTimeMinutes: readTime, blocks }),
       });
       if (res.ok) showToast('Article saved successfully');
       else showToast('Failed to save');
@@ -83,7 +87,7 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
       const res = await fetch(`/api/content/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status: newStatus, categorySlug, tags: tagsInput, readTimeMinutes: readTime, blocks }),
+        body: JSON.stringify({ title, description, status: newStatus, contentType, categorySlug, tags: tagsInput, readTimeMinutes: readTime, blocks }),
       });
       if (res.ok) {
         showToast(`Status changed to ${newStatus}`);
@@ -107,7 +111,7 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
       await fetch(`/api/content/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status: 'in_review', categorySlug, tags: tagsInput, readTimeMinutes: readTime, blocks }),
+        body: JSON.stringify({ title, description, status: 'in_review', contentType, categorySlug, tags: tagsInput, readTimeMinutes: readTime, blocks }),
       });
       // Change status back to in_review
       const res = await fetch('/api/admin/queue', {
@@ -240,7 +244,19 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {/* Meta row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+          <select
+            value={contentType}
+            onChange={(e) => setContentType(e.target.value as ContentType)}
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          >
+            {CONTENT_TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
           <input
@@ -261,6 +277,7 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
             <option value="in_review">In Review</option>
             <option value="approved">Approved</option>
             <option value="published">Published</option>
+            <option value="archived">Archived</option>
           </select>
         </div>
         <div>

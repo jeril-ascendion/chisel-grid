@@ -13,25 +13,28 @@ import {
 
 describe('ContentTypeEnum', () => {
   it('accepts valid content types', () => {
-    expect(ContentTypeEnum.parse('standard_doc')).toBe('standard_doc');
-    expect(ContentTypeEnum.parse('blog_post')).toBe('blog_post');
+    for (const t of ['article', 'adr', 'diagram', 'decision', 'runbook', 'template', 'post_mortem']) {
+      expect(ContentTypeEnum.parse(t)).toBe(t);
+    }
   });
 
   it('rejects invalid content types', () => {
     expect(() => ContentTypeEnum.parse('invalid')).toThrow();
+    expect(() => ContentTypeEnum.parse('standard_doc')).toThrow();
+    expect(() => ContentTypeEnum.parse('blog_post')).toThrow();
   });
 });
 
 describe('ContentStatusEnum', () => {
   it('accepts all valid statuses', () => {
-    const statuses = ['draft', 'submitted', 'in_review', 'approved', 'published', 'deprecated', 'rejected'];
+    const statuses = ['draft', 'submitted', 'in_review', 'approved', 'published', 'archived', 'deprecated', 'rejected'];
     for (const s of statuses) {
       expect(ContentStatusEnum.parse(s)).toBe(s);
     }
   });
 
   it('rejects invalid statuses', () => {
-    expect(() => ContentStatusEnum.parse('archived')).toThrow();
+    expect(() => ContentStatusEnum.parse('nonsense')).toThrow();
   });
 });
 

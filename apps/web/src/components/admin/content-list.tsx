@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { ContentTypeBadge } from './content-type-badge';
 
 interface ContentItem {
   id: string;
   title: string;
   status: string;
+  contentType: string;
   author: string;
   category: string;
   timesReferenced?: number;
@@ -79,6 +81,7 @@ export function ContentList() {
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
               <th className="px-4 py-3 text-left font-medium text-gray-500">Title</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-500">Type</th>
               <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
               <th className="px-4 py-3 text-left font-medium text-gray-500">Author</th>
               <th className="px-4 py-3 text-left font-medium text-gray-500">Category</th>
@@ -89,14 +92,15 @@ export function ContentList() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
             )}
             {!loading && items.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No articles found</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No articles found</td></tr>
             )}
             {items.map((item) => (
               <tr key={item.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
                 <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{item.title}</td>
+                <td className="px-4 py-3"><ContentTypeBadge contentType={item.contentType} /></td>
                 <td className="px-4 py-3">
                   <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', statusColors[item.status])}>
                     {item.status.replace('_', ' ')}

@@ -44,7 +44,7 @@ describe('WriterAgent', () => {
       const callArgs = vi.mocked(bedrock.invoke).mock.calls[0]!;
       const userMessage = callArgs[0]![0]!.content;
       expect(userMessage).toContain('Test Topic');
-      expect(userMessage).toContain('standard_doc');
+      expect(userMessage).toContain('article');
     });
 
     it('throws on invalid output (fewer than 3 blocks)', async () => {

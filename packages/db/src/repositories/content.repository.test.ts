@@ -70,7 +70,7 @@ describe('ContentRepository', () => {
       expect(result.title).toBe('Test Article');
     });
 
-    it('defaults contentType to standard_doc', async () => {
+    it('defaults contentType to article', async () => {
       await repo.create({
         tenantId: 'tenant-1',
         authorId: 'author-1',
@@ -80,7 +80,7 @@ describe('ContentRepository', () => {
 
       expect(mockDb.chainMethods.values).toHaveBeenCalledWith(
         expect.objectContaining({
-          contentType: 'standard_doc',
+          contentType: 'article',
         }),
       );
     });
