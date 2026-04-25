@@ -13,6 +13,7 @@ import {
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
 import { useSessionId } from '@/hooks/use-session-id';
 import { DiagramSourceBanner } from '@/components/grid/DiagramSourceBanner';
+import { RelatedContent } from '@/components/grid/RelatedContent';
 
 const DiagramCanvas = dynamic(
   () => import('@chiselgrid/grid-renderer').then((m) => m.DiagramCanvas),
@@ -332,8 +333,16 @@ export default function PreciseModePage() {
         )}
 
         {diagramId && (
-          <div className="border-b border-border bg-blue-50/20 px-3 py-2">
+          <div className="border-b border-border bg-blue-50/20 px-3 py-2 space-y-2">
             <DiagramSourceBanner diagramId={diagramId} />
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Linked articles & related
+              </summary>
+              <div className="mt-2">
+                <RelatedContent ownerId={diagramId} ownerType="diagram" />
+              </div>
+            </details>
           </div>
         )}
 

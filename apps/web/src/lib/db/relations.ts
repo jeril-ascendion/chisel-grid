@@ -93,6 +93,183 @@ export async function insertRelation(
   return newId;
 }
 
+export interface RelationRow {
+  id: string;
+  tenantId: string;
+  sourceId: string;
+  sourceType: string;
+  targetId: string;
+  targetType: string;
+  relationType: string;
+  createdAt: string;
+  title: string | null;
+}
+
+export async function listOutbound(
+  tenantId: string,
+  sourceId: string,
+  sourceType: string,
+): Promise<RelationRow[]> {
+  return listRelations(tenantId, {
+    side: 'source',
+    id: sourceId,
+    type: sourceType,
+  });
+}
+
+export async function listInbound(
+  tenantId: string,
+  targetId: string,
+  targetType: string,
+): Promise<RelationRow[]> {
+  return listRelations(tenantId, {
+    side: 'target',
+    id: targetId,
+    type: targetType,
+  });
+}
+
+async function listRelations(
+  tenantId: string,
+  filter: { side: 'source' | 'target'; id: string; type: string },
+): Promise<RelationRow[]> {
+  const idCol = filter.side === 'source' ? 'r.source_id' : 'r.target_id';
+  const typeCol = filter.side === 'source' ? 'r.source_type' : 'r.target_type';
+  const sql = `
+    SELECT r.id::text                        AS id,
+           r.tenant_id                       AS tenant_id,
+           r.source_id::text                 AS source_id,
+           r.source_type                     AS source_type,
+           r.target_id::text                 AS target_id,
+           r.target_type                     AS target_type,
+           r.relation_type                   AS relation_type,
+           to_char(r.created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS created_at,
+           COALESCE(c.title, g.title)        AS title
+      FROM content_relations r
+      LEFT JOIN content       c
+        ON c.content_id = (CASE WHEN ${
+          filter.side === 'source' ? 'r.target_type' : 'r.source_type'
+        } = 'article'
+                                  THEN ${
+                                    filter.side === 'source' ? 'r.target_id' : 'r.source_id'
+                                  }
+                                ELSE NULL END)
+       AND c.tenant_id::text = r.tenant_id
+      LEFT JOIN grid_diagrams g
+        ON g.id = (CASE WHEN ${
+          filter.side === 'source' ? 'r.target_type' : 'r.source_type'
+        } = 'diagram'
+                          THEN ${
+                            filter.side === 'source' ? 'r.target_id' : 'r.source_id'
+                          }
+                        ELSE NULL END)
+       AND g.tenant_id = r.tenant_id
+     WHERE r.tenant_id = $1
+       AND ${idCol} = $2
+       AND ${typeCol} = $3
+     ORDER BY r.created_at DESC
+     LIMIT 200
+  `;
+  const { rows } = await query<{
+    id: string;
+    tenant_id: string;
+    source_id: string;
+    source_type: string;
+    target_id: string;
+    target_type: string;
+    relation_type: string;
+    created_at: string;
+    title: string | null;
+  }>(sql, [tenantId, asUuid(filter.id), filter.type]);
+
+  return rows.map((r) => ({
+    id: r.id,
+    tenantId: r.tenant_id,
+    sourceId: r.source_id,
+    sourceType: r.source_type,
+    targetId: r.target_id,
+    targetType: r.target_type,
+    relationType: r.relation_type,
+    createdAt: r.created_at,
+    title: r.title,
+  }));
+}
+
+/**
+ * Delete an edge by id and decrement the target's counter.
+ * Returns the deleted row's target info, or null if no row matched.
+ */
+export async function deleteRelation(
+  tenantId: string,
+  id: string,
+): Promise<{ targetId: string; targetType: string } | null> {
+  const { rows } = await query<{ target_id: string; target_type: string }>(
+    `DELETE FROM content_relations
+      WHERE tenant_id = $1 AND id = $2
+      RETURNING target_id::text AS target_id, target_type`,
+    [tenantId, asUuid(id)],
+  );
+  const row = rows[0];
+  if (!row) return null;
+
+  if (row.target_type === 'article') {
+    await query(
+      `UPDATE content
+          SET times_referenced = GREATEST(times_referenced - 1, 0)
+        WHERE content_id = $1
+          AND tenant_id::text = $2`,
+      [asUuid(row.target_id), tenantId],
+    );
+  } else if (row.target_type === 'diagram') {
+    await query(
+      `UPDATE grid_diagrams
+          SET times_referenced = GREATEST(times_referenced - 1, 0)
+        WHERE id = $1
+          AND tenant_id = $2`,
+      [asUuid(row.target_id), tenantId],
+    );
+  }
+
+  return { targetId: row.target_id, targetType: row.target_type };
+}
+
+export interface SearchResult {
+  id: string;
+  type: 'article' | 'diagram';
+  title: string;
+}
+
+export async function searchLinkable(
+  tenantId: string,
+  q: string,
+  limit = 20,
+): Promise<SearchResult[]> {
+  const term = `%${q.replace(/[%_]/g, '\\$&')}%`;
+  const { rows } = await query<{ id: string; type: string; title: string }>(
+    `SELECT * FROM (
+       SELECT content_id::text AS id, 'article' AS type, title
+         FROM content
+        WHERE tenant_id::text = $1 AND title ILIKE $2
+        ORDER BY updated_at DESC
+        LIMIT $3
+     ) a
+     UNION ALL
+     SELECT * FROM (
+       SELECT id::text AS id, 'diagram' AS type, title
+         FROM grid_diagrams
+        WHERE tenant_id = $1 AND title ILIKE $2
+        ORDER BY updated_at DESC
+        LIMIT $3
+     ) d`,
+    [tenantId, term, limit],
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    type: r.type as 'article' | 'diagram',
+    title: r.title,
+  }));
+}
+
 export interface SourceSessionRow {
   sessionId: string;
   title: string | null;

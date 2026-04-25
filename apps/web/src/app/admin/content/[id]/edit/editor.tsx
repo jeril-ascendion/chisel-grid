@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ContentBlock } from '@chiselgrid/types';
+import { RelatedContent } from '@/components/grid/RelatedContent';
 
 interface ArticleData {
   contentId: string;
@@ -357,6 +358,8 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
           ))}
         </div>
       </div>
+
+      <RelatedContent ownerId={id} ownerType="article" />
     </div>
   );
 }

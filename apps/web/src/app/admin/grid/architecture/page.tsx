@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { DiagramType, TEMPLATES, type GridEdge, type GridIR, type GridNode } from '@chiselgrid/grid-ir';
 import { useSessionId } from '@/hooks/use-session-id';
 import { DiagramSourceBanner } from '@/components/grid/DiagramSourceBanner';
+import { RelatedContent } from '@/components/grid/RelatedContent';
 import { upsertRecentSession } from '@/lib/recent-sessions';
 import { ReasoningTrail, type TrailEntry } from '@/components/workspace/ReasoningTrail';
 import { ShareButton } from '@/components/workspace/share-button';
@@ -859,8 +860,16 @@ export default function ArchitecturePage() {
           <ShareButton />
         </div>
         {diagramId && (
-          <div className="border-b border-border px-3 py-2">
+          <div className="border-b border-border px-3 py-2 space-y-2">
             <DiagramSourceBanner diagramId={diagramId} />
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                Linked articles & related
+              </summary>
+              <div className="mt-2">
+                <RelatedContent ownerId={diagramId} ownerType="diagram" />
+              </div>
+            </details>
           </div>
         )}
         <div className="relative flex-1 min-h-0">
