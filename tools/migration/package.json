@@ -19,6 +19,9 @@
     "relations:counters:verify": "tsx src/relations-counters.ts verify",
     "relations:backfill": "tsx src/backfill-times-referenced.ts run",
     "relations:backfill:verify": "tsx src/backfill-times-referenced.ts verify",
+    "templates:migrate": "tsx src/studio-templates-schema.ts migrate",
+    "templates:verify": "tsx src/studio-templates-schema.ts verify",
+    "templates:seed": "tsx src/seed-studio-templates.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
