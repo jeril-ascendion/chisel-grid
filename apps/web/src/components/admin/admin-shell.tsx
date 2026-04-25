@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { AdminSidebar } from '@/components/admin/sidebar';
 import { AdminBreadcrumbs } from '@/components/admin/breadcrumbs';
-import { AdminThemeToggle } from '@/components/admin/admin-theme-toggle';
 import { FloatingSidebarToggle } from '@/components/admin/floating-sidebar-toggle';
 import { useAuthSync } from '@/lib/auth-sync';
 
@@ -73,7 +72,6 @@ export function AdminShell({
         <header className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-3">
           <AdminBreadcrumbs />
           <div className="flex items-center gap-3">
-            <AdminThemeToggle />
             <span
               className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                 role === 'admin'
