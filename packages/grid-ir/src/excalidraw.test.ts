@@ -41,25 +41,28 @@ describe('gridIRToExcalidraw', () => {
     expect(arrows).toHaveLength(9);
   });
 
-  it('sets roughness=1 on every rectangle (hand-drawn aesthetic)', () => {
+  it('sets roughness=0 on every rectangle (sharp-edge aesthetic)', () => {
     const rectangles = elements.filter(
       (e): e is ExcalidrawRectangle => e.type === 'rectangle',
     );
     for (const rect of rectangles) {
-      expect(rect.roughness).toBe(1);
+      expect(rect.roughness).toBe(0);
+      expect(rect.roundness).toBeNull();
+      expect(rect.strokeColor).toBe('#000000');
+      expect(rect.strokeWidth).toBe(1);
     }
   });
 
-  it('maps zone colors per the spec', () => {
+  it('maps zone background fills per the spec (strokes are uniform black)', () => {
     const byId = new Map(
       elements
         .filter((e): e is ExcalidrawRectangle => e.type === 'rectangle')
         .map((e) => [e.id, e]),
     );
-    expect(byId.get('node-0')!.strokeColor).toBe('#3b82f6'); // public
-    expect(byId.get('node-1')!.strokeColor).toBe('#10b981'); // private
-    expect(byId.get('node-2')!.strokeColor).toBe('#ef4444'); // compliance
-    expect(byId.get('node-3')!.strokeColor).toBe('#a855f7'); // external
+    expect(byId.get('node-0')!.backgroundColor).toBe('#EFF6FF'); // public
+    expect(byId.get('node-1')!.backgroundColor).toBe('#F0FDF4'); // private
+    expect(byId.get('node-2')!.backgroundColor).toBe('#FEF2F2'); // compliance
+    expect(byId.get('node-3')!.backgroundColor).toBe('#F5F3FF'); // external
   });
 
   it('binds arrows to source and target node ids', () => {

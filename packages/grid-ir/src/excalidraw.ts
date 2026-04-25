@@ -11,7 +11,7 @@ export interface ExcalidrawElementBase {
   strokeColor: string;
   backgroundColor: string;
   fillStyle: 'solid' | 'hachure' | 'cross-hatch';
-  strokeWidth: 1 | 2 | 4;
+  strokeWidth: number;
   strokeStyle: 'solid' | 'dashed' | 'dotted';
   roughness: 0 | 1 | 2;
   opacity: number;
@@ -39,13 +39,14 @@ export interface ExcalidrawArrow extends ExcalidrawElementBase {
   endBinding: { elementId: string; focus: 0; gap: 1 } | null;
   startArrowhead: null;
   endArrowhead: 'arrow';
+  elbowed: boolean;
 }
 
 export interface ExcalidrawText extends ExcalidrawElementBase {
   type: 'text';
   text: string;
   fontSize: number;
-  fontFamily: 1;
+  fontFamily: 1 | 4;
   textAlign: 'center';
   verticalAlign: 'middle';
   baseline: number;
@@ -63,24 +64,18 @@ const FALLBACK_X_STEP = 240;
 const FALLBACK_Y_STEP = 140;
 
 const ZONE_BACKGROUND: Record<string, string> = {
-  public: '#dbeafe',
-  private: '#d1fae5',
-  compliance: '#fee2e2',
-  external: '#ede9fe',
+  public: '#EFF6FF',
+  private: '#F0FDF4',
+  compliance: '#FEF2F2',
+  data: '#FFFBEB',
+  external: '#F5F3FF',
 };
 
-const ZONE_STROKE: Record<string, string> = {
-  public: '#3b82f6',
-  private: '#10b981',
-  compliance: '#ef4444',
-  external: '#a855f7',
-};
+const DEFAULT_BACKGROUND = '#F9FAFB';
+const NODE_STROKE = '#000000';
+const ARROW_STROKE = '#374151';
+const TEXT_COLOR = '#000000';
 
-const DEFAULT_BACKGROUND = '#f1f5f9';
-const DEFAULT_STROKE = '#475569';
-
-// Deterministic seed/id derivation so the same Grid-IR always produces the
-// same Excalidraw file (useful for tests and content-addressable storage).
 function hashString(s: string): number {
   let h = 5381;
   for (let i = 0; i < s.length; i++) {
@@ -115,16 +110,16 @@ function buildRectangle(node: GridNode, idx: number, textId: string): Excalidraw
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
     angle: 0,
-    strokeColor: ZONE_STROKE[zone] ?? DEFAULT_STROKE,
+    strokeColor: NODE_STROKE,
     backgroundColor: ZONE_BACKGROUND[zone] ?? DEFAULT_BACKGROUND,
     fillStyle: 'solid',
-    strokeWidth: 2,
+    strokeWidth: 1,
     strokeStyle: 'solid',
-    roughness: 1,
+    roughness: 0,
     opacity: 100,
     groupIds: [],
     frameId: null,
-    roundness: { type: 3 },
+    roundness: null,
     seed,
     version: 1,
     versionNonce: seed,
@@ -147,12 +142,12 @@ function buildLabel(node: GridNode, idx: number, textId: string): ExcalidrawText
     width: NODE_WIDTH,
     height: NODE_HEIGHT,
     angle: 0,
-    strokeColor: '#0f172a',
+    strokeColor: TEXT_COLOR,
     backgroundColor: 'transparent',
     fillStyle: 'solid',
     strokeWidth: 1,
     strokeStyle: 'solid',
-    roughness: 1,
+    roughness: 0,
     opacity: 100,
     groupIds: [],
     frameId: null,
@@ -167,7 +162,7 @@ function buildLabel(node: GridNode, idx: number, textId: string): ExcalidrawText
     locked: false,
     text: node.label,
     fontSize: 16,
-    fontFamily: 1,
+    fontFamily: 4,
     textAlign: 'center',
     verticalAlign: 'middle',
     baseline: 18,
@@ -195,12 +190,12 @@ function buildArrow(
     width: endX - startX,
     height: endY - startY,
     angle: 0,
-    strokeColor: '#475569',
+    strokeColor: ARROW_STROKE,
     backgroundColor: 'transparent',
     fillStyle: 'solid',
-    strokeWidth: 2,
+    strokeWidth: 1.5,
     strokeStyle: 'solid',
-    roughness: 1,
+    roughness: 0,
     opacity: 100,
     groupIds: [],
     frameId: null,
@@ -221,6 +216,7 @@ function buildArrow(
     endBinding: { elementId: edge.to, focus: 0, gap: 1 },
     startArrowhead: null,
     endArrowhead: 'arrow',
+    elbowed: true,
   };
 }
 
