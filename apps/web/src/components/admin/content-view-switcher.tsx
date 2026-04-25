@@ -4,42 +4,30 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-
-const STORAGE_KEY = 'cg.adminContentView';
-const VIEWS = [
-  { id: 'table' as const, label: 'Table', href: '/admin/content' },
-  { id: 'board' as const, label: 'Board', href: '/admin/content/board' },
-  { id: 'timeline' as const, label: 'Timeline', href: '/admin/content/timeline' },
-];
-type ViewId = (typeof VIEWS)[number]['id'];
-
-function pathToView(pathname: string): ViewId {
-  if (pathname.startsWith('/admin/content/board')) return 'board';
-  if (pathname.startsWith('/admin/content/timeline')) return 'timeline';
-  return 'table';
-}
-
-function isValidView(v: string | null): v is ViewId {
-  return v === 'table' || v === 'board' || v === 'timeline';
-}
+import {
+  CONTENT_VIEWS,
+  CONTENT_VIEW_STORAGE_KEY,
+  hrefForContentView,
+  isValidContentView,
+  pathToContentView,
+} from '@/lib/content-view';
 
 export function ContentViewSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
-  const active = pathToView(pathname);
+  const active = pathToContentView(pathname);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, active);
+    window.localStorage.setItem(CONTENT_VIEW_STORAGE_KEY, active);
   }, [active]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (pathname !== '/admin/content') return;
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (isValidView(saved) && saved !== 'table') {
-      const target = VIEWS.find((v) => v.id === saved)!.href;
-      router.replace(target);
+    const saved = window.localStorage.getItem(CONTENT_VIEW_STORAGE_KEY);
+    if (isValidContentView(saved) && saved !== 'table') {
+      router.replace(hrefForContentView(saved));
     }
   }, [pathname, router]);
 
@@ -49,7 +37,7 @@ export function ContentViewSwitcher() {
       aria-label="Content view"
       className="inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1"
     >
-      {VIEWS.map((v) => {
+      {CONTENT_VIEWS.map((v) => {
         const isActive = v.id === active;
         return (
           <Link
