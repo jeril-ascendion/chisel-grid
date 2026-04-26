@@ -8,6 +8,7 @@ import {
   aws_s3 as s3,
   aws_cloudfront as cf,
   aws_cloudfront_origins as origins,
+  aws_certificatemanager as acm,
 } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
 import type { EnvConfig } from '../config';
@@ -80,8 +81,22 @@ export class StorageStack extends Stack {
       compress: true,
     };
 
+    // Public domain + TLS cert for chiselgrid.com.
+    // CRITICAL — ARN is pinned because the cert is in us-east-1 (CloudFront
+    // requirement) and is not managed by CDK. If this block is removed, the
+    // distribution falls back to *.cloudfront.net default cert and any request
+    // for chiselgrid.com fails with NET::ERR_CERT_COMMON_NAME_INVALID — the
+    // entire site goes down. See CLAUDE.md "VIEWER CERT REGRESSION".
+    const chiselgridCert = acm.Certificate.fromCertificateArn(
+      this,
+      'ChiselgridCert',
+      'arn:aws:acm:us-east-1:852973339602:certificate/0677b964-22bc-4db1-93c5-cb7e63ca7c4e',
+    );
+
     const distribution = new cf.Distribution(this, 'WebDistribution', {
       comment: `ChiselGrid Web Distribution — ${id}`,
+      domainNames: ['chiselgrid.com', 'www.chiselgrid.com'],
+      certificate: chiselgridCert,
       defaultRootObject: 'index.html',
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),

@@ -99,6 +99,31 @@
 
    The fix script is idempotent — safe to run any time behaviors drift.
 
+5. VIEWER CERT REGRESSION — Distribution EWLP3KOX3KKTV must serve the
+   ACM cert for chiselgrid.com (and www.chiselgrid.com), NOT the default
+   *.cloudfront.net cert. If ViewerCertificate falls back to
+   `CloudFrontDefaultCertificate=True` with empty Aliases, every browser
+   hitting chiselgrid.com gets NET::ERR_CERT_COMMON_NAME_INVALID and the
+   site is fully down.
+
+   The cert + aliases are now pinned in
+   infra/lib/stacks/storage.stack.ts via `domainNames` and
+   `certificate: acm.Certificate.fromCertificateArn(...)`. The ARN is
+   hardcoded because the cert lives in us-east-1 (CloudFront requirement)
+   and is not CDK-managed.
+
+   Required state on EWLP3KOX3KKTV:
+       Aliases: ['chiselgrid.com', 'www.chiselgrid.com']
+       ACMCertificateArn: arn:aws:acm:us-east-1:852973339602:certificate/0677b964-22bc-4db1-93c5-cb7e63ca7c4e
+       SSLSupportMethod: sni-only
+       MinimumProtocolVersion: TLSv1.2_2021
+
+   Regression test:
+       echo | openssl s_client -connect www.chiselgrid.com:443 \
+         -servername www.chiselgrid.com 2>/dev/null \
+         | openssl x509 -noout -subject
+   Subject CN must be `chiselgrid.com`, not `*.cloudfront.net`.
+
 ## Architecture Decisions (Follow These Always)
 - Content stored as `ContentBlock[]` JSON in Aurora JSONB column — see packages/types/src/content.ts
 - AI agent workflows run in Step Functions — never block synchronous API responses
