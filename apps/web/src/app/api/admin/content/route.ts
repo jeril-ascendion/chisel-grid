@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
     timesReferenced: a.timesReferenced,
     version: a.version,
     versionNotes: a.versionNotes,
+    rejectionReason: a.rejectionReason,
     updatedAt: a.createdAt,
     publishedAt: a.publishedAt ?? (a.status === 'published' ? a.createdAt : null),
   }));

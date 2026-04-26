@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     readTimeMinutes: Math.max(1, Math.ceil(blocks.length * 0.7)),
     version: 'v0.0.1',
     versionNotes: null,
+    rejectionReason: null,
     createdAt: new Date().toISOString(),
     publishedAt: null,
   });

@@ -9,6 +9,7 @@ const PatchSchema = z.object({
   status: ContentStatusEnum,
   version: z.string().regex(/^v\d+\.\d+\.\d+$/).optional(),
   versionNotes: z.string().max(2000).nullable().optional(),
+  rejectionReason: z.string().trim().min(1).max(2000).optional(),
 });
 
 /**
@@ -23,7 +24,7 @@ const PatchSchema = z.object({
 type TransitionRole = 'admin' | 'creator_or_admin';
 const TRANSITIONS: Record<ContentStatus, Partial<Record<ContentStatus, TransitionRole>>> = {
   draft: { submitted: 'creator_or_admin' },
-  submitted: { in_review: 'admin' },
+  submitted: { in_review: 'admin', approved: 'admin', rejected: 'admin' },
   in_review: { approved: 'admin', rejected: 'admin' },
   approved: { published: 'admin' },
   published: { archived: 'admin' },
@@ -84,9 +85,17 @@ export async function PATCH(
     );
   }
 
+  if (to === 'rejected' && !parsed.data.rejectionReason) {
+    return NextResponse.json(
+      { error: 'rejectionReason is required when transitioning to rejected' },
+      { status: 400 },
+    );
+  }
+
   const ok = await updateArticleStatus(id, to, {
     ...(parsed.data.version ? { version: parsed.data.version } : {}),
     ...(parsed.data.versionNotes !== undefined ? { versionNotes: parsed.data.versionNotes } : {}),
+    ...(parsed.data.rejectionReason ? { rejectionReason: parsed.data.rejectionReason } : {}),
   });
   if (!ok) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });

@@ -41,13 +41,13 @@
     READER: read-only view of published content
   Remove separate All Content route
 
-[⬜ OPEN] P12-02 — Role-based access control (RBAC)
+[✅ DONE] P12-02 — Role-based access control (RBAC)
   Define four roles: OUTSIDE, READER, CREATOR, ADMIN
   Enforce at route level, API level, and component level
   Hide Users/Tenant Settings/Content Queue admin from READER
   READER content not published to portal or model
 
-[⬜ OPEN] P12-03 — Content Publish Engine rewrite
+[✅ DONE] P12-03 — Content Publish Engine rewrite
   Full content flow: Draft → Submitted → In Review → Approved → Published
   Pre-built templates for article publication
   Diagrams, animations, narrations each follow their own engine
@@ -58,9 +58,15 @@
   Increment version on each modification post-publish
   Version history viewable in editor
 
-[⬜ OPEN] P12-05 — Content taxonomy management
+[⬜ OPEN] P12-05-TAXONOMY — Content taxonomy management
   Admin-only CRUD for categories and tags
   READER can view but not modify taxonomy
+
+[✅ DONE] P12-05 — Submit for review UI + admin review workflow
+  Editor: Save Draft + Submit for Review (with confirmation), read-only
+  while awaiting admin action; rejection reason banner shown to creator.
+  Admin: Pending Review filter, Review/Approve/Reject (reason modal)/Publish
+  buttons in editor and table view; rejection_reason persisted on content.
 
 ---
 

@@ -27,6 +27,7 @@ export interface StoredArticle {
   timesReferenced?: number;
   version: string;
   versionNotes: string | null;
+  rejectionReason: string | null;
   createdAt: string;
   publishedAt: string | null;
 }
@@ -85,7 +86,7 @@ const CATEGORY_SLUG_PATH_SUBQUERY = `
 const LIST_COLS = `
   c.content_id, c.title, c.slug, c.description, c.status, c.content_type,
   c.category_id, c.author_id, c.read_time_minutes, c.times_referenced,
-  c.version, c.version_notes,
+  c.version, c.version_notes, c.rejection_reason,
   c.created_at, c.published_at,
   cat.name AS category_name, cat.slug AS category_slug,
   cat.level AS category_level,
@@ -114,6 +115,7 @@ type Row = {
   times_referenced: number | null;
   version: string | null;
   version_notes: string | null;
+  rejection_reason: string | null;
   created_at: string;
   published_at: string | null;
 };
@@ -156,6 +158,7 @@ function rowToArticle(row: Row): StoredArticle {
     timesReferenced: row.times_referenced ?? 0,
     version: row.version ?? 'v0.0.1',
     versionNotes: row.version_notes,
+    rejectionReason: row.rejection_reason,
     createdAt: created,
     publishedAt: published,
   };
@@ -214,6 +217,8 @@ export interface UpdateStatusOptions {
   version?: string;
   /** Optional release notes for this version. */
   versionNotes?: string | null;
+  /** Required when transitioning to 'rejected'. */
+  rejectionReason?: string;
 }
 
 export async function updateArticleStatus(
@@ -230,6 +235,25 @@ export async function updateArticleStatus(
          WHERE tenant_id = $2 AND content_id = $3`,
         [status, asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
       );
+
+      if (status === 'rejected' && options.rejectionReason !== undefined) {
+        await query(
+          `UPDATE content SET rejection_reason = $1
+            WHERE tenant_id = $2 AND content_id = $3`,
+          [options.rejectionReason, asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
+        );
+        if (mem) mem.rejectionReason = options.rejectionReason;
+      }
+      if (status === 'draft') {
+        // Clearing the rejection reason when the creator picks the article
+        // back up to revise — fresh slate before they resubmit.
+        await query(
+          `UPDATE content SET rejection_reason = NULL
+            WHERE tenant_id = $1 AND content_id = $2`,
+          [asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
+        );
+        if (mem) mem.rejectionReason = null;
+      }
 
       if (status === 'published') {
         // P12-04 publish flow: bump patch version when re-publishing an

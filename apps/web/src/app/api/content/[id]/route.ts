@@ -44,6 +44,7 @@ export async function GET(
       authorName: stored.authorId,
       version: stored.version,
       versionNotes: stored.versionNotes,
+      rejectionReason: stored.rejectionReason,
     });
   }
 

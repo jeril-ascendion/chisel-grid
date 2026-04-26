@@ -33,7 +33,18 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: 'bg-red-100 text-red-700',
 };
 
-const STATUS_FILTERS = ['all', 'draft', 'in_review', 'approved', 'published', 'archived', 'rejected'];
+const STATUS_FILTERS = ['all', 'draft', 'submitted', 'in_review', 'approved', 'published', 'archived', 'rejected'];
+
+const STATUS_LABELS: Record<string, string> = {
+  all: 'All',
+  draft: 'draft',
+  submitted: 'pending review',
+  in_review: 'in review',
+  approved: 'approved',
+  published: 'published',
+  archived: 'archived',
+  rejected: 'rejected',
+};
 
 interface ColumnDef {
   id: 'title' | 'type' | 'status' | 'author' | 'category' | 'updated' | 'actions';
@@ -128,15 +139,28 @@ export function ContentTableView() {
     }
   };
 
-  const patchStatus = async (id: string, status: 'approved' | 'rejected' | 'published' | 'in_review') => {
+  const patchStatus = async (
+    id: string,
+    status: 'approved' | 'rejected' | 'published' | 'in_review',
+    extra?: Record<string, unknown>,
+  ) => {
     const res = await fetch(`/api/content/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...extra }),
     });
     if (res.ok) {
       setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
+    } else {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      if (err.error) console.warn('[content-table] status update failed:', err.error);
     }
+  };
+
+  const rejectWithPrompt = async (id: string) => {
+    const reason = window.prompt('Reason for rejection (the creator will see this):');
+    if (!reason || !reason.trim()) return;
+    await patchStatus(id, 'rejected', { rejectionReason: reason.trim() });
   };
 
   const sorted = useMemo(() => {
@@ -170,7 +194,7 @@ export function ContentTableView() {
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200',
               )}
             >
-              {s === 'all' ? 'All' : s.replace('_', ' ')}
+              {STATUS_LABELS[s] ?? s.replace('_', ' ')}
             </button>
           ))}
         </div>
@@ -308,6 +332,14 @@ export function ContentTableView() {
                                 {item.status === 'rejected' ? 'Edit & Resubmit' : 'Edit'}
                               </Link>
                             )}
+                            {showAdminActions && item.status === 'submitted' && (
+                              <button
+                                onClick={() => void patchStatus(item.id, 'in_review')}
+                                className="rounded border border-amber-300 px-2 py-0.5 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/20"
+                              >
+                                Review
+                              </button>
+                            )}
                             {showAdminActions && isReviewable && (
                               <>
                                 <button
@@ -317,7 +349,7 @@ export function ContentTableView() {
                                   Approve
                                 </button>
                                 <button
-                                  onClick={() => void patchStatus(item.id, 'rejected')}
+                                  onClick={() => void rejectWithPrompt(item.id)}
                                   className="rounded border border-red-300 px-2 py-0.5 text-red-600 hover:bg-red-50"
                                 >
                                   Reject
