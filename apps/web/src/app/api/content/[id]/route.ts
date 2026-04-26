@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import { getArticleById } from '@/lib/mock-data';
 import { getArticle, updateArticle } from '@/lib/article-store';
 
@@ -7,16 +8,27 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const session = await auth();
+  const isAuthenticated = !!session?.user;
 
   // Check mock data first
   const mockArticle = getArticleById(id);
   if (mockArticle) {
+    if (!isAuthenticated && mockArticle.status !== 'published') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
     return NextResponse.json(mockArticle);
   }
 
   // Check persistence store (Aurora or in-memory)
   const stored = await getArticle(id);
   if (stored) {
+    // Public API contract (P12-03): unauthenticated callers only see
+    // published content. Authenticated admin / creator editors keep
+    // their existing draft-loading behaviour.
+    if (!isAuthenticated && stored.status !== 'published') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
     return NextResponse.json({
       contentId: stored.contentId,
       title: stored.title,
