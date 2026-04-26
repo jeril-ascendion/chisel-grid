@@ -98,12 +98,12 @@
 
 ## EPIC-P14 — Workspace and Project Hierarchy
 
-[⬜ OPEN] P14-01 — Workspace data model
+[✅ DONE] P14-01 — Workspace data model
   CREATE TABLE workspaces: id, tenant_id, name, description,
   client_name (auto), project_name (auto), created_by, created_at
   Workspace creation modal before first session
 
-[⬜ OPEN] P14-02 — Session belongs to Workspace
+[✅ DONE] P14-02 — Session belongs to Workspace
   work_sessions.workspace_id FK to workspaces
   Session picker shows sessions within current workspace
 
@@ -111,6 +111,11 @@
   Background Bedrock agent extracts client/project names from
   session content and populates workspace metadata
   User never manually enters client or project
+
+[✅ DONE] P14-API — Workspace CRUD API + switcher UI
+  GET/POST /api/admin/workspaces, GET/PATCH /api/admin/workspaces/[id]
+  Sidebar WorkspaceSwitcher persists current id in localStorage
+  Chamber + Grid headers show current workspace badge
 
 ---
 

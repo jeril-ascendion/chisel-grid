@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { CurrentWorkspaceBadge } from '@/components/admin/CurrentWorkspaceBadge';
 
 interface GridMode {
   title: string;
@@ -60,7 +61,10 @@ export default function GridPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Grid</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-bold">Grid</h1>
+          <CurrentWorkspaceBadge />
+        </div>
         <p className="text-muted-foreground mt-1">
           Create diagrams, animations, visual charts and graphs for your content
         </p>

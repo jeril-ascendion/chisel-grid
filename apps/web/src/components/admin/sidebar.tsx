@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { permissions, type Permission } from '@/lib/auth/roles';
 import { readRecentSessions, type RecentSession } from '@/lib/recent-sessions';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 const SESSION_AWARE_PREFIXES = ['/admin/chamber', '/admin/grid', '/admin/forge'];
 
@@ -124,6 +125,8 @@ export function AdminSidebar({
           )}
         </Link>
       </div>
+
+      <WorkspaceSwitcher collapsed={collapsed} />
 
       <nav
         className={cn(
