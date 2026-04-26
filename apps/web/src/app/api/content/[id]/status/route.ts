@@ -1,13 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/auth';
-import { ContentStatusEnum } from '@chiselgrid/types';
-import { updateArticleStatus } from '@/lib/article-store';
-import { getUserRole } from '@/lib/auth/roles';
+import { type ContentStatus, ContentStatusEnum } from '@chiselgrid/types';
+import { getArticle, updateArticleStatus } from '@/lib/article-store';
+import { getUserRole, type UserRole } from '@/lib/auth/roles';
 
 const PatchSchema = z.object({ status: ContentStatusEnum });
 
-const ADMIN_ONLY_STATUSES = new Set(['approved', 'published', 'in_review', 'rejected']);
+/**
+ * Content lifecycle state machine — EPIC-P12-02.
+ *
+ * Each entry maps a current status to the set of statuses it may
+ * transition to, paired with the roles that may perform the move.
+ * "creator_or_admin" means CREATOR or ADMIN. "admin" is admin only.
+ *
+ * Statuses not listed (deprecated, archived terminal) are read-only.
+ */
+type TransitionRole = 'admin' | 'creator_or_admin';
+const TRANSITIONS: Record<ContentStatus, Partial<Record<ContentStatus, TransitionRole>>> = {
+  draft: { submitted: 'creator_or_admin' },
+  submitted: { in_review: 'admin' },
+  in_review: { approved: 'admin', rejected: 'admin' },
+  approved: { published: 'admin' },
+  published: { archived: 'admin' },
+  rejected: { draft: 'creator_or_admin' },
+  archived: {},
+  deprecated: {},
+};
+
+function roleAllowed(allowed: TransitionRole, role: UserRole | null): boolean {
+  if (role === 'admin') return true;
+  if (allowed === 'creator_or_admin' && role === 'creator') return true;
+  return false;
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -28,14 +53,36 @@ export async function PATCH(
     );
   }
 
-  const role = getUserRole(session);
-  if (ADMIN_ONLY_STATUSES.has(parsed.data.status) && role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden: admin role required' }, { status: 403 });
+  const article = await getArticle(id);
+  if (!article) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  const ok = await updateArticleStatus(id, parsed.data.status);
+  const from = article.status;
+  const to = parsed.data.status;
+  if (from === to) {
+    return NextResponse.json({ contentId: id, status: to });
+  }
+
+  const allowedRole = TRANSITIONS[from]?.[to];
+  if (!allowedRole) {
+    return NextResponse.json(
+      { error: `Invalid transition: ${from} → ${to}` },
+      { status: 400 },
+    );
+  }
+
+  const role = getUserRole(session);
+  if (!roleAllowed(allowedRole, role)) {
+    return NextResponse.json(
+      { error: `Forbidden: ${allowedRole === 'admin' ? 'admin' : 'creator or admin'} role required for ${from} → ${to}` },
+      { status: 403 },
+    );
+  }
+
+  const ok = await updateArticleStatus(id, to);
   if (!ok) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
-  return NextResponse.json({ contentId: id, status: parsed.data.status });
+  return NextResponse.json({ contentId: id, status: to });
 }
