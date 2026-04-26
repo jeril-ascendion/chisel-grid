@@ -59,6 +59,20 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Content Studio CTA — explicit entry to /admin so authed users in
+          a fresh tab don't have to know the URL. NextAuth handles the rest. */}
+      <section className="py-4">
+        <Link
+          href="/admin"
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+        >
+          Go to Content Studio
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </section>
+
       {/* Category Grid */}
       <section className="py-8">
         <div className="flex items-center justify-between mb-6">

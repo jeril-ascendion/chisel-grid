@@ -76,8 +76,9 @@ export function useAuthSync(): void {
       const data = ev.data;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'SIGNED_IN') {
-        // Pull the new session into RSC trees + client useSession() readers.
-        router.refresh();
+        // Send the receiving tab to /admin so the user lands in the
+        // workspace, not on whatever public page they had open.
+        router.push('/admin');
         return;
       }
       if (data.type === 'SIGNED_OUT') {
