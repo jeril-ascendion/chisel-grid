@@ -4,7 +4,6 @@ import {
   ReactFlow,
   Controls,
   Background,
-  MiniMap,
   BackgroundVariant,
   type Node,
   type NodeMouseHandler,
@@ -29,7 +28,6 @@ const NODE_TYPES = {
 
 export function DiagramCanvas({ gridIR, onNodeClick, className }: DiagramCanvasProps) {
   const { nodes, edges } = useMemo(() => gridIRToReactFlow(gridIR), [gridIR]);
-  const showMiniMap = gridIR.nodes.length > 10;
 
   const handleNodeClick: NodeMouseHandler = useCallback(
     (_event, node: Node) => {
@@ -50,7 +48,6 @@ export function DiagramCanvas({ gridIR, onNodeClick, className }: DiagramCanvasP
       >
         <Controls />
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-        {showMiniMap && <MiniMap pannable zoomable />}
       </ReactFlow>
     </div>
   );
