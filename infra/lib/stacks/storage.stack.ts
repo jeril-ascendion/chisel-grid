@@ -115,6 +115,8 @@ export class StorageStack extends Stack {
         '/articles/*':   lambdaBehavior,
         '/search*':      lambdaBehavior,
         '/_next/data/*': lambdaBehavior,
+        '/share':        lambdaBehavior,
+        '/share/*':      lambdaBehavior,
         // Media bucket (separate S3 origin).
         '/media/*': {
           origin: origins.S3BucketOrigin.withOriginAccessControl(mediaBucket),

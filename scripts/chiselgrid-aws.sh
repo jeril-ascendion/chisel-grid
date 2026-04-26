@@ -116,6 +116,13 @@ deploy_latest() {
     mv "apps/web/src/app/admin" "$BACKUP_DIR/admin"
     log "Excluded /admin/* from static build (Lambda-served)"
   fi
+  # /share/[sessionId] is force-dynamic (reads Aurora at request time) and
+  # must be served by Lambda, not S3 — output:export refuses to prerender
+  # force-dynamic routes and aborts the whole build if /share is present.
+  if [ -d "apps/web/src/app/share" ]; then
+    mv "apps/web/src/app/share" "$BACKUP_DIR/share"
+    log "Excluded /share/* from static build (Lambda-served, force-dynamic)"
+  fi
   NEXT_OUTPUT=export pnpm build --filter=@chiselgrid/web
   BUILD_RC=$?
   # Restore excluded routes
@@ -124,6 +131,9 @@ deploy_latest() {
   fi
   if [ -d "$BACKUP_DIR/admin" ]; then
     mv "$BACKUP_DIR/admin" "apps/web/src/app/admin"
+  fi
+  if [ -d "$BACKUP_DIR/share" ]; then
+    mv "$BACKUP_DIR/share" "apps/web/src/app/share"
   fi
   rm -rf "$BACKUP_DIR"
   if [ $BUILD_RC -ne 0 ]; then

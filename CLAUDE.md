@@ -78,12 +78,13 @@
    ChiselGrid-Dev-Storage stack (infra/lib/stacks/storage.stack.ts — NOT
    web.stack.ts; WebStack creates an unused distribution E23TR00XJJCH02).
 
-   The storage stack MUST declare these nine paths in `additionalBehaviors`,
+   The storage stack MUST declare these eleven paths in `additionalBehaviors`,
    all pointing to the API Gateway (Lambda) origin with
    CACHING_DISABLED + ALL_VIEWER_EXCEPT_HOST_HEADER + ALLOW_ALL methods:
 
        /api/*   /admin   /admin/*   /login   /login/*
        /category/*   /articles/*   /search*   /_next/data/*
+       /share   /share/*
 
    The API Gateway origin is hardcoded in storage.stack.ts as
    `ux71c274nd.execute-api.ap-southeast-1.amazonaws.com` because the

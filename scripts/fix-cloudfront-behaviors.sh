@@ -3,8 +3,8 @@
 # fix-cloudfront-behaviors.sh
 #
 # Emergency repair for CloudFront distribution EWLP3KOX3KKTV.
-# Restores the 9 Lambda cache behaviors that /admin, /api, /login,
-# /category, /articles, /search, /_next/data depend on.
+# Restores the 11 Lambda cache behaviors that /admin, /api, /login,
+# /category, /articles, /search, /_next/data, /share depend on.
 #
 # Run this if the post-deploy smoke test reports /admin returning 200
 # instead of 307, or if /admin loads unstyled (CSS missing, blue links).
@@ -82,6 +82,7 @@ lambda_paths = [
     "/login", "/login/*",
     "/category/*", "/articles/*", "/search*",
     "/_next/data/*",
+    "/share", "/share/*",
 ]
 
 existing = cfg.get('CacheBehaviors', {}).get('Items', [])
@@ -104,7 +105,7 @@ with open("$TMP_PATCHED", 'w') as f:
     json.dump(cfg, f)
 
 if not changes:
-    print("[fix-cf] No changes needed — all 9 Lambda behaviors already correct.")
+    print("[fix-cf] No changes needed — all 11 Lambda behaviors already correct.")
 else:
     for c in changes:
         print(f"[fix-cf] {c}")

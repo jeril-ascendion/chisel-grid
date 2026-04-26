@@ -105,17 +105,12 @@ export class AudioStack extends Stack {
       }),
     );
 
-    // S3 write permissions for Polly output and checking existence
+    // S3 write permissions for Polly output and checking existence.
+    // Polly's StartSpeechSynthesisTask writes using the IAM identity that
+    // invoked it (this Lambda's role), not via a service principal — adding
+    // `polly.amazonaws.com` as a bucket-policy principal is rejected by S3
+    // with "Invalid principal in policy" and rolls back the whole stack.
     audioProps.mediaBucket.grantReadWrite(audioLambda);
-
-    // Also grant Polly service role write access to the bucket
-    audioProps.mediaBucket.addToResourcePolicy(
-      new iam.PolicyStatement({
-        actions: ['s3:PutObject'],
-        resources: [audioProps.mediaBucket.arnForObjects('audio/*')],
-        principals: [new iam.ServicePrincipal('polly.amazonaws.com')],
-      }),
-    );
 
     // ── Batch Audio Lambda ─────────────────────────────────
     const batchLambda = new lambda.Function(this, 'AudioBatchFn', {
