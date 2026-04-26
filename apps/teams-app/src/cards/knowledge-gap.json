@@ -65,7 +65,7 @@
       "verb": "startArticleDraft",
       "data": {
         "topic": "${topic}",
-        "contentType": "standard_doc"
+        "contentType": "article"
       },
       "style": "positive"
     },

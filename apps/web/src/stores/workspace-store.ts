@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import type { ContentBlock } from '@chiselgrid/types';
+import type { TrailEntry } from '@/components/workspace/ReasoningTrail';
 
 export interface ChatMessage {
   id: string;
@@ -29,8 +30,12 @@ export interface SEOData {
 export interface WorkspaceState {
   messages: ChatMessage[];
   isGenerating: boolean;
-  addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
+  addMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp'>) => string;
   setGenerating: (v: boolean) => void;
+
+  reasoningTrails: Record<string, TrailEntry[]>;
+  setReasoningTrail: (messageId: string, entries: TrailEntry[]) => void;
+  setReasoningTrails: (trails: Record<string, TrailEntry[]>) => void;
 
   agentEvents: AgentEvent[];
   addAgentEvent: (evt: Omit<AgentEvent, 'id' | 'timestamp'>) => void;
@@ -69,6 +74,7 @@ let eventCounter = 0;
 const initialState = {
   messages: [] as ChatMessage[],
   isGenerating: false,
+  reasoningTrails: {} as Record<string, TrailEntry[]>,
   agentEvents: [] as AgentEvent[],
   blocks: [] as ContentBlock[],
   seo: null as SEOData | null,
@@ -83,11 +89,20 @@ const initialState = {
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   ...initialState,
 
-  addMessage: (msg) =>
+  addMessage: (msg) => {
+    const id = `msg-${++messageCounter}`;
     set((s) => ({
-      messages: [...s.messages, { ...msg, id: `msg-${++messageCounter}`, timestamp: Date.now() }],
-    })),
+      messages: [...s.messages, { ...msg, id, timestamp: Date.now() }],
+    }));
+    return id;
+  },
   setGenerating: (v) => set({ isGenerating: v }),
+
+  setReasoningTrail: (messageId, entries) =>
+    set((s) => ({
+      reasoningTrails: { ...s.reasoningTrails, [messageId]: entries },
+    })),
+  setReasoningTrails: (trails) => set({ reasoningTrails: trails }),
 
   addAgentEvent: (evt) =>
     set((s) => ({

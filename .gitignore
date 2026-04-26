@@ -148,3 +148,5 @@ cdk.out/
 .DS_Store
 apps/mobile/.expo/
 .claude/ralph-loop.local.md
+apps/web/.open-next/
+apps/web/chiselgrid-fix-loop.sh

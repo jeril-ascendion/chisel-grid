@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tailwind v4 defaults `dark:` to `@media (prefers-color-scheme: dark)`.
+   This switches it to a class-based selector so the toggle (which adds
+   `.dark` to <html>) drives both CSS-variable themes AND `dark:` utilities. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ═══════════════════════════════════════════════════════════
    ChiselGrid Design System — T-06.1
    CSS Custom Properties, Typography Scale, Dark/Light Mode
@@ -46,6 +51,22 @@
   --nav-border: rgba(255,255,255,0.08);
   --radius-lg: 10px;
   --transition: 0.18s ease;
+
+  /* Design system tokens — DESIGN-SYSTEM.md §2.3 (light mode) */
+  --bg-base: #FFFFFF;
+  --bg-elevated: #F8F8F8;
+  --bg-surface: #F0F0F0;
+  --border-subtle: #E5E5E5;
+  --border-default: #D0D0D0;
+  --border-strong: #B0B0B0;
+  --text-primary: #0F0F0F;
+  --text-secondary: #505050;
+  --text-tertiary: #909090;
+  --accent: #C96330;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
 }
 
 /* --- Dark Mode --- */
@@ -81,6 +102,22 @@
   --border-md: #3A3A3A;
   --nav-bg: #000000;
   --nav-border: rgba(255,255,255,0.06);
+
+  /* Design system tokens — DESIGN-SYSTEM.md §2.2 (dark mode) */
+  --bg-base: #0F0F0F;
+  --bg-elevated: #161616;
+  --bg-surface: #1E1E1E;
+  --border-subtle: #2A2A2A;
+  --border-default: #3A3A3A;
+  --border-strong: #4A4A4A;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+  --text-tertiary: #606060;
+  --accent: #C96330;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
 }
 
 @theme inline {
@@ -131,38 +168,41 @@ body {
 }
 
 .prose-chisel h2 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  line-height: 1.3;
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.25;
   letter-spacing: -0.02em;
   margin-top: 2.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-ae, var(--border));
 }
 
 .prose-chisel h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.35;
   margin-top: 2rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .prose-chisel h4 {
-  font-size: 1.0625rem;
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 700;
   line-height: 1.5;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
 }
 
 .prose-chisel p {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--ink-2, #444444);
-  line-height: 1.78;
+  line-height: 1.8;
   margin-top: 0;
   margin-bottom: 1.25rem;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
 }
 
 .prose-chisel a {
@@ -178,12 +218,31 @@ body {
 .prose-chisel ul,
 .prose-chisel ol {
   margin-top: 0;
-  margin-bottom: 1.25rem;
-  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-left: 1.75rem;
+}
+
+.prose-chisel ul {
+  list-style: disc;
+}
+
+.prose-chisel ol {
+  list-style: decimal;
 }
 
 .prose-chisel li {
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
+}
+
+.prose-chisel li > p {
+  margin-bottom: 0.25rem;
+  text-align: left;
+}
+
+.prose-chisel strong {
+  font-weight: 600;
+  color: var(--ink, #111111);
 }
 
 .prose-chisel blockquote {

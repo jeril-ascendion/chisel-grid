@@ -5,6 +5,7 @@ import {
   CfnOutput,
   RemovalPolicy,
   Duration,
+  SecretValue,
   aws_cognito as cognito,
 } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
@@ -15,6 +16,7 @@ export interface AuthStackOutputs {
   userPoolClient: cognito.UserPoolClient;
   userPoolId: string;
   userPoolClientId: string;
+  userPoolClientSecret: SecretValue;
   userPoolDomain: string;
   adminGroupName: string;
   creatorGroupName: string;
@@ -194,6 +196,7 @@ export class AuthStack extends Stack {
       userPoolClient,
       userPoolId: userPool.userPoolId,
       userPoolClientId: userPoolClient.userPoolClientId,
+      userPoolClientSecret: userPoolClient.userPoolClientSecret,
       userPoolDomain: domain.domainName,
       adminGroupName: 'admins',
       creatorGroupName: 'creators',

@@ -20,6 +20,9 @@ export interface Article {
   authorAvatar: string | null;
   categoryName: string;
   categorySlug: string;
+  categoryPath?: string;
+  categorySlugPath?: string;
+  categoryLevel?: number;
   tags: { name: string; slug: string }[];
   publishedAt: string;
   seoMetaTitle: string | null;
@@ -179,11 +182,11 @@ function renderBlock(block: ContentBlock): string {
 
 export const MOCK_CATEGORIES: Category[] = [
   { categoryId: 'cat-1', name: 'Cloud Architecture', slug: 'cloud-architecture', description: 'AWS, Azure, GCP infrastructure patterns and best practices', iconName: 'cloud', parentId: null, articleCount: 12 },
-  { categoryId: 'cat-2', name: 'AI & Machine Learning', slug: 'ai-ml', description: 'Machine learning, LLMs, and AI engineering at scale', iconName: 'brain', parentId: null, articleCount: 8 },
-  { categoryId: 'cat-3', name: 'Full-Stack Development', slug: 'full-stack', description: 'React, Next.js, Node.js, and modern web development', iconName: 'code', parentId: null, articleCount: 15 },
-  { categoryId: 'cat-4', name: 'DevOps & SRE', slug: 'devops-sre', description: 'CI/CD, observability, incident response, and platform engineering', iconName: 'server', parentId: null, articleCount: 10 },
+  { categoryId: 'cat-2', name: 'AI & Machine Learning', slug: 'ai-architecture', description: 'Machine learning, LLMs, and AI engineering at scale', iconName: 'brain', parentId: null, articleCount: 8 },
+  { categoryId: 'cat-3', name: 'System Design', slug: 'system-design', description: 'Architecture patterns, scalability, and system-level engineering', iconName: 'code', parentId: null, articleCount: 15 },
+  { categoryId: 'cat-4', name: 'DevOps & SRE', slug: 'ci-cd', description: 'CI/CD, observability, incident response, and platform engineering', iconName: 'server', parentId: null, articleCount: 10 },
   { categoryId: 'cat-5', name: 'Data Engineering', slug: 'data-engineering', description: 'Pipelines, warehousing, streaming, and analytics infrastructure', iconName: 'database', parentId: null, articleCount: 7 },
-  { categoryId: 'cat-6', name: 'Engineering Culture', slug: 'engineering-culture', description: 'Team practices, leadership, career growth, and knowledge sharing', iconName: 'users', parentId: null, articleCount: 5 },
+  { categoryId: 'cat-6', name: 'Engineering Strategy', slug: 'engineering-strategy', description: 'Team practices, leadership, roadmaps, and knowledge sharing', iconName: 'users', parentId: null, articleCount: 5 },
 ];
 
 export const MOCK_ARTICLES: Article[] = [

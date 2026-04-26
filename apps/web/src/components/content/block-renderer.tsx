@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useId, useRef, useState } from 'react';
 import type { ContentBlock } from '@chiselgrid/types';
 import { cn } from '@/lib/utils';
 
@@ -56,7 +57,7 @@ function CalloutBlock({ block }: { block: Extract<ContentBlock, { type: 'callout
     info: { border: 'border-info', bg: 'bg-info/10', icon: 'i' },
     warning: { border: 'border-warning', bg: 'bg-warning/10', icon: '!' },
     danger: { border: 'border-destructive', bg: 'bg-destructive/10', icon: '!!' },
-    success: { border: 'border-success', bg: 'bg-success/10', icon: '\u2713' },
+    success: { border: 'border-success', bg: 'bg-success/10', icon: '✓' },
   };
 
   const s = styles[block.variant] ?? styles.info;
@@ -80,13 +81,96 @@ function CalloutBlock({ block }: { block: Extract<ContentBlock, { type: 'callout
   );
 }
 
+function MermaidDiagram({ code }: { code: string }) {
+  const reactId = useId();
+  const domId = `mermaid-${reactId.replace(/:/g, '')}`;
+  const [svg, setSvg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const mermaid = (await import('mermaid')).default;
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'IBM Plex Sans, sans-serif',
+        });
+        // Validate first with suppressErrors so mermaid does not inject a
+        // "Syntax error in text" element into the DOM on invalid input.
+        const parsed = await mermaid.parse(code, { suppressErrors: true });
+        if (parsed === false) {
+          if (!cancelled) setError('invalid');
+          return;
+        }
+        const { svg } = await mermaid.render(domId, code);
+        if (!cancelled) setSvg(svg);
+      } catch (e) {
+        if (!cancelled) setError(String(e));
+      }
+    })();
+    return () => {
+      cancelled = true;
+      // Mermaid may leave orphan error nodes appended to <body>; sweep them.
+      if (typeof document !== 'undefined') {
+        document
+          .querySelectorAll(`#${domId}, [id^="d${domId}"]`)
+          .forEach((n) => n.remove());
+      }
+    };
+  }, [code, domId]);
+
+  if (error) {
+    return (
+      <pre className="text-xs text-muted-foreground whitespace-pre-wrap p-4 bg-muted rounded">
+        {code}
+      </pre>
+    );
+  }
+
+  if (!svg) {
+    return (
+      <div ref={ref} className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+        Rendering diagram…
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="mermaid-rendered flex justify-center"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+}
+
 function DiagramBlock({ block }: { block: Extract<ContentBlock, { type: 'diagram' }> }) {
+  const body = (() => {
+    if (block.diagramType === 'svg') {
+      return (
+        <div
+          className="flex justify-center [&>svg]:max-w-full [&>svg]:h-auto"
+          dangerouslySetInnerHTML={{ __html: block.content }}
+        />
+      );
+    }
+    if (block.diagramType === 'mermaid') {
+      return <MermaidDiagram code={block.content} />;
+    }
+    return (
+      <pre className="text-sm font-mono text-muted-foreground whitespace-pre-wrap">
+        {block.content}
+      </pre>
+    );
+  })();
+
   return (
     <figure className="my-6">
-      <div className="rounded-lg border border-border bg-muted p-4 overflow-x-auto">
-        <pre className="text-sm font-mono text-muted-foreground whitespace-pre-wrap">
-          {block.content}
-        </pre>
+      <div className="rounded-lg border border-border bg-muted/40 p-4 overflow-x-auto">
+        {body}
       </div>
       {block.caption && (
         <figcaption className="mt-2 text-center text-sm text-muted-foreground italic">
@@ -141,15 +225,77 @@ export function BlockRenderer({ blocks }: { blocks: ContentBlock[] }) {
   );
 }
 
-/** Minimal markdown-lite: handles **bold**, *italic*, `code`, [links](url), and line breaks */
+/**
+ * Markdown-lite: handles headings not — those come from HeadingBlock.
+ * Supports paragraphs, bulleted/numbered lists, **bold**, *italic*, `code`, [links](url).
+ * Lines starting with "- " or "* " become <ul><li>. Lines starting with "1. " become <ol><li>.
+ */
 function renderMarkdownLite(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>')
-    .replace(/\n/g, '<br />');
+  const escape = (s: string) =>
+    s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+  const inline = (s: string) =>
+    s
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/(^|\W)\*(?!\s)([^*]+?)\*(?!\w)/g, '$1<em>$2</em>')
+      .replace(/`([^`]+?)`/g, '<code>$1</code>')
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>');
+
+  const lines = text.split(/\r?\n/);
+  const out: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+  let paraBuf: string[] = [];
+
+  const flushPara = () => {
+    if (paraBuf.length) {
+      const joined = paraBuf.map((l) => inline(escape(l))).join(' ');
+      out.push(`<p>${joined}</p>`);
+      paraBuf = [];
+    }
+  };
+  const closeList = () => {
+    if (listType) {
+      out.push(`</${listType}>`);
+      listType = null;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (line === '') {
+      flushPara();
+      closeList();
+      continue;
+    }
+    const ulMatch = /^[-*]\s+(.+)$/.exec(line);
+    const olMatch = /^\d+\.\s+(.+)$/.exec(line);
+
+    if (ulMatch) {
+      flushPara();
+      if (listType !== 'ul') {
+        closeList();
+        out.push('<ul>');
+        listType = 'ul';
+      }
+      out.push(`<li>${inline(escape(ulMatch[1]))}</li>`);
+    } else if (olMatch) {
+      flushPara();
+      if (listType !== 'ol') {
+        closeList();
+        out.push('<ol>');
+        listType = 'ol';
+      }
+      out.push(`<li>${inline(escape(olMatch[1]))}</li>`);
+    } else {
+      closeList();
+      paraBuf.push(line);
+    }
+  }
+  flushPara();
+  closeList();
+
+  return out.join('\n');
 }

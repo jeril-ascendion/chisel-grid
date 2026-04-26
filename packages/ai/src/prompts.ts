@@ -108,7 +108,7 @@ export const PROMPT_TEMPLATES = {
     system: SYSTEM_PROMPTS.writer,
     buildUserMessage: (vars: Record<string, string>) => {
       const topic = vars['topic'] ?? '';
-      const contentType = vars['contentType'] ?? 'standard_doc';
+      const contentType = vars['contentType'] ?? 'article';
       const categoryContext = vars['categoryContext'] ?? '';
       const additionalInstructions = vars['additionalInstructions'] ?? '';
 
@@ -327,7 +327,7 @@ Respond with a JSON object:
     buildUserMessage: (vars: Record<string, string>) => {
       const structuredTranscript = vars['structuredTranscript'] ?? '';
       const languageCode = vars['languageCode'] ?? 'en-US';
-      const contentType = vars['contentType'] ?? 'standard_doc';
+      const contentType = vars['contentType'] ?? 'article';
 
       return `Write a technical article based on this structured voice transcript.
 

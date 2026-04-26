@@ -12,7 +12,7 @@ vi.mock('../bedrock-client', () => ({
 const baseInput = {
   tenantId: '550e8400-e29b-41d4-a716-446655440000',
   topic: 'Building microservices',
-  contentType: 'standard_doc' as const,
+  contentType: 'article' as const,
   authorId: '550e8400-e29b-41d4-a716-446655440001',
   maxRevisions: 3,
   revisionThreshold: 60,

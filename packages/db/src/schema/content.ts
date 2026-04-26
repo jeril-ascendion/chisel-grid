@@ -13,8 +13,13 @@ import { tenants } from './tenants';
 import { users } from './users';
 
 export const contentTypeEnum = pgEnum('content_type', [
-  'standard_doc',
-  'blog_post',
+  'article',
+  'adr',
+  'diagram',
+  'decision',
+  'runbook',
+  'template',
+  'post_mortem',
 ]);
 
 export const contentStatusEnum = pgEnum('content_status', [
@@ -23,6 +28,7 @@ export const contentStatusEnum = pgEnum('content_status', [
   'in_review',
   'approved',
   'published',
+  'archived',
   'deprecated',
   'rejected',
 ]);
@@ -42,7 +48,7 @@ export const content = pgTable(
     description: text('description'),
     contentType: contentTypeEnum('content_type')
       .notNull()
-      .default('standard_doc'),
+      .default('article'),
     status: contentStatusEnum('status').notNull().default('draft'),
     blocks: jsonb('blocks').notNull().default('[]'),
     heroImageUrl: varchar('hero_image_url', { length: 2048 }),
@@ -53,6 +59,7 @@ export const content = pgTable(
     seoOgImageUrl: varchar('seo_og_image_url', { length: 2048 }),
     categoryId: uuid('category_id'),
     currentRevision: integer('current_revision').notNull().default(1),
+    timesReferenced: integer('times_referenced').notNull().default(0),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
@@ -68,6 +75,10 @@ export const content = pgTable(
     authorIdx: index('idx_content_author').on(table.authorId),
     categoryIdx: index('idx_content_category').on(table.categoryId),
     publishedAtIdx: index('idx_content_published_at').on(table.publishedAt),
+    timesReferencedIdx: index('idx_content_times_referenced').on(
+      table.tenantId,
+      table.timesReferenced,
+    ),
   }),
 );
 

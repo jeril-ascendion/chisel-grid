@@ -44,8 +44,8 @@ function decodeJwt(token: string): Record<string, unknown> {
 
 /** Derive role from Cognito groups */
 function deriveRole(groups: string[]): 'admin' | 'creator' | 'reader' {
-  if (groups.includes('admins')) return 'admin';
-  if (groups.includes('creators')) return 'creator';
+  if (groups.includes('admin') || groups.includes('admins')) return 'admin';
+  if (groups.includes('creator') || groups.includes('creators')) return 'creator';
   return 'reader';
 }
 

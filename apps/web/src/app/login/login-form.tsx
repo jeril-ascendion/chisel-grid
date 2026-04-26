@@ -4,12 +4,8 @@ import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Suspense } from 'react';
-
-function isStaticSite(): boolean {
-  if (typeof window === 'undefined') return false;
-  const h = window.location.hostname;
-  return h === 'www.chiselgrid.com' || h === 'chiselgrid.com' || h.endsWith('.cloudfront.net');
-}
+import { cognitoSignIn } from '@/lib/cognito-client';
+import { broadcastSignedIn } from '@/lib/auth-sync';
 
 export function LoginForm() {
   return (
@@ -35,20 +31,6 @@ function LoginFormInner() {
     setLoading(true);
 
     try {
-      if (isStaticSite()) {
-        // Static S3+CloudFront: use direct Cognito auth (localStorage-based)
-        const { cognitoSignIn } = await import('@/lib/cognito-client');
-        const cognitoResult = await cognitoSignIn(email, password);
-        if (cognitoResult.ok) {
-          window.location.href = '/admin';
-          return;
-        }
-        setFormError(cognitoResult.error);
-        setLoading(false);
-        return;
-      }
-
-      // Dev/server mode: use NextAuth credentials provider
       const result = await signIn('cognito-credentials', {
         username: email,
         password,
@@ -56,6 +38,10 @@ function LoginFormInner() {
       });
 
       if (result?.ok && !result?.error) {
+        // Also populate localStorage so public pages (header, admin-button)
+        // see the session without depending on /api/auth/session.
+        await cognitoSignIn(email, password).catch(() => {});
+        broadcastSignedIn();
         router.push('/admin');
       } else {
         setFormError('Invalid email or password.');
@@ -70,7 +56,7 @@ function LoginFormInner() {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
           {error === 'OAuthSignin'
             ? 'Could not start sign in flow. Please try again.'
             : error === 'OAuthCallback'
@@ -81,13 +67,13 @@ function LoginFormInner() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {formError && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-400">
             {formError}
           </div>
         )}
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Email
           </label>
           <input
@@ -96,13 +82,13 @@ function LoginFormInner() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="you@ascendion.com"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Password
           </label>
           <div className="relative">
@@ -112,12 +98,12 @@ function LoginFormInner() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 pr-10 text-sm text-gray-900 dark:text-white shadow-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? (
@@ -138,7 +124,7 @@ function LoginFormInner() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-gray-800 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50"
+          className="w-full rounded-md bg-gray-800 dark:bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-900 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>

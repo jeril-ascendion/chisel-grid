@@ -1,0 +1,4 @@
+{
+  "extends": "@chiselgrid/config/typescript/nextjs.json",
+  "include": ["src"]
+}

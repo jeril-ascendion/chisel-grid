@@ -7,13 +7,14 @@ const labelMap: Record<string, string> = {
   admin: 'Dashboard',
   queue: 'Content Queue',
   content: 'All Content',
+  chamber: 'Chamber',
   workspace: 'Workspace',
   users: 'Users',
   categories: 'Categories',
-  'ai-usage': 'AI Usage',
   edit: 'Edit',
-  studio: 'Architecture Studio',
+  studio: 'Studio',
   grid: 'Grid',
+  architecture: 'Architecture Diagrams',
   session: 'Session',
 };
 

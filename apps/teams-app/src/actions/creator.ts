@@ -43,7 +43,7 @@ export function registerCreatorActions(
   app.ai.action(
     'startArticleDraft',
     async (context, state, params: { topic: string; contentType?: string }) => {
-      const { topic, contentType = 'standard_doc' } = params;
+      const { topic, contentType = 'article' } = params;
       const userId = context.activity.from?.aadObjectId ?? context.activity.from?.id;
 
       const stateMachineArn = process.env.CONTENT_PIPELINE_ARN;

@@ -13,6 +13,7 @@ import type { NetworkStack } from './network.stack';
 
 export interface DataStackOutputs {
   clusterEndpoint: string;
+  clusterArn: string;
   dbSecretArn: string;
   dbPort: number;
 }
@@ -87,6 +88,7 @@ export class DataStack extends Stack {
 
     this.outputs = {
       clusterEndpoint: cluster.clusterEndpoint.hostname,
+      clusterArn: cluster.clusterArn,
       dbSecretArn: secret.secretArn,
       dbPort: cluster.clusterEndpoint.port,
     };

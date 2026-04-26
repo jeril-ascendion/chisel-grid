@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ContentBlockSchema } from '@chiselgrid/types';
+import { ContentBlockSchema, ContentTypeEnum } from '@chiselgrid/types';
 
 /**
  * Shared Zod schemas for AI agent inputs and outputs.
@@ -62,7 +62,7 @@ export const PipelineInputSchema = z.object({
   tenantId: z.string().uuid(),
   contentId: z.string().uuid().optional(),
   topic: z.string().min(5),
-  contentType: z.enum(['standard_doc', 'blog_post']).default('standard_doc'),
+  contentType: ContentTypeEnum.default('article'),
   categoryId: z.string().uuid().optional(),
   categoryContext: z.string().optional(),
   additionalInstructions: z.string().optional(),

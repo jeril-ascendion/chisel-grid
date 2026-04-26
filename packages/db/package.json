@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1025.0",
+    "@aws-sdk/client-rds-data": "^3.1030.0",
     "@chiselgrid/types": "workspace:*",
     "drizzle-orm": "^0.31.0",
     "pg": "^8.11.0"

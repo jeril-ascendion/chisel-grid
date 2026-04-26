@@ -28,10 +28,23 @@ const nextConfig: NextConfig = {
     '@chiselgrid/studio-core',
     '@chiselgrid/studio-agents',
     '@chiselgrid/ai',
+    '@chiselgrid/grid-ir',
+    '@chiselgrid/grid-agents',
+    '@chiselgrid/grid-renderer',
   ],
 
   // Compression (Brotli is handled by CloudFront, but enable gzip for direct access)
   compress: true,
+
+  // Redirects: legacy routes after EPIC-P12/P13 restructure.
+  async redirects() {
+    if (isStaticExport) return [];
+    return [
+      { source: '/admin/studio', destination: '/admin/forge', permanent: true },
+      { source: '/admin/studio/:path*', destination: '/admin/forge/:path*', permanent: true },
+      { source: '/admin/queue', destination: '/admin/content', permanent: true },
+    ];
+  },
 
   // Reduce bundle size
   reactStrictMode: true,

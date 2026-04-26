@@ -1,15 +1,18 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getArticleBySlug, getRelatedArticles, MOCK_ARTICLES } from '@/lib/mock-data';
+import {
+  getArticleBySlug,
+  getArticlesByCategory,
+  getAllPublishedSlugs,
+} from '@/lib/db/articles';
+import { DEFAULT_TENANT_ID } from '@/lib/db/aurora';
 import { BlockRenderer } from '@/components/content/block-renderer';
 import { TableOfContents } from '@/components/content/table-of-contents';
 import { AudioPlayer } from '@/components/content/audio-player';
 import { ArticleCard } from '@/components/common/article-card';
-import { AdminBarWrapper } from '@/components/article/AdminBarWrapper';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
 import { formatDate, SITE_NAME, SITE_URL } from '@/lib/utils';
-import type { ContentBlock } from '@chiselgrid/types';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -17,7 +20,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(DEFAULT_TENANT_ID, slug);
   if (!article) return {};
 
   const title = article.seoMetaTitle ?? article.title;
@@ -42,16 +45,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  return MOCK_ARTICLES.map((a) => ({ slug: a.slug }));
+  const slugs = await getAllPublishedSlugs(DEFAULT_TENANT_ID);
+  return slugs.map((slug) => ({ slug }));
 }
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(DEFAULT_TENANT_ID, slug);
 
   if (!article) notFound();
 
-  const related = getRelatedArticles(article.contentId, 3);
+  const sameCategory = await getArticlesByCategory(
+    DEFAULT_TENANT_ID,
+    article.categorySlug,
+  );
+  const related = sameCategory
+    .filter((a) => a.contentId !== article.contentId)
+    .slice(0, 3);
 
   // JSON-LD structured data
   const jsonLd = {
@@ -106,8 +116,6 @@ export default async function ArticlePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
-      <AdminBarWrapper contentId={article.contentId} />
-
       {/* Hero section with animation */}
       <section style={{ borderBottom: '1px solid var(--border)', padding: '2rem 1rem', background: 'var(--bg, #fff)', overflow: 'hidden' }}>
         <div style={{ maxWidth: '1160px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
@@ -116,19 +124,30 @@ export default async function ArticlePage({ params }: Props) {
           </div>
           <div>
             <nav aria-label="Breadcrumb" style={{ marginBottom: '0.75rem' }}>
-              <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <ol className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
                 <li>
                   <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
                 </li>
-                <li><span className="mx-1">/</span></li>
-                <li>
-                  <Link
-                    href={`/category/${article.categorySlug}`}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {article.categoryName}
-                  </Link>
-                </li>
+                {(() => {
+                  const names = (article.categoryPath ?? article.categoryName).split(' > ');
+                  const slugs = (article.categorySlugPath ?? article.categorySlug).split('/');
+                  const leafSlug = slugs[slugs.length - 1] ?? article.categorySlug;
+                  return names.map((name, i) => (
+                    <span key={`${name}-${i}`} className="flex items-center gap-1.5">
+                      <span className="mx-1">/</span>
+                      {i === names.length - 1 ? (
+                        <Link
+                          href={`/category/${leafSlug}`}
+                          className="hover:text-foreground transition-colors"
+                        >
+                          {name}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground/80">{name}</span>
+                      )}
+                    </span>
+                  ));
+                })()}
                 <li><span className="mx-1">/</span></li>
                 <li className="text-foreground font-medium truncate max-w-[200px]">
                   {article.title}
@@ -139,8 +158,9 @@ export default async function ArticlePage({ params }: Props) {
               <Link
                 href={`/category/${article.categorySlug}`}
                 className="font-medium text-primary hover:underline"
+                title={article.categoryPath ?? article.categoryName}
               >
-                {article.categoryName}
+                {article.categoryPath ?? article.categoryName}
               </Link>
               <span>&middot;</span>
               <span>{article.readTimeMinutes} min read</span>
@@ -185,7 +205,7 @@ export default async function ArticlePage({ params }: Props) {
                     <Link
                       key={tag.slug}
                       href={`/search?tag=${tag.slug}`}
-                      className="px-3 py-1 text-sm rounded-full bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="px-3 py-1 text-sm rounded-full bg-muted text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     >
                       {tag.name}
                     </Link>

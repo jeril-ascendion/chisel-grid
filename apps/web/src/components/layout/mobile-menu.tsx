@@ -13,7 +13,7 @@ export function MobileMenu({ categories }: { categories: Category[] }) {
         onClick={() => setOpen(!open)}
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-expanded={open}
-        className="p-2 rounded-lg hover:bg-accent transition-colors md:hidden"
+        className="p-2 rounded-lg hover:bg-muted transition-colors md:hidden"
       >
         {open ? (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -37,7 +37,7 @@ export function MobileMenu({ categories }: { categories: Category[] }) {
                 key={cat.slug}
                 href={`/category/${cat.slug}`}
                 onClick={() => setOpen(false)}
-                className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent transition-colors"
+                className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
               >
                 {cat.name}
               </Link>
@@ -46,7 +46,7 @@ export function MobileMenu({ categories }: { categories: Category[] }) {
             <Link
               href="/search"
               onClick={() => setOpen(false)}
-              className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent transition-colors"
+              className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
             >
               Search
             </Link>

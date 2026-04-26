@@ -8,6 +8,7 @@ import {
   GetUserCommand,
   AdminListGroupsForUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
+import { DEFAULT_TENANT_ID } from '@/lib/db/aurora';
 
 function computeSecretHash(username: string, clientId: string, clientSecret: string): string {
   return createHmac('sha256', clientSecret)
@@ -40,6 +41,7 @@ const oauthProviders = cognitoIssuer && process.env.COGNITO_CLIENT_SECRET
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   providers: [
     ...oauthProviders,
     CredentialsProvider({
@@ -50,7 +52,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) return null;
+        console.log('[auth] authorize called username=%s hasPassword=%s',
+          credentials?.username ?? 'none',
+          !!credentials?.password);
+        if (!credentials?.username || !credentials?.password) {
+          console.log('[auth] authorize: missing credentials');
+          return null;
+        }
 
         const issuerUrl = cognitoIssuer ?? '';
         const region = issuerUrl.match(
@@ -94,7 +102,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           )?.Value ?? credentials.username as string;
           const tenantId = userInfo.UserAttributes?.find(
             (a) => a.Name === 'custom:tenantId',
-          )?.Value ?? 'default';
+          )?.Value ?? DEFAULT_TENANT_ID;
 
           // Extract groups from the ID token claims (contains cognito:groups)
           let groups: string[] = [];
@@ -121,6 +129,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
           }
 
+          console.log('[auth] authorize SUCCESS email=%s groups=%j tenantId=%s',
+            email, groups, tenantId);
           return {
             id: sub,
             email,
@@ -145,7 +155,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === 'cognito-credentials' && user) {
         token.groups = (user as Record<string, unknown>).groups as string[] ?? [];
         token.tenantId =
-          (user as Record<string, unknown>).tenantId as string ?? 'default';
+          (user as Record<string, unknown>).tenantId as string ?? DEFAULT_TENANT_ID;
         token.sub = user.id ?? undefined;
       } else if (account && profile) {
         const cognitoGroups =
@@ -155,7 +165,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.groups = cognitoGroups ?? [];
         token.tenantId =
           ((profile as Record<string, unknown>)['custom:tenantId'] as string) ??
-          'default';
+          DEFAULT_TENANT_ID;
         token.sub = profile.sub ?? undefined;
       }
       return token;
@@ -164,7 +174,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.sub!;
         session.user.groups = (token.groups as string[]) ?? [];
-        session.user.tenantId = (token.tenantId as string) ?? 'default';
+        session.user.tenantId = (token.tenantId as string) ?? DEFAULT_TENANT_ID;
         session.user.role = deriveRole((token.groups as string[]) ?? []);
       }
       return session;
@@ -180,7 +190,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 });
 
 function deriveRole(groups: string[]): 'admin' | 'creator' | 'reader' {
-  if (groups.includes('admins')) return 'admin';
-  if (groups.includes('creators')) return 'creator';
+  if (groups.includes('admin') || groups.includes('admins')) return 'admin';
+  if (groups.includes('creator') || groups.includes('creators')) return 'creator';
   return 'reader';
 }

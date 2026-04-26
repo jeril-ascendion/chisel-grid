@@ -1,0 +1,10 @@
+{
+  "extends": "@chiselgrid/config/typescript",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}

@@ -2,19 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
 import { getCognitoSession, cognitoSignOut } from '@/lib/cognito-client';
+import { broadcastSignedOut } from '@/lib/auth-sync';
 import { ThemeToggle } from './theme-toggle';
 import { MobileMenu } from './mobile-menu';
 import { getCategories } from '@/lib/mock-data';
 
+const ContentStudioButton = dynamic(
+  () => import('./ContentStudioButton'),
+  { ssr: false },
+);
+
 const NAV_LABELS: Record<string, string> = {
   'cloud-architecture': 'Cloud',
-  'ai-ml': 'AI/ML',
-  'full-stack': 'Software',
-  'devops-sre': 'DevOps',
+  'ai-architecture': 'AI/ML',
+  'system-design': 'Software',
+  'ci-cd': 'DevOps',
   'data-engineering': 'Data',
-  'engineering-culture': 'Culture',
+  'engineering-strategy': 'Strategy',
 };
 
 function Wordmark() {
@@ -44,8 +51,10 @@ export function Header() {
   const categories = getCategories();
   const { data: session, status } = useSession();
   const [cognitoUser, setCognitoUser] = useState<{ email: string; role: string } | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Check client-side Cognito session (for static S3 deployment)
     const cs = getCognitoSession();
     if (cs) setCognitoUser({ email: cs.email, role: cs.role });
@@ -55,13 +64,14 @@ export function Header() {
   const userDisplay = session?.user?.name ?? session?.user?.email ?? cognitoUser?.email;
 
   const handleSignOut = () => {
+    // Must call NextAuth signOut unconditionally. Gating on
+    // `status === 'authenticated'` skipped cookie clearing when useSession
+    // hadn't resolved (common on static-exported pages), leaving a stale
+    // NextAuth cookie that let the next "Sign In" auto-redirect to /admin.
     cognitoSignOut();
     setCognitoUser(null);
-    if (status === 'authenticated') {
-      signOut({ callbackUrl: '/' });
-    } else {
-      window.location.href = '/';
-    }
+    broadcastSignedOut();
+    signOut({ callbackUrl: '/' });
   };
 
   return (
@@ -104,8 +114,14 @@ export function Header() {
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </Link>
+          <ContentStudioButton />
           <ThemeToggle />
-          {isAuthenticated ? (
+          {/* Auth UI is gated on `mounted` so first client render matches the
+              static HTML (which has no session at build time). Without this,
+              next-auth's SessionProvider on chiselgrid.com synchronously
+              resolves to `unauthenticated` and renders a Sign In link that
+              wasn't in the pre-rendered HTML → React hydration error #418. */}
+          {mounted && isAuthenticated ? (
             <div className="hidden sm:flex items-center gap-2 ml-1">
               <span className="text-[0.8rem] text-white/65 max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
                 {userDisplay}
@@ -117,7 +133,7 @@ export function Header() {
                 Sign Out
               </button>
             </div>
-          ) : status !== 'loading' ? (
+          ) : mounted && status !== 'loading' ? (
             <Link
               href="/login"
               className="hidden sm:inline-flex ml-1 items-center bg-white text-[#111111] text-[0.8rem] font-medium px-4 py-[0.35rem] rounded-full hover:opacity-80 transition-opacity duration-[0.18s] ease"

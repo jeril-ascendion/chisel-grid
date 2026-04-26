@@ -11,6 +11,7 @@ const SubmitRequestSchema = z.object({
   tags: z.array(z.string()),
   blocks: z.array(ContentBlockSchema).min(1),
   action: z.enum(['draft', 'submit']),
+  contentType: z.enum(['article', 'adr', 'diagram', 'decision', 'runbook', 'template', 'post_mortem']).optional(),
 });
 
 /**
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { title, slug, action, blocks, tags, categoryId } = parsed.data;
+  const { title, slug, action, blocks, tags, categoryId, contentType } = parsed.data;
   const contentId = crypto.randomUUID();
   const status = action === 'draft' ? 'draft' : 'in_review';
 
@@ -44,12 +45,22 @@ export async function POST(request: Request) {
     slug,
     description: '',
     status,
+    contentType: contentType ?? 'article',
     blocks,
     category: categoryId ?? '',
+    categoryName: '',
+    categorySlug: '',
+    categoryPath: '',
+    categorySlugPath: '',
+    categoryLevel: 1,
     tags,
     authorId: session.user.email ?? 'unknown',
     readTimeMinutes: Math.max(1, Math.ceil(blocks.length * 0.7)),
+    version: 'v0.0.1',
+    versionNotes: null,
+    rejectionReason: null,
     createdAt: new Date().toISOString(),
+    publishedAt: null,
   });
 
   return NextResponse.json({

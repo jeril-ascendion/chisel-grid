@@ -1,10 +1,14 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getCategoryBySlug, getArticles, getCategories } from '@/lib/mock-data';
+import {
+  getArticlesByCategory,
+  getCategoryBySlug,
+  getCategorySlugsWithPublishedContent,
+} from '@/lib/db/articles';
+import { DEFAULT_TENANT_ID } from '@/lib/db/aurora';
 import { ArticleCard } from '@/components/common/article-card';
 import { HeroAnimation } from '@/components/animations/HeroAnimation';
-import { GlobalAdminBar } from '@/components/layout/GlobalAdminBar';
 import { SITE_URL } from '@/lib/utils';
 
 type Props = {
@@ -13,7 +17,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(DEFAULT_TENANT_ID, slug);
   if (!category) return {};
 
   return {
@@ -26,7 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  return getCategories().map((c) => ({ slug: c.slug }));
+  const slugs = await getCategorySlugsWithPublishedContent(DEFAULT_TENANT_ID);
+  return slugs.map((slug) => ({ slug }));
 }
 
 const ITEMS_PER_PAGE = 12;
@@ -34,19 +39,17 @@ const ITEMS_PER_PAGE = 12;
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
 
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(DEFAULT_TENANT_ID, slug);
   if (!category) notFound();
 
-  const { items: articles, total } = getArticles({
-    categorySlug: slug,
-    limit: ITEMS_PER_PAGE,
-  });
+  const allArticles = await getArticlesByCategory(DEFAULT_TENANT_ID, slug);
+  const articles = allArticles.slice(0, ITEMS_PER_PAGE);
+  const total = allArticles.length;
 
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
-  // Collect unique tags from articles for filter
+  // Tags not yet wired to Aurora — leave empty for now.
   const allTags = new Map<string, string>();
-  articles.forEach((a) => a.tags.forEach((t) => allTags.set(t.slug, t.name)));
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',
@@ -69,7 +72,6 @@ export default async function CategoryPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
-      <GlobalAdminBar />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-6">
@@ -110,7 +112,7 @@ export default async function CategoryPage({ params }: Props) {
               <Link
                 key={tagSlug}
                 href={`/search?tag=${tagSlug}`}
-                className="px-3 py-1 text-sm rounded-full transition-colors bg-muted text-muted-foreground hover:bg-accent"
+                className="px-3 py-1 text-sm rounded-full transition-colors bg-muted text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 {tagName}
               </Link>
@@ -120,7 +122,7 @@ export default async function CategoryPage({ params }: Props) {
 
         {/* Articles grid */}
         {articles.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article) => (
               <ArticleCard key={article.contentId} article={article} />
             ))}

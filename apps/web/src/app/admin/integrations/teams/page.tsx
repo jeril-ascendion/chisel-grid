@@ -145,7 +145,7 @@ export default function TeamsIntegrationPage() {
               <button onClick={handleAdd} className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
                 Save
               </button>
-              <button onClick={() => setShowAddForm(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+              <button onClick={() => setShowAddForm(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
                 Cancel
               </button>
             </div>
@@ -176,8 +176,8 @@ export default function TeamsIntegrationPage() {
                     onClick={() => handleToggle(m.id, !m.enabled)}
                     className={`px-3 py-1 rounded-full text-sm ${
                       m.enabled
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-500'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                     }`}
                   >
                     {m.enabled ? 'Active' : 'Paused'}
