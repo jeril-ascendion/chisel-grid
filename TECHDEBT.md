@@ -53,7 +53,7 @@
   Diagrams, animations, narrations each follow their own engine
   Published content visible on tenant portal immediately
 
-[⬜ OPEN] P12-04 — Content versioning
+[✅ DONE] P12-04 — Content versioning
   Article versioning: <article_name>-v0.0.0
   Increment version on each modification post-publish
   Version history viewable in editor

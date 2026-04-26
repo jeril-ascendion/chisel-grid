@@ -25,8 +25,21 @@ export interface StoredArticle {
   authorId: string;
   readTimeMinutes: number;
   timesReferenced?: number;
+  version: string;
+  versionNotes: string | null;
   createdAt: string;
   publishedAt: string | null;
+}
+
+/**
+ * Bump the patch component of a v{major}.{minor}.{patch} version string
+ * by 1. Falls back to 'v0.0.1' if the input doesn't match.
+ */
+export function bumpPatchVersion(current: string | null | undefined): string {
+  const m = (current ?? '').match(/^v(\d+)\.(\d+)\.(\d+)$/);
+  if (!m) return 'v0.0.1';
+  const [, major, minor, patch] = m;
+  return `v${major}.${minor}.${Number(patch) + 1}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -72,6 +85,7 @@ const CATEGORY_SLUG_PATH_SUBQUERY = `
 const LIST_COLS = `
   c.content_id, c.title, c.slug, c.description, c.status, c.content_type,
   c.category_id, c.author_id, c.read_time_minutes, c.times_referenced,
+  c.version, c.version_notes,
   c.created_at, c.published_at,
   cat.name AS category_name, cat.slug AS category_slug,
   cat.level AS category_level,
@@ -98,6 +112,8 @@ type Row = {
   author_id: string | null;
   read_time_minutes: number | null;
   times_referenced: number | null;
+  version: string | null;
+  version_notes: string | null;
   created_at: string;
   published_at: string | null;
 };
@@ -138,6 +154,8 @@ function rowToArticle(row: Row): StoredArticle {
     authorId: row.author_id ?? '',
     readTimeMinutes: row.read_time_minutes ?? 5,
     timesReferenced: row.times_referenced ?? 0,
+    version: row.version ?? 'v0.0.1',
+    versionNotes: row.version_notes,
     createdAt: created,
     publishedAt: published,
   };
@@ -191,9 +209,17 @@ export async function getArticle(contentId: string): Promise<StoredArticle | und
   return memoryStore.get(contentId);
 }
 
+export interface UpdateStatusOptions {
+  /** Optional explicit version string (admin override). */
+  version?: string;
+  /** Optional release notes for this version. */
+  versionNotes?: string | null;
+}
+
 export async function updateArticleStatus(
   contentId: string,
   status: StoredArticle['status'],
+  options: UpdateStatusOptions = {},
 ): Promise<boolean> {
   const mem = memoryStore.get(contentId);
   if (mem) mem.status = status;
@@ -204,12 +230,43 @@ export async function updateArticleStatus(
          WHERE tenant_id = $2 AND content_id = $3`,
         [status, asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
       );
+
       if (status === 'published') {
+        // P12-04 publish flow: bump patch version when re-publishing an
+        // article that was previously published, unless the caller passed
+        // an explicit version. First-time publish keeps the existing version.
+        let nextVersion = options.version;
+        if (!nextVersion) {
+          const { rows } = await query<{ version: string | null; published_at: string | null }>(
+            `SELECT version, published_at FROM content
+              WHERE tenant_id = $1 AND content_id = $2`,
+            [asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
+          );
+          const cur = rows[0];
+          if (cur?.published_at) {
+            nextVersion = bumpPatchVersion(cur.version);
+          }
+        }
+
+        const setParts = ['published_at = COALESCE(published_at, NOW())'];
+        const params: unknown[] = [asUuid(DEFAULT_TENANT_ID), asUuid(contentId)];
+        if (nextVersion) {
+          params.push(nextVersion);
+          setParts.push(`version = $${params.length}`);
+        }
+        if (options.versionNotes !== undefined) {
+          params.push(options.versionNotes);
+          setParts.push(`version_notes = $${params.length}`);
+        }
         await query(
-          `UPDATE content SET published_at = COALESCE(published_at, NOW())
-           WHERE tenant_id = $1 AND content_id = $2`,
-          [asUuid(DEFAULT_TENANT_ID), asUuid(contentId)],
+          `UPDATE content SET ${setParts.join(', ')}
+            WHERE tenant_id = $1 AND content_id = $2`,
+          params,
         );
+        if (mem && nextVersion) {
+          mem.version = nextVersion;
+          if (options.versionNotes !== undefined) mem.versionNotes = options.versionNotes;
+        }
       }
       return rowsAffected > 0 || !!mem;
     } catch (e) {

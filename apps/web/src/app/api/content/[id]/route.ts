@@ -42,6 +42,8 @@ export async function GET(
       tags: stored.tags.map((t) => ({ name: t, slug: t.toLowerCase().replace(/[^a-z0-9]+/g, '-') })),
       readTimeMinutes: stored.readTimeMinutes,
       authorName: stored.authorId,
+      version: stored.version,
+      versionNotes: stored.versionNotes,
     });
   }
 

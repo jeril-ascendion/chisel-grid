@@ -50,6 +50,8 @@ export async function GET(req: NextRequest) {
     categoryLevel: a.categoryLevel,
     categoryId: a.category,
     timesReferenced: a.timesReferenced,
+    version: a.version,
+    versionNotes: a.versionNotes,
     updatedAt: a.createdAt,
     publishedAt: a.publishedAt ?? (a.status === 'published' ? a.createdAt : null),
   }));

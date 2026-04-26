@@ -19,6 +19,7 @@ interface ContentItem {
   updatedAt: string;
   publishedAt: string | null;
   timesReferenced?: number;
+  version?: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -256,6 +257,14 @@ export function ContentTableView() {
                         <td key={c.id} className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                           <span className="inline-flex items-center gap-2">
                             <span>{item.title}</span>
+                            {item.version && (
+                              <span
+                                className="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 font-mono text-[10px] text-gray-600 dark:text-gray-300"
+                                title={`Version ${item.version}`}
+                              >
+                                {item.version}
+                              </span>
+                            )}
                             {(item.timesReferenced ?? 0) > 0 ? (
                               <span
                                 className="rounded bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300"

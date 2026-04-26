@@ -26,6 +26,8 @@
     "workspaces:verify": "tsx src/workspaces-schema.ts verify",
     "sessions-workspace:migrate": "tsx src/session-workspace-migration.ts migrate",
     "sessions-workspace:verify": "tsx src/session-workspace-migration.ts verify",
+    "content-version:migrate": "tsx src/content-version-migration.ts migrate",
+    "content-version:verify": "tsx src/content-version-migration.ts verify",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

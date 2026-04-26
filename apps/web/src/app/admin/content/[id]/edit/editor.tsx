@@ -19,6 +19,7 @@ interface ArticleData {
   tags: { name: string; slug: string }[];
   readTimeMinutes: number;
   authorName: string;
+  version?: string;
 }
 
 export function EditArticleEditor({ params }: { params: Promise<{ id: string }> }) {
@@ -174,7 +175,14 @@ export function EditArticleEditor({ params }: { params: Promise<{ id: string }> 
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Article</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Article</h1>
+            {article.version && (
+              <span className="rounded bg-gray-100 dark:bg-gray-700 px-2 py-0.5 font-mono text-xs text-gray-600 dark:text-gray-300">
+                {article.version}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-gray-500 mt-1">ID: {id}</p>
         </div>
         <div className="flex items-center gap-2">

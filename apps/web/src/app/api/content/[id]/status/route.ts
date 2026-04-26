@@ -5,7 +5,11 @@ import { type ContentStatus, ContentStatusEnum } from '@chiselgrid/types';
 import { getArticle, updateArticleStatus } from '@/lib/article-store';
 import { getUserRole, type UserRole } from '@/lib/auth/roles';
 
-const PatchSchema = z.object({ status: ContentStatusEnum });
+const PatchSchema = z.object({
+  status: ContentStatusEnum,
+  version: z.string().regex(/^v\d+\.\d+\.\d+$/).optional(),
+  versionNotes: z.string().max(2000).nullable().optional(),
+});
 
 /**
  * Content lifecycle state machine — EPIC-P12-02.
@@ -80,7 +84,10 @@ export async function PATCH(
     );
   }
 
-  const ok = await updateArticleStatus(id, to);
+  const ok = await updateArticleStatus(id, to, {
+    ...(parsed.data.version ? { version: parsed.data.version } : {}),
+    ...(parsed.data.versionNotes !== undefined ? { versionNotes: parsed.data.versionNotes } : {}),
+  });
   if (!ok) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }

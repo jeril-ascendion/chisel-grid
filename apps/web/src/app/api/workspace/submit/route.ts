@@ -56,6 +56,8 @@ export async function POST(request: Request) {
     tags,
     authorId: session.user.email ?? 'unknown',
     readTimeMinutes: Math.max(1, Math.ceil(blocks.length * 0.7)),
+    version: 'v0.0.1',
+    versionNotes: null,
     createdAt: new Date().toISOString(),
     publishedAt: null,
   });
