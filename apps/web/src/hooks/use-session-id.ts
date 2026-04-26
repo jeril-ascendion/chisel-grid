@@ -12,6 +12,11 @@ export interface UseSessionIdOptions {
   restoreKind?: 'grid' | 'chamber' | 'studio';
 }
 
+function lastSessionStorageKey(kind: 'grid' | 'chamber' | 'studio'): string {
+  // grid → cg.lastGridSession, chamber → cg.lastChamberSession, etc.
+  return `cg.last${kind.charAt(0).toUpperCase()}${kind.slice(1)}Session`;
+}
+
 export function useSessionId(opts: UseSessionIdOptions = {}): string {
   const router = useRouter();
   const pathname = usePathname();
@@ -27,6 +32,18 @@ export function useSessionId(opts: UseSessionIdOptions = {}): string {
 
   const sessionId = urlSession ?? generated;
 
+  // Persist the active session ID so a sibling navigation (Grid landing →
+  // Grid/Architecture) without a ?session= can restore it instead of
+  // minting a brand-new session.
+  useEffect(() => {
+    if (!restoreKind || !urlSession) return;
+    try {
+      window.localStorage.setItem(lastSessionStorageKey(restoreKind), urlSession);
+    } catch {
+      // Quota / private mode — silent fallback is fine.
+    }
+  }, [urlSession, restoreKind]);
+
   useEffect(() => {
     if (urlSession || !generated) return;
     let cancelled = false;
@@ -40,6 +57,18 @@ export function useSessionId(opts: UseSessionIdOptions = {}): string {
 
     if (!restoreKind) {
       replaceWith(generated);
+      return;
+    }
+
+    // Local cache first — survives navigation across pages, instant.
+    let cached: string | null = null;
+    try {
+      cached = window.localStorage.getItem(lastSessionStorageKey(restoreKind));
+    } catch {
+      cached = null;
+    }
+    if (cached) {
+      replaceWith(cached);
       return;
     }
 
