@@ -95,7 +95,7 @@ export default function StudioDocumentPage() {
 
   useEffect(() => {
     if (!documentId) return;
-    fetch(`/api/admin/studio/documents/${documentId}`)
+    fetch(`/api/admin/forge/documents/${documentId}`)
       .then(r => r.ok ? r.json() : Promise.reject(new Error('not found')))
       .then((data: DocumentResponse) => {
         setDoc(data);
@@ -112,7 +112,7 @@ export default function StudioDocumentPage() {
       const payload: Record<string, unknown> = {};
       payload['title'] = override?.title ?? title;
       payload['sections'] = override?.sections ?? sections;
-      const res = await fetch(`/api/admin/studio/documents/${documentId}`, {
+      const res = await fetch(`/api/admin/forge/documents/${documentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -173,7 +173,7 @@ export default function StudioDocumentPage() {
     closePicker();
     try {
       const section = sections[idx]!;
-      const res = await fetch('/api/admin/studio/populate', {
+      const res = await fetch('/api/admin/forge/populate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -230,7 +230,7 @@ export default function StudioDocumentPage() {
     if (!documentId) return;
     setExporting(format);
     try {
-      const res = await fetch(`/api/admin/studio/documents/${documentId}/export?format=${format}`);
+      const res = await fetch(`/api/admin/forge/documents/${documentId}/export?format=${format}`);
       if (!res.ok) return;
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -267,8 +267,8 @@ export default function StudioDocumentPage() {
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <Link href="/admin/studio" className="text-xs text-gray-500 hover:underline dark:text-gray-400">
-            ← Studio
+          <Link href="/admin/forge" className="text-xs text-gray-500 hover:underline dark:text-gray-400">
+            ← Forge
           </Link>
           <input
             type="text"
@@ -388,10 +388,10 @@ export default function StudioDocumentPage() {
 
       <div className="mt-6 flex justify-end gap-3">
         <button
-          onClick={() => router.push('/admin/studio')}
+          onClick={() => router.push('/admin/forge')}
           className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
         >
-          Back to Studio
+          Back to Forge
         </button>
         <button
           onClick={() => void persist()}

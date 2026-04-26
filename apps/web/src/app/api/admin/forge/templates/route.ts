@@ -78,7 +78,7 @@ export async function GET() {
       })),
     });
   } catch (err) {
-    console.error('[api/admin/studio/templates] GET failed:', err);
+    console.error('[api/admin/forge/templates] GET failed:', err);
     return NextResponse.json(
       { error: 'Failed to load templates', detail: (err as Error).message },
       { status: 500 },

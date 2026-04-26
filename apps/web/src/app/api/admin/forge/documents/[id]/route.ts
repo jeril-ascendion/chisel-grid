@@ -83,7 +83,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       updated_at: doc.updated_at,
     });
   } catch (err) {
-    console.error('[api/admin/studio/documents/:id] GET failed:', err);
+    console.error('[api/admin/forge/documents/:id] GET failed:', err);
     return NextResponse.json(
       { error: 'Failed to load document', detail: (err as Error).message },
       { status: 500 },
@@ -132,7 +132,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[api/admin/studio/documents/:id] PATCH failed:', err);
+    console.error('[api/admin/forge/documents/:id] PATCH failed:', err);
     return NextResponse.json(
       { error: 'Failed to update document', detail: (err as Error).message },
       { status: 500 },
@@ -154,7 +154,7 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
     await query(`DELETE FROM studio_documents WHERE id = $1 AND tenant_id = $2`, [id, tenantId]);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[api/admin/studio/documents/:id] DELETE failed:', err);
+    console.error('[api/admin/forge/documents/:id] DELETE failed:', err);
     return NextResponse.json(
       { error: 'Failed to delete document', detail: (err as Error).message },
       { status: 500 },

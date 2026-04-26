@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { permissions, type Permission } from '@/lib/auth/roles';
 import { readRecentSessions, type RecentSession } from '@/lib/recent-sessions';
 
-const SESSION_AWARE_PREFIXES = ['/admin/chamber', '/admin/grid', '/admin/studio'];
+const SESSION_AWARE_PREFIXES = ['/admin/chamber', '/admin/grid', '/admin/forge'];
 
 type Role = 'admin' | 'creator' | 'reader';
 
@@ -36,7 +36,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Chamber', href: '/admin/chamber', icon: 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z', requires: 'canUseWorkspace' },
       { label: 'Grid', href: '/admin/grid', icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z', requires: 'canUseWorkspace' },
-      { label: 'Studio', href: '/admin/studio', icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z', requires: 'canUseWorkspace' },
+      { label: 'Forge', href: '/admin/forge', icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z', requires: 'canUseWorkspace' },
       { label: 'Knowledge Graph', href: '/admin/knowledge-graph', icon: 'M5 7a2 2 0 100-4 2 2 0 000 4zm14 0a2 2 0 100-4 2 2 0 000 4zM5 21a2 2 0 100-4 2 2 0 000 4zm14 0a2 2 0 100-4 2 2 0 000 4zm-7-7a2 2 0 100-4 2 2 0 000 4zm-5-3l3.5-2M16.5 6L13 8m0 8l3.5 2M7 18l3.5-2' },
     ],
   },

@@ -81,13 +81,13 @@ export async function POST(req: Request) {
     try {
       content = await invokeModel(SYSTEM_PROMPT, userPrompt);
     } catch (err) {
-      console.error('[api/admin/studio/populate] Bedrock failed:', err);
+      console.error('[api/admin/forge/populate] Bedrock failed:', err);
       content = `_Could not extract content from the Chamber session: ${(err as Error).message}_\n\n${transcript.slice(0, 800)}`;
     }
 
     return NextResponse.json({ content: content.trim() });
   } catch (err) {
-    console.error('[api/admin/studio/populate] failed:', err);
+    console.error('[api/admin/forge/populate] failed:', err);
     return NextResponse.json(
       { error: 'Failed to populate section', detail: (err as Error).message },
       { status: 500 },

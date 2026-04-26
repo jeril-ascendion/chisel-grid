@@ -284,9 +284,9 @@ export default function StudioSessionPage() {
       <div className="px-6 pt-4 pb-2">
         <StudioBreadcrumb
           items={[
-            { label: 'Studio', href: '/admin/studio' },
-            ...(breadcrumbWorkspace ? [{ label: breadcrumbWorkspace.name, href: `/admin/studio/workspace/${breadcrumbWorkspace.id}` }] : []),
-            ...(breadcrumbGrid ? [{ label: breadcrumbGrid.name, href: `/admin/studio/grid/${breadcrumbGrid.id}` }] : []),
+            { label: 'Forge', href: '/admin/forge' },
+            ...(breadcrumbWorkspace ? [{ label: breadcrumbWorkspace.name, href: `/admin/forge/workspace/${breadcrumbWorkspace.id}` }] : []),
+            ...(breadcrumbGrid ? [{ label: breadcrumbGrid.name, href: `/admin/forge/grid/${breadcrumbGrid.id}` }] : []),
             { label: 'Session' },
           ]}
         />
@@ -312,7 +312,7 @@ export default function StudioSessionPage() {
           {messages.length === 0 && (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
-                <p className="text-lg font-medium text-gray-900 dark:text-white">Welcome to Architecture Studio</p>
+                <p className="text-lg font-medium text-gray-900 dark:text-white">Welcome to Architecture Forge</p>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   Describe your architecture challenge to begin.
                 </p>

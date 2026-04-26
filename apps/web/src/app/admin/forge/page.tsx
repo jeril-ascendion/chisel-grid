@@ -94,11 +94,11 @@ export default function StudioPage() {
   useEffect(() => {
     fetch('/api/studio/workspaces').then(r => r.json()).then(setWorkspaces).catch(() => {});
     fetch('/api/studio/sessions').then(r => r.json()).then(setSessions).catch(() => {});
-    fetch('/api/admin/studio/templates')
+    fetch('/api/admin/forge/templates')
       .then(r => r.json())
       .then((data: { templates?: Template[] }) => setTemplates(data.templates ?? []))
       .catch(() => {});
-    fetch('/api/admin/studio/documents')
+    fetch('/api/admin/forge/documents')
       .then(r => r.json())
       .then((data: { documents?: StudioDocument[] }) => setDocuments(data.documents ?? []))
       .catch(() => {});
@@ -128,7 +128,7 @@ export default function StudioPage() {
   const handlePickTemplate = async (template: Template) => {
     setCreatingDocId(template.id);
     try {
-      const res = await fetch('/api/admin/studio/documents', {
+      const res = await fetch('/api/admin/forge/documents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ template_id: template.id }),
@@ -136,7 +136,7 @@ export default function StudioPage() {
       if (res.ok) {
         const data = await res.json() as { id: string };
         setShowTemplateModal(false);
-        router.push(`/admin/studio/document/${data.id}`);
+        router.push(`/admin/forge/document/${data.id}`);
       }
     } finally {
       setCreatingDocId(null);
@@ -158,7 +158,7 @@ export default function StudioPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Studio</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Forge</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Combine Chamber content and Grid visuals into polished documents using templates
           </p>
@@ -216,7 +216,7 @@ export default function StudioPage() {
               {documents.map(doc => (
                 <Link
                   key={doc.id}
-                  href={`/admin/studio/document/${doc.id}`}
+                  href={`/admin/forge/document/${doc.id}`}
                   className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:border-gray-300 dark:hover:border-gray-600"
                 >
                   <div className="flex items-center justify-between">
@@ -256,7 +256,7 @@ export default function StudioPage() {
                       )}
                     </div>
                     <Link
-                      href={`/admin/studio/workspace/${ws.id}`}
+                      href={`/admin/forge/workspace/${ws.id}`}
                       className="text-sm font-medium hover:underline"
                       style={{ color: '#C96330' }}
                     >
@@ -279,7 +279,7 @@ export default function StudioPage() {
                         </span>
                       </div>
                       <Link
-                        href={`/admin/studio/session/${s.id}`}
+                        href={`/admin/forge/session/${s.id}`}
                         className="text-sm font-medium hover:underline"
                         style={{ color: '#C96330' }}
                       >

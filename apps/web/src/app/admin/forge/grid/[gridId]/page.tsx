@@ -153,7 +153,7 @@ export default function GridDetailPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        router.push(`/admin/studio/session/${data.session_id}`);
+        router.push(`/admin/forge/session/${data.session_id}`);
       }
     } finally {
       setCreatingSession(false);
@@ -168,8 +168,8 @@ export default function GridDetailPage() {
     <div>
       <StudioBreadcrumb
         items={[
-          { label: 'Studio', href: '/admin/studio' },
-          ...(workspace ? [{ label: workspace.name, href: `/admin/studio/workspace/${workspace.id}` }] : []),
+          { label: 'Forge', href: '/admin/forge' },
+          ...(workspace ? [{ label: workspace.name, href: `/admin/forge/workspace/${workspace.id}` }] : []),
           { label: grid?.name ?? 'Grid' },
         ]}
       />
@@ -242,7 +242,7 @@ export default function GridDetailPage() {
                     </span>
                   </div>
                   <Link
-                    href={`/admin/studio/session/${s.id}`}
+                    href={`/admin/forge/session/${s.id}`}
                     className="text-sm font-medium hover:underline"
                     style={{ color: '#C96330' }}
                   >

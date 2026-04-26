@@ -108,7 +108,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
       },
     });
   } catch (err) {
-    console.error('[api/admin/studio/documents/:id/export] failed:', err);
+    console.error('[api/admin/forge/documents/:id/export] failed:', err);
     return NextResponse.json(
       { error: 'Export failed', detail: (err as Error).message },
       { status: 500 },

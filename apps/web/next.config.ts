@@ -36,6 +36,15 @@ const nextConfig: NextConfig = {
   // Compression (Brotli is handled by CloudFront, but enable gzip for direct access)
   compress: true,
 
+  // Redirects: legacy /admin/studio → /admin/forge after EPIC-P13 rename.
+  async redirects() {
+    if (isStaticExport) return [];
+    return [
+      { source: '/admin/studio', destination: '/admin/forge', permanent: true },
+      { source: '/admin/studio/:path*', destination: '/admin/forge/:path*', permanent: true },
+    ];
+  },
+
   // Reduce bundle size
   reactStrictMode: true,
 

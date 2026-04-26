@@ -66,7 +66,7 @@
 
 ## EPIC-P13 — Studio Rename to Forge + Navigation Restructure
 
-[⬜ OPEN] P13-01 — Rename Studio to Forge
+[✅ DONE] P13-01 — Rename Studio to Forge
   Update all UI labels: "Studio" → "Forge"
   Update all routes: /admin/studio/* → /admin/forge/*
   Update sidebar navigation

@@ -110,7 +110,7 @@ export default function WorkspaceDetailPage() {
       });
       if (res.ok) {
         const grid = await res.json();
-        router.push(`/admin/studio/grid/${grid.id}`);
+        router.push(`/admin/forge/grid/${grid.id}`);
       }
     } finally {
       setCreating(false);
@@ -129,7 +129,7 @@ export default function WorkspaceDetailPage() {
     <div>
       <StudioBreadcrumb
         items={[
-          { label: 'Studio', href: '/admin/studio' },
+          { label: 'Forge', href: '/admin/forge' },
           { label: workspace.name },
         ]}
       />
@@ -211,7 +211,7 @@ export default function WorkspaceDetailPage() {
               )}
 
               <Link
-                href={`/admin/studio/grid/${grid.id}`}
+                href={`/admin/forge/grid/${grid.id}`}
                 className="text-sm font-medium hover:underline"
                 style={{ color: '#C96330' }}
               >

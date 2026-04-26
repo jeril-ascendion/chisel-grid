@@ -80,7 +80,7 @@ export async function GET() {
     );
     return NextResponse.json({ documents: rows });
   } catch (err) {
-    console.error('[api/admin/studio/documents] GET failed:', err);
+    console.error('[api/admin/forge/documents] GET failed:', err);
     return NextResponse.json(
       { error: 'Failed to load documents', detail: (err as Error).message },
       { status: 500 },
@@ -133,7 +133,7 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ id, title, category: tpl.category }, { status: 201 });
   } catch (err) {
-    console.error('[api/admin/studio/documents] POST failed:', err);
+    console.error('[api/admin/forge/documents] POST failed:', err);
     return NextResponse.json(
       { error: 'Failed to create document', detail: (err as Error).message },
       { status: 500 },
