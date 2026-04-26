@@ -21,6 +21,7 @@ import {
   type BoardColumnId,
 } from '@/lib/status-board-map';
 import { ContentTypeBadge } from './content-type-badge';
+import { useUserRole } from '@/hooks/use-user-role';
 
 interface BoardItem {
   id: string;
@@ -32,22 +33,24 @@ interface BoardItem {
   updatedAt: string;
 }
 
-function Card({ item }: { item: BoardItem }) {
+function Card({ item, draggable }: { item: BoardItem; draggable: boolean }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
+    disabled: !draggable,
   });
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
+      {...(draggable ? listeners : {})}
       {...attributes}
       data-board-card
       style={{ transform: CSS.Translate.toString(transform) }}
       className={cn(
-        'cursor-grab rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-sm shadow-sm hover:shadow transition-shadow',
+        'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-sm shadow-sm hover:shadow transition-shadow',
+        draggable ? 'cursor-grab' : 'cursor-default',
         isDragging && 'opacity-50',
       )}
-      aria-roledescription="Draggable card. Press space or enter to pick up."
+      aria-roledescription={draggable ? 'Draggable card. Press space or enter to pick up.' : 'Status card'}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="font-medium text-gray-900 dark:text-white line-clamp-2">{item.title}</div>
@@ -95,6 +98,8 @@ function Column({
 
 export function ContentBoardView() {
   const router = useRouter();
+  const role = useUserRole();
+  const canMove = role === 'admin';
   const [items, setItems] = useState<BoardItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -125,6 +130,7 @@ export function ContentBoardView() {
   }, [items]);
 
   const onDragEnd = async (e: DragEndEvent) => {
+    if (!canMove) return;
     const cardId = String(e.active.id);
     const overId = e.over?.id ? String(e.over.id) : null;
     if (!overId) return;
@@ -171,7 +177,7 @@ export function ContentBoardView() {
           {BOARD_COLUMNS.map((col) => (
             <Column key={col.id} id={col.id} label={col.label} count={grouped[col.id].length}>
               {grouped[col.id].map((item) => (
-                <Card key={item.id} item={item} />
+                <Card key={item.id} item={item} draggable={canMove} />
               ))}
               {grouped[col.id].length === 0 && (
                 <div className="text-xs text-gray-400 px-2 py-4 text-center">No items</div>

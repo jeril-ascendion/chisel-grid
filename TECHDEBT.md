@@ -33,7 +33,7 @@
 
 ## EPIC-P12 — Content Lifecycle and Organisation Rewrite
 
-[⬜ OPEN] P12-01 — Merge All Content into Content Queue
+[✅ DONE] P12-01 — Merge All Content into Content Queue
   Combine /admin/content and /admin/queue into single Content Queue
   Role-based views:
     ADMIN: can review, approve, publish, reject

@@ -3,8 +3,11 @@ import { z } from 'zod';
 import { auth } from '@/auth';
 import { ContentStatusEnum } from '@chiselgrid/types';
 import { updateArticleStatus } from '@/lib/article-store';
+import { getUserRole } from '@/lib/auth/roles';
 
 const PatchSchema = z.object({ status: ContentStatusEnum });
+
+const ADMIN_ONLY_STATUSES = new Set(['approved', 'published', 'in_review', 'rejected']);
 
 export async function PATCH(
   request: NextRequest,
@@ -23,6 +26,11 @@ export async function PATCH(
       { error: 'Validation failed', details: parsed.error.issues },
       { status: 400 },
     );
+  }
+
+  const role = getUserRole(session);
+  if (ADMIN_ONLY_STATUSES.has(parsed.data.status) && role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden: admin role required' }, { status: 403 });
   }
 
   const ok = await updateArticleStatus(id, parsed.data.status);

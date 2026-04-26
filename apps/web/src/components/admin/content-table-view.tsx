@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { CONTENT_TYPES } from '@chiselgrid/types';
 import { ContentTypeBadge } from './content-type-badge';
+import { useUserRole } from '@/hooks/use-user-role';
 
 interface ContentItem {
   id: string;
@@ -55,6 +57,9 @@ type SortDir = 'asc' | 'desc';
 export function ContentTableView() {
   const router = useRouter();
   const params = useSearchParams();
+  const role = useUserRole();
+  const { data: session } = useSession();
+  const currentEmail = session?.user?.email ?? '';
 
   const status = params.get('status') ?? 'all';
   const type = params.get('type') ?? 'all';
@@ -119,6 +124,17 @@ export function ContentTableView() {
     } else {
       setParam('sort', String(key));
       setParam('dir', 'asc');
+    }
+  };
+
+  const patchStatus = async (id: string, status: 'approved' | 'rejected' | 'published' | 'in_review') => {
+    const res = await fetch(`/api/content/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) {
+      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     }
   };
 
@@ -267,17 +283,50 @@ export function ContentTableView() {
                       return <td key={c.id} className="px-4 py-3 text-gray-500 text-xs">{item.category || '—'}</td>;
                     case 'updated':
                       return <td key={c.id} className="px-4 py-3 text-gray-500 text-xs">{new Date(item.updatedAt).toLocaleDateString()}</td>;
-                    case 'actions':
+                    case 'actions': {
+                      const isOwner = item.author === currentEmail;
+                      const canEdit = role === 'admin' || (role === 'creator' && isOwner);
+                      const showAdminActions = role === 'admin';
+                      const isReviewable = item.status === 'submitted' || item.status === 'in_review';
                       return (
                         <td key={c.id} className="px-4 py-3 text-right">
-                          <Link
-                            href={`/admin/content/${item.id}/edit`}
-                            className="text-blue-600 hover:underline text-xs font-medium"
-                          >
-                            {item.status === 'rejected' ? 'Edit & Resubmit' : 'Edit'}
-                          </Link>
+                          <div className="inline-flex items-center justify-end gap-2 text-xs font-medium">
+                            {canEdit && (
+                              <Link
+                                href={`/admin/content/${item.id}/edit`}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {item.status === 'rejected' ? 'Edit & Resubmit' : 'Edit'}
+                              </Link>
+                            )}
+                            {showAdminActions && isReviewable && (
+                              <>
+                                <button
+                                  onClick={() => void patchStatus(item.id, 'approved')}
+                                  className="rounded bg-green-600 px-2 py-0.5 text-white hover:bg-green-700"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => void patchStatus(item.id, 'rejected')}
+                                  className="rounded border border-red-300 px-2 py-0.5 text-red-600 hover:bg-red-50"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                            {showAdminActions && item.status === 'approved' && (
+                              <button
+                                onClick={() => void patchStatus(item.id, 'published')}
+                                className="rounded bg-emerald-600 px-2 py-0.5 text-white hover:bg-emerald-700"
+                              >
+                                Publish
+                              </button>
+                            )}
+                          </div>
                         </td>
                       );
+                    }
                   }
                 })}
               </tr>
