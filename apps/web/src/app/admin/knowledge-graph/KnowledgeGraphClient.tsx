@@ -55,9 +55,9 @@ function hrefFor(node: GraphNode): string | null {
   switch (node.type) {
     case 'article':
     case 'decision':
-      return `/admin/content/${node.id}`;
+      return `/admin/content/${node.id}/edit`;
     case 'diagram':
-      return `/admin/grid/architecture?diagram=${node.id}`;
+      return `/admin/grid/architecture?session=${node.id}`;
     case 'session':
       return `/admin/chamber?session=${node.id}`;
     default:
