@@ -24,6 +24,8 @@
     "templates:seed": "tsx src/seed-studio-templates.ts",
     "workspaces:migrate": "tsx src/workspaces-schema.ts migrate",
     "workspaces:verify": "tsx src/workspaces-schema.ts verify",
+    "sessions-workspace:migrate": "tsx src/session-workspace-migration.ts migrate",
+    "sessions-workspace:verify": "tsx src/session-workspace-migration.ts verify",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

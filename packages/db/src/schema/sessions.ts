@@ -29,6 +29,7 @@ export const workSessions = pgTable(
       .notNull()
       .references(() => tenants.tenantId, { onDelete: 'cascade' }),
     createdBy: uuid('created_by').notNull(),
+    workspaceId: uuid('workspace_id'),
     kind: sessionKindEnum('kind').notNull(),
     visibility: sessionVisibilityEnum('visibility')
       .notNull()
@@ -49,5 +50,6 @@ export const workSessions = pgTable(
       table.updatedAt,
     ),
     visibilityIdx: index('idx_work_sessions_visibility').on(table.visibility),
+    workspaceIdx: index('work_sessions_workspace_idx').on(table.workspaceId),
   }),
 );

@@ -19,6 +19,7 @@ export interface WorkSession {
   sessionId: string;
   tenantId: string;
   createdBy: string;
+  workspaceId: string | null;
   kind: SessionKind;
   visibility: SessionVisibility;
   title: string | null;
@@ -30,6 +31,7 @@ export interface WorkSession {
 /** Public-facing shape stripped of tenant/owner identifiers. */
 export interface PublicSession {
   sessionId: string;
+  workspaceId: string | null;
   kind: SessionKind;
   visibility: SessionVisibility;
   title: string | null;
@@ -42,6 +44,7 @@ type Row = {
   session_id: string;
   tenant_id: string;
   created_by: string;
+  workspace_id: string | null;
   kind: SessionKind;
   visibility: SessionVisibility;
   title: string | null;
@@ -72,6 +75,7 @@ function rowToSession(row: Row): WorkSession {
     sessionId: row.session_id,
     tenantId: row.tenant_id,
     createdBy: row.created_by,
+    workspaceId: row.workspace_id,
     kind: row.kind,
     visibility: row.visibility,
     title: row.title,
@@ -84,6 +88,7 @@ function rowToSession(row: Row): WorkSession {
 export function toPublicSession(row: WorkSession): PublicSession {
   return {
     sessionId: row.sessionId,
+    workspaceId: row.workspaceId,
     kind: row.kind,
     visibility: row.visibility,
     title: row.title,
@@ -97,6 +102,7 @@ const SELECT_COLUMNS = `
   session_id,
   tenant_id,
   created_by,
+  workspace_id,
   kind,
   visibility,
   title,
@@ -109,6 +115,7 @@ export interface UpsertSessionInput {
   sessionId: string;
   tenantId: string;
   createdBy: string;
+  workspaceId?: string | null;
   kind: SessionKind;
   title?: string | null;
   state: Record<string, unknown>;
@@ -117,20 +124,21 @@ export interface UpsertSessionInput {
 
 /**
  * INSERT or UPDATE in one round-trip. Tenant + creator are locked in on
- * insert; subsequent calls only touch state/title/visibility/kind. The
- * conflict guard on `tenant_id` and `created_by` prevents another caller
+ * insert; subsequent calls only touch state/title/visibility/kind/workspace.
+ * The conflict guard on `tenant_id` and `created_by` prevents another caller
  * from hijacking a UUID collision.
  */
 export async function upsertSession(input: UpsertSessionInput): Promise<WorkSession> {
   const { rows } = await query<Row>(
     `INSERT INTO work_sessions
-       (session_id, tenant_id, created_by, kind, title, state, visibility)
-     VALUES ($1, $2, $3, $4::session_kind, $5, $6, COALESCE($7::session_visibility, 'shared_view'))
+       (session_id, tenant_id, created_by, workspace_id, kind, title, state, visibility)
+     VALUES ($1, $2, $3, $4, $5::session_kind, $6, $7, COALESCE($8::session_visibility, 'shared_view'))
      ON CONFLICT (session_id) DO UPDATE SET
        kind = EXCLUDED.kind,
        title = COALESCE(EXCLUDED.title, work_sessions.title),
        state = EXCLUDED.state,
        visibility = COALESCE(EXCLUDED.visibility, work_sessions.visibility),
+       workspace_id = COALESCE(EXCLUDED.workspace_id, work_sessions.workspace_id),
        updated_at = now()
      WHERE work_sessions.tenant_id = EXCLUDED.tenant_id
        AND work_sessions.created_by = EXCLUDED.created_by
@@ -139,6 +147,7 @@ export async function upsertSession(input: UpsertSessionInput): Promise<WorkSess
       asUuid(input.sessionId),
       asUuid(input.tenantId),
       asUuid(input.createdBy),
+      input.workspaceId ? asUuid(input.workspaceId) : null,
       input.kind,
       input.title ?? null,
       asJson(input.state),
@@ -187,6 +196,7 @@ export async function getPublicSession(
 
 export interface ListSessionsOptions {
   kind?: SessionKind;
+  workspaceId?: string;
   limit?: number;
   /** Currently only 'updated_at_desc' is supported. */
   sort?: 'updated_at_desc';
@@ -209,13 +219,18 @@ export async function listSessionsForOwner(
     params.push(opts.kind);
     kindClause = `AND kind = $${params.length}::session_kind`;
   }
+  let workspaceClause = '';
+  if (opts.workspaceId) {
+    params.push(asUuid(opts.workspaceId));
+    workspaceClause = `AND workspace_id = $${params.length}`;
+  }
   params.push(limit);
   const limitParamIdx = params.length;
 
   const { rows } = await query<Row>(
     `SELECT ${SELECT_COLUMNS}
      FROM work_sessions
-     WHERE tenant_id = $1 AND created_by = $2 ${kindClause}
+     WHERE tenant_id = $1 AND created_by = $2 ${kindClause} ${workspaceClause}
      ORDER BY updated_at DESC
      LIMIT $${limitParamIdx}`,
     params,

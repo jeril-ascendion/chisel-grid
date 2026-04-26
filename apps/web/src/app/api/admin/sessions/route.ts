@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
   const limitRaw = url.searchParams.get('limit');
   const sortRaw = url.searchParams.get('sort');
   const kindRaw = url.searchParams.get('kind');
+  const workspaceIdRaw = url.searchParams.get('workspace_id');
 
   const limit = limitRaw ? Math.max(1, Math.min(parseInt(limitRaw, 10) || 1, 100)) : 20;
   if (sortRaw && !(VALID_SORTS as readonly string[]).includes(sortRaw)) {
@@ -49,10 +50,15 @@ export async function GET(req: NextRequest) {
     }
     kind = kindRaw as SessionKind;
   }
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (workspaceIdRaw && !UUID_RE.test(workspaceIdRaw)) {
+    return NextResponse.json({ error: 'Invalid workspace_id' }, { status: 400 });
+  }
 
   try {
     const rows = await listSessionsForOwner(tenantId, ownerId, {
       ...(kind ? { kind } : {}),
+      ...(workspaceIdRaw ? { workspaceId: workspaceIdRaw } : {}),
       limit,
       sort: 'updated_at_desc',
     });
