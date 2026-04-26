@@ -22,6 +22,8 @@
     "templates:migrate": "tsx src/studio-templates-schema.ts migrate",
     "templates:verify": "tsx src/studio-templates-schema.ts verify",
     "templates:seed": "tsx src/seed-studio-templates.ts",
+    "workspaces:migrate": "tsx src/workspaces-schema.ts migrate",
+    "workspaces:verify": "tsx src/workspaces-schema.ts verify",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
