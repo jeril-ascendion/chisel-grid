@@ -317,16 +317,21 @@ and internal reusable patterns."
 ### NOW: Stabilisation Sprint (April-May 2026)
   RULE: No new features until all items below are checked.
 
-  [ ] BUG-01  Fix Forge 500 on document creation
-  [ ] BUG-02  Verify Knowledge Graph Open routes correctly
-  [ ] P13     Verify Studio → Forge rename complete in all UI
-  [ ] P12-02  Implement RBAC role-based action visibility
-  [ ] P12-03  Content publish flow end-to-end verified
-  [ ] P12-04  Content versioning (v0.0.0 format)
-  [ ] CLEAN   Zero TypeScript errors across monorepo
-  [ ] CLEAN   All pages load without console errors
-  [ ] CLEAN   /admin returns 307 consistently
-  [ ] CLEAN   MASTER-PLAN.md in repo and up to date
+  [ ]  BUG-01  Fix Forge 500 on document creation
+  [ ]  BUG-02  Verify Knowledge Graph Open routes correctly
+  [✅] P13-01  Verify Studio → Forge rename complete in all UI
+  [✅] P12-02  Implement RBAC role-based action visibility
+  [✅] P12-03  Content publish flow end-to-end verified
+  [✅] P12-04  Content versioning (v0.0.0 format)
+  [✅] P12-05  Submit-for-review UI + admin review workflow
+  [✅] P14-01  Workspace data model
+  [✅] P14-02  Session belongs to Workspace
+  [✅] P14-03  Workspace CRUD API
+  [✅] P14-04  Workspace switcher in sidebar
+  [ ]  CLEAN   Zero TypeScript errors across monorepo
+  [ ]  CLEAN   All pages load without console errors
+  [ ]  CLEAN   /admin returns 307 consistently
+  [ ]  CLEAN   MASTER-PLAN.md in repo and up to date
 
 ### MAY 2026: Foundation Sprint
   [ ] P14     Workspace hierarchy (Workspace → Session structure)

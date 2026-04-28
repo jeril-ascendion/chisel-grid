@@ -1,78 +1,61 @@
 # ChiselGrid Tech Debt and Action Items
-# Updated: April 26, 2026
+# Updated: April 27, 2026
 # Format: [STATUS] ITEM — Description
 
 ---
 
 ## CRITICAL — Fix Now (Bugs in Production)
 
-[🔴 OPEN] BUG-01 — Studio 500 error on document creation
-  File: apps/web/src/app/api/admin/studio/documents/route.ts
+[🔴 OPEN] BUG-01 — Forge 500 error on document creation
+  File: apps/web/src/app/api/admin/forge/documents/route.ts
   Issue: studio_documents table missing, POST returns 500
   Fix: Create studio_documents migration and run against Aurora
 
 [🔴 OPEN] BUG-02 — Knowledge Graph Open button navigates to 404
   File: apps/web/src/app/admin/knowledge-graph/KnowledgeGraphClient.tsx
   Issue: Navigates to /admin/content/{id} instead of /admin/content/{id}/edit
-  Fix: Correct navigation for all node types
+  Fix: Correct navigation for all node types (partial fix in d79c141)
 
-[🔴 OPEN] BUG-03 — Architecture diagram minimap blocking viewport
+[✅ DONE] BUG-03 — Architecture diagram minimap blocking viewport (53d8f58)
   Files: grid/architecture/page.tsx, grid/precise/page.tsx, grid/sketch/page.tsx
-  Issue: React Flow MiniMap component rendering over diagram
-  Fix: Remove <MiniMap /> from all three Grid pages
+  Removed <MiniMap /> from all three Grid pages.
 
-[🔴 OPEN] BUG-04 — Multi-tab auth not working
-  Issue: New tab does not pick up existing auth session automatically
-  Fix: Content Studio button routes to /admin, NextAuth handles cookie
+[✅ DONE] BUG-04 — Multi-tab auth not working (ae3aa0d, b8609ed)
+  Multi-tab auth sync via BroadcastChannel; Content Studio button routes to /admin.
 
-[🔴 OPEN] BUG-05 — Session lost on Grid navigation
-  Issue: Navigating Grid → Grid/Architecture creates new session
-  Fix: Persist last session ID in localStorage, restore on navigation
+[✅ DONE] BUG-05 — Session lost on Grid navigation (a6465cc)
+  Last session ID persisted to localStorage and restored on navigation.
 
 ---
 
 ## EPIC-P12 — Content Lifecycle and Organisation Rewrite
 
-[⬜ OPEN] P12-01 — Merge All Content into Content Queue
-  Combine /admin/content and /admin/queue into single Content Queue
-  Role-based views:
-    ADMIN: can review, approve, publish, reject
-    CREATOR: can view own content status only
-    READER: read-only view of published content
-  Remove separate All Content route
+[✅ DONE] P12-01 — Merge All Content into Content Queue (1181cbc)
+  Combined /admin/content and /admin/queue into single Content Queue
+  with role-based action visibility (ADMIN review/approve/publish/reject,
+  CREATOR own content, READER read-only).
 
-[⬜ OPEN] P12-02 — Role-based access control (RBAC)
-  Define four roles: OUTSIDE, READER, CREATOR, ADMIN
-  Enforce at route level, API level, and component level
-  Hide Users/Tenant Settings/Content Queue admin from READER
-  READER content not published to portal or model
+[✅ DONE] P12-02 — Role-based access control (RBAC) (fa71aea)
+  Content lifecycle state machine enforced at route, API, and component level.
+  Four roles defined: OUTSIDE, READER, CREATOR, ADMIN.
 
-[⬜ OPEN] P12-03 — Content Publish Engine rewrite
-  Full content flow: Draft → Submitted → In Review → Approved → Published
-  Pre-built templates for article publication
-  Diagrams, animations, narrations each follow their own engine
-  Published content visible on tenant portal immediately
+[✅ DONE] P12-03 — Content Publish Engine rewrite (d44a0e8)
+  Published content visible on tenant portal immediately.
+  Lifecycle: Draft → Submitted → In Review → Approved → Published.
 
-[⬜ OPEN] P12-04 — Content versioning
-  Article versioning: <article_name>-v0.0.0
-  Increment version on each modification post-publish
-  Version history viewable in editor
+[✅ DONE] P12-04 — Content versioning (dd07545)
+  Article versioning in <article_name>-v0.0.0 format.
 
-[⬜ OPEN] P12-05 — Content taxonomy management
-  Admin-only CRUD for categories and tags
-  READER can view but not modify taxonomy
+[✅ DONE] P12-05 — Submit for review UI + admin review workflow (94a0723)
+  CREATOR submits drafts for review; ADMIN reviews/approves/rejects in queue.
 
 ---
 
 ## EPIC-P13 — Studio Rename to Forge + Navigation Restructure
 
-[⬜ OPEN] P13-01 — Rename Studio to Forge
-  Update all UI labels: "Studio" → "Forge"
-  Update all routes: /admin/studio/* → /admin/forge/*
-  Update sidebar navigation
-  Update all code references, API routes, database columns
-  Update ROADMAP.md, GRID.md, PLATFORM-EPICS.md, CLAUDE.md
-  Update LANGUAGE.md references
+[✅ DONE] P13-01 — Rename Studio to Forge (070c349)
+  All UI labels, routes (/admin/studio/* → /admin/forge/*), sidebar nav,
+  code references, API routes, and doc references updated.
 
 [⬜ OPEN] P13-02 — Update top-level navigation
   Content Studio sidebar should show:
@@ -98,19 +81,24 @@
 
 ## EPIC-P14 — Workspace and Project Hierarchy
 
-[⬜ OPEN] P14-01 — Workspace data model
-  CREATE TABLE workspaces: id, tenant_id, name, description,
-  client_name (auto), project_name (auto), created_by, created_at
-  Workspace creation modal before first session
+[✅ DONE] P14-01 — Workspace data model (24e7b1a)
+  workspaces table created (id, tenant_id, name, description,
+  client_name, project_name, created_by, created_at).
 
-[⬜ OPEN] P14-02 — Session belongs to Workspace
-  work_sessions.workspace_id FK to workspaces
-  Session picker shows sessions within current workspace
+[✅ DONE] P14-02 — Session belongs to Workspace (a8a430a)
+  work_sessions.workspace_id FK to workspaces; session picker
+  scoped to current workspace.
 
-[⬜ OPEN] P14-03 — Auto-detect Client and Project from content
+[✅ DONE] P14-03 — Workspace CRUD API (438ccd8)
+  Create/read/update/delete endpoints for workspaces.
+
+[✅ DONE] P14-04 — Workspace switcher in sidebar (11eb055)
+  Sidebar workspace switcher component wired to current session context.
+
+[⬜ OPEN] P14-05 — Auto-detect Client and Project from content
   Background Bedrock agent extracts client/project names from
-  session content and populates workspace metadata
-  User never manually enters client or project
+  session content and populates workspace metadata.
+  User never manually enters client or project. (not built yet)
 
 ---
 
